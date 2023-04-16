@@ -5,8 +5,8 @@ on: push
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v2
       - uses: DerYeger/yarn-setup-action@v1.0.1
         with:
           node-version: 18
