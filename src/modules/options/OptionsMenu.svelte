@@ -90,17 +90,17 @@
         >
           Add links to HLTB pages
         </OptionsToggle>
-        <button class="toggle-item-sub" on:click={enqueueEntireLibrary}>Submit your library for enqueueing</button>
+        <!-- <button class="toggle-item-sub" on:click={enqueueEntireLibrary}>Submit your library for enqueueing</button>
         <div class="toggle-item-sub">
           You can use this button to send your entire BLAEO library to the BLAEO+ backend for fetching times.
-        </div>
+        </div> -->
       </OptionsItem>
 
-      <OptionsItem title="Posts" titleClass="h3">
-        <OptionsToggle id="bp-options-modules-posts-saving" bind:boundValue={options.modules.posts.saving}>
+      <!-- <OptionsItem title="Posts" titleClass="h3">
+        <OptionsToggle id="bp-options-modules-posts-saving" bind:boundValue={options.modules.newPosts.saving}>
           Add saving/loading posts
         </OptionsToggle>
-      </OptionsItem>
+      </OptionsItem> -->
       <OptionsItem title="Comments" titleClass="h3">
         <OptionsToggle id="bp-options-modules-comments-previews" bind:boundValue={options.modules.comments.previews}>
           Add preview button

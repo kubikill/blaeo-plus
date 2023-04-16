@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "author": "kubikill",
+  "description": "A userscript for Backlog Assassins Extraordinaire that adds new features and QoL improvements to the site.",
   "type": "module",
   "scripts": {
     "dev": "vite",

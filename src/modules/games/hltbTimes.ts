@@ -1,15 +1,12 @@
 import { hltbLogo } from "@/assets/icons";
 import { options } from "@/globals";
-import { enqueueHltbData, hltbExcludedGames, hltbData, syncHltbData, syncHltbExcludedGames } from "@/lib/hltbService";
+import { enqueueHltbData, hltbExcludedGames, hltbData } from "@/lib/hltbService";
 
 export async function initHltbTimes() {
   const gameContainer = document.querySelector("#games") as HTMLElement;
   if (!gameContainer) {
     return;
   }
-
-  await syncHltbData();
-  await syncHltbExcludedGames();
 
   let checkInterval: ReturnType<typeof setInterval>;
   checkInterval = setInterval(() => {
@@ -20,79 +17,88 @@ export async function initHltbTimes() {
       const gameTableGroups = gameContainer.querySelector("colgroup") as HTMLElement;
       const games = gameContainer.querySelectorAll(".game") as NodeListOf<HTMLElement>;
 
-      if (gameTableHeader) {
-        if (options.modules.games.hltbIntegration.displayColumns.main) {
-          gameTableHeader.insertAdjacentHTML(
-            "beforeend",
-            `
-              <th class="text-right" data-bp-ttb-main="asc">TTB Main <i class="fa fa-sort"></i></th>
-            `
-          );
+      let colspan = 0;
 
-          const gameTtbMainHeader = gameTableHeader.querySelector("[data-bp-ttb-main]") as HTMLElement;
-
-          gameTtbMainHeader.addEventListener("click", () => {
-            $(gameContainer).sortable_table(
-              "sort",
-              $(gameTtbMainHeader).index(),
-              gameTtbMainHeader.dataset.bpTtbMain === "asc"
-            );
-            if (gameTtbMainHeader.dataset.bpTtbMain === "asc") {
-              gameTtbMainHeader.dataset.bpTtbMain = "desc";
-            } else {
-              gameTtbMainHeader.dataset.bpTtbMain = "asc";
-            }
-          });
-        }
-
-        if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-          gameTableHeader.insertAdjacentHTML(
-            "beforeend",
-            `
-              <th class="text-right" data-bp-ttb-extra="asc">TTB +Extra <i class="fa fa-sort"></i></th>
-            `
-          );
-
-          const gameTtbExtraHeader = gameTableHeader.querySelector("[data-bp-ttb-extra]") as HTMLElement;
-
-          gameTtbExtraHeader.addEventListener("click", () => {
-            $(gameContainer).sortable_table(
-              "sort",
-              $(gameTtbExtraHeader).index(),
-              gameTtbExtraHeader.dataset.bpTtbExtra === "asc"
-            );
-            if (gameTtbExtraHeader.dataset.bpTtbExtra === "asc") {
-              gameTtbExtraHeader.dataset.bpTtbExtra = "desc";
-            } else {
-              gameTtbExtraHeader.dataset.bpTtbExtra = "asc";
-            }
-          });
-        }
-
-        if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-          gameTableHeader.insertAdjacentHTML(
-            "beforeend",
-            `
-              <th class="text-right" data-bp-ttb-everything="asc">TTB 100% <i class="fa fa-sort"></i></th>
-            `
-          );
-
-          const gameTtbEverythingHeader = gameTableHeader.querySelector("[data-bp-ttb-everything]") as HTMLElement;
-
-          gameTtbEverythingHeader.addEventListener("click", () => {
-            $(gameContainer).sortable_table(
-              "sort",
-              $(gameTtbEverythingHeader).index(),
-              gameTtbEverythingHeader.dataset.bpTtbEverything === "asc"
-            );
-            if (gameTtbEverythingHeader.dataset.bpTtbEverything === "asc") {
-              gameTtbEverythingHeader.dataset.bpTtbEverything = "desc";
-            } else {
-              gameTtbEverythingHeader.dataset.bpTtbEverything = "asc";
-            }
-          });
+      for (let column of Object.entries(options.modules.games.hltbIntegration.displayColumns)) {
+        if (column[1]) {
+          colspan++;
         }
       }
+
+      if (options.modules.games.hltbIntegration.displayColumns)
+        if (gameTableHeader) {
+          if (options.modules.games.hltbIntegration.displayColumns.main) {
+            gameTableHeader.insertAdjacentHTML(
+              "beforeend",
+              `
+              <th class="text-right" data-bp-ttb-main="asc">TTB Main <i class="fa fa-sort"></i></th>
+            `
+            );
+
+            const gameTtbMainHeader = gameTableHeader.querySelector("[data-bp-ttb-main]") as HTMLElement;
+
+            gameTtbMainHeader.addEventListener("click", () => {
+              $(gameContainer).sortable_table(
+                "sort",
+                $(gameTtbMainHeader).index(),
+                gameTtbMainHeader.dataset.bpTtbMain === "asc"
+              );
+              if (gameTtbMainHeader.dataset.bpTtbMain === "asc") {
+                gameTtbMainHeader.dataset.bpTtbMain = "desc";
+              } else {
+                gameTtbMainHeader.dataset.bpTtbMain = "asc";
+              }
+            });
+          }
+
+          if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
+            gameTableHeader.insertAdjacentHTML(
+              "beforeend",
+              `
+              <th class="text-right" data-bp-ttb-extra="asc">TTB +Extra <i class="fa fa-sort"></i></th>
+            `
+            );
+
+            const gameTtbExtraHeader = gameTableHeader.querySelector("[data-bp-ttb-extra]") as HTMLElement;
+
+            gameTtbExtraHeader.addEventListener("click", () => {
+              $(gameContainer).sortable_table(
+                "sort",
+                $(gameTtbExtraHeader).index(),
+                gameTtbExtraHeader.dataset.bpTtbExtra === "asc"
+              );
+              if (gameTtbExtraHeader.dataset.bpTtbExtra === "asc") {
+                gameTtbExtraHeader.dataset.bpTtbExtra = "desc";
+              } else {
+                gameTtbExtraHeader.dataset.bpTtbExtra = "asc";
+              }
+            });
+          }
+
+          if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
+            gameTableHeader.insertAdjacentHTML(
+              "beforeend",
+              `
+              <th class="text-right" data-bp-ttb-everything="asc">TTB 100% <i class="fa fa-sort"></i></th>
+            `
+            );
+
+            const gameTtbEverythingHeader = gameTableHeader.querySelector("[data-bp-ttb-everything]") as HTMLElement;
+
+            gameTtbEverythingHeader.addEventListener("click", () => {
+              $(gameContainer).sortable_table(
+                "sort",
+                $(gameTtbEverythingHeader).index(),
+                gameTtbEverythingHeader.dataset.bpTtbEverything === "asc"
+              );
+              if (gameTtbEverythingHeader.dataset.bpTtbEverything === "asc") {
+                gameTtbEverythingHeader.dataset.bpTtbEverything = "desc";
+              } else {
+                gameTtbEverythingHeader.dataset.bpTtbEverything = "asc";
+              }
+            });
+          }
+        }
 
       if (gameTableGroups) {
         if (gameTableHeader.firstElementChild.textContent.trim() === "#") {
@@ -104,15 +110,15 @@ export async function initHltbTimes() {
           `;
 
           if (options.modules.games.hltbIntegration.displayColumns.main) {
-            gameTableGroups.innerHTML += '<col style="width: 110px;">';
+            gameTableGroups.innerHTML += `<col style="width: ${155 - 15 * colspan}px;">`;
           }
 
           if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-            gameTableGroups.innerHTML += '<col style="width: 110px;">';
+            gameTableGroups.innerHTML += `<col style="width: ${155 - 15 * colspan}px;">`;
           }
 
           if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-            gameTableGroups.innerHTML += '<col style="width: 110px;">';
+            gameTableGroups.innerHTML += `<col style="width: ${155 - 15 * colspan}px;">`;
           }
         } else {
           gameTableGroups.innerHTML = `
@@ -122,15 +128,15 @@ export async function initHltbTimes() {
           `;
 
           if (options.modules.games.hltbIntegration.displayColumns.main) {
-            gameTableGroups.innerHTML += '<col style="width: 110px;">';
+            gameTableGroups.innerHTML += `<col style="width: ${155 - 15 * colspan}px;">`;
           }
 
           if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-            gameTableGroups.innerHTML += '<col style="width: 110px;">';
+            gameTableGroups.innerHTML += `<col style="width: ${155 - 15 * colspan}px;">`;
           }
 
           if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-            gameTableGroups.innerHTML += '<col style="width: 110px;">';
+            gameTableGroups.innerHTML += `<col style="width: ${155 - 15 * colspan}px;">`;
           }
         }
       }
@@ -146,7 +152,12 @@ export async function initHltbTimes() {
 
           const gameToolbar = game.querySelector(".toolbar");
 
-          if (gameToolbar && hltbData[steamId] && hltbData[steamId].hltbId != -1) {
+          if (
+            options.modules.games.hltbIntegration.addHltbLinks &&
+            gameToolbar &&
+            hltbData[steamId] &&
+            hltbData[steamId].hltbId != -1
+          ) {
             gameToolbar.insertAdjacentHTML(
               "beforeend",
               `
@@ -159,7 +170,7 @@ export async function initHltbTimes() {
 
           const gameName = game.querySelector("td:not(.text-right, .achievements)").firstChild.textContent.trim();
 
-          if ((!hltbData || !hltbData[steamId]) && !hltbExcludedGames.includes(+steamId)) {
+          if (hltbData && !hltbData[steamId] && !hltbExcludedGames.includes(+steamId)) {
             queryList.push({
               name: gameName,
               steamId: steamId,
@@ -305,24 +316,36 @@ function getHltbHtml(steamId: string) {
             hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameObj?.mp ?? -1
           }">
             <span title="based on ${gameObj?.mpCount ?? 0} report(s)">${mpCompString}</span>
-            &nbsp;
             <span title="based on ${gameObj?.coopCount ?? 0} report(s)">${coopCompString}</span>
           </td>
           `;
     }
   } else {
     let gameStatus = hltbExcludedGames.includes(+steamId) ? "N/A" : hltbData[steamId] ? "Not on HLTB" : "Unknown";
-    html += `
-      <td class="text-right" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : -1}">
-        <div>${gameStatus}</div>
-      </td>
-      <td class="text-right" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : -1}">
-        <div>${gameStatus}</div>
-      </td>
+
+    if (options.modules.games.hltbIntegration.displayColumns.main) {
+      html += `
       <td class="text-right" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : -1}">
         <div>${gameStatus}</div>
       </td>
     `;
+    }
+
+    if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
+      html += `
+      <td class="text-right" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : -1}">
+        <div>${gameStatus}</div>
+      </td>
+    `;
+    }
+
+    if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
+      html += `
+      <td class="text-right" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : -1}">
+        <div>${gameStatus}</div>
+      </td>
+    `;
+    }
   }
 
   return html;

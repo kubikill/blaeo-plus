@@ -27,7 +27,7 @@ export const options = mergeDeep(
         },
       },
       newPosts: {
-        saving: true,
+        saving: false,
       },
       comments: {
         previews: true,

@@ -2,11 +2,11 @@ import { GM_getValue, GM_setValue, GM_xmlhttpRequest } from "vite-plugin-monkey/
 import { splitArrayIntoChunks } from "./utilities";
 import { getUserGames, getUserName, userData } from "@/globals";
 
-export let hltbExcludedGames = JSON.parse(GM_getValue("hltb-excluded-games", "{}") || "{}");
-
+export let hltbExcludedGames = JSON.parse(GM_getValue("hltb-excluded-games", "[]") || "[]");
 export let hltbData = JSON.parse(GM_getValue("hltb-data", "{}") || "{}");
+export let hltbLastUpdate = new Date(GM_getValue("hltb-last-update", 0));
 
-export function syncHltbData() {
+export function syncHltbGames() {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET",
@@ -16,8 +16,9 @@ export function syncHltbData() {
       anonymous: true,
       onload: (response) => {
         if (response.status === 200) {
-          GM_setValue("hltb-data", response.responseText);
           hltbData = response.response;
+          GM_setValue("hltb-data", response.responseText);
+
           resolve(response.responseText);
         } else {
           reject(`Failed to fetch HLTB info from backend. Details: ${response.responseText}`);
@@ -40,7 +41,7 @@ export function syncHltbExcludedGames() {
       anonymous: true,
       onload: (response) => {
         if (response.status === 200) {
-          GM_setValue("hltb-excludedgames", response.responseText);
+          GM_setValue("hltb-excluded-games", response.responseText);
           hltbExcludedGames = response.response;
           resolve(response.responseText);
         } else {
@@ -52,6 +53,17 @@ export function syncHltbExcludedGames() {
       },
     });
   });
+}
+
+export async function syncHltb() {
+  let hltbGames = syncHltbGames();
+  let hltbExcludedGames = syncHltbExcludedGames();
+
+  await hltbGames;
+  await hltbExcludedGames;
+
+  hltbLastUpdate = new Date();
+  GM_setValue("hltb-last-update", Date.now());
 }
 
 export function enqueueHltbData(games: Array<any>) {

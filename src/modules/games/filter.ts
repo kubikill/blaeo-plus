@@ -161,25 +161,35 @@ function runFilters(
 }
 
 export function initFilter(isProgressPage) {
-  const gamesTable = document.querySelector("table#games");
-  const gamesList = document.querySelector("div#games");
-  const gamesGrid = document.querySelector("ul#games");
+  const gamesTable = document.querySelector("table#games") as HTMLElement;
+  const gamesList = document.querySelector("div#games") as HTMLElement;
+  const gamesGrid = document.querySelector("#main > ul.games") as HTMLElement;
 
-  const gamesContainer = gamesTable || gamesList || gamesGrid;
+  let gamesContainer = gamesTable || gamesList || gamesGrid;
+  let fallbackGamesList = false;
 
   if (!gamesContainer) {
-    return;
+    if (document.querySelector("#main > .game.game-media")) {
+      gamesContainer = document.querySelector("#main") as HTMLElement;
+      fallbackGamesList = true;
+    } else {
+      return;
+    }
   }
 
   let checkInterval: ReturnType<typeof setInterval>;
   checkInterval = setInterval(() => {
-    // @ts-ignore
     if (!gamesContainer.dataset.delayedLast) {
       if (gamesContainer) {
         const filterContainer = document.createElement("div");
         filterContainer.classList.add("bp-filters");
 
-        gamesContainer.insertAdjacentElement("beforebegin", filterContainer);
+        if (fallbackGamesList) {
+          const progressBar = gamesContainer.querySelector(".list-progress");
+          progressBar.insertAdjacentElement("afterend", filterContainer);
+        } else {
+          gamesContainer.insertAdjacentElement("beforebegin", filterContainer);
+        }
 
         const games = gamesContainer.querySelectorAll(".game") as NodeListOf<
           HTMLTableRowElement | HTMLDivElement | HTMLLIElement
@@ -346,5 +356,5 @@ export function initFilter(isProgressPage) {
 
       clearInterval(checkInterval);
     }
-  }, 100);
+  }, 200);
 }

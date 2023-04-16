@@ -1,5 +1,5 @@
 import "@/app.scss";
-import { getUserGames, getUserName, options, userData } from "@/globals";
+import { options } from "@/globals";
 import addHeaderShortcuts from "@/modules/header/shortcuts";
 import addMobileMessageBadge from "@/modules/header/mobileMessageBadge";
 import { initMenu } from "@/modules/options/menu";
@@ -7,6 +7,7 @@ import { initFilter } from "@/modules/games/filter";
 import { initHltbTimes } from "@/modules/games/hltbTimes";
 import addCommentPreview from "./modules/comments/commentPreview";
 import { initSaveLoad } from "./modules/newPost/saveLoad";
+import { hltbLastUpdate, syncHltb } from "./lib/hltbService";
 
 function checkIfProgressPage(url: string) {
   return (
@@ -16,6 +17,15 @@ function checkIfProgressPage(url: string) {
     url.includes("games/beaten") ||
     url.includes("games/completed")
   );
+}
+
+function init() {
+  if (options.modules.games.hltbIntegration.enabled) {
+    if (hltbLastUpdate.getTime() < Date.now() - 86400) {
+      // if last sync was at least 1 day ago
+      syncHltb();
+    }
+  }
 }
 
 function initEachPage() {
@@ -51,6 +61,7 @@ function initEachPage() {
   }
 }
 
+init();
 initEachPage();
 
 document.addEventListener("turbolinks:load", initEachPage);
