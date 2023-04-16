@@ -1,7 +1,7 @@
 import { GM_xmlhttpRequest, GM_getValue } from "vite-plugin-monkey/dist/client";
 import { mergeDeep } from "@/lib/utilities";
 
-export const BP_VERSION = "1.0.0";
+export const BP_VERSION = "1.0.1";
 
 export const options = mergeDeep(
   {

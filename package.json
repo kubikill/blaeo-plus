@@ -1,7 +1,7 @@
 {
   "name": "blaeo-plus",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "kubikill",
   "description": "A userscript for Backlog Assassins Extraordinaire that adds new features and QoL improvements to the site.",
   "type": "module",
