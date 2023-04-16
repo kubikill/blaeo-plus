@@ -36,6 +36,7 @@ export default defineConfig({
         homepage: "https://github.com/kubikill/blaeo-plus",
         updateURL: "https://github.com/kubikill/blaeo-plus/releases/latest/download/blaeo-plus.meta.js",
         downloadURL: "https://github.com/kubikill/blaeo-plus/releases/latest/download/blaeo-plus.user.js",
+        supportURL: "https://steamcommunity.com/groups/attackyourbacklog/discussions/1/7155698768546603592/",
       },
     }),
   ],
