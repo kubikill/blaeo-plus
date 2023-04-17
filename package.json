@@ -1,10 +1,23 @@
 {
   "name": "blaeo-plus",
-  "private": true,
-  "version": "1.0.1",
-  "author": "kubikill",
+  "version": "1.0.2",
   "description": "A userscript for Backlog Assassins Extraordinaire that adds new features and QoL improvements to the site.",
+  "author": {
+    "name": "kubikill"
+  },
+  "homepage": "https://github.com/kubikill/blaeo-plus",
+  "bugs": {
+    "url": "https://steamcommunity.com/groups/attackyourbacklog/discussions/1/7155698768546603592/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kubikill/blaeo-plus.git"
+  },
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "yarn@3.5.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

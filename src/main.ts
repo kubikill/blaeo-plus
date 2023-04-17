@@ -29,6 +29,12 @@ function init() {
 }
 
 function initEachPage() {
+  if (document.body.dataset.blaeoPlusInitialized === "true") {
+    return;
+  }
+
+  document.body.dataset.blaeoPlusInitialized = "true";
+
   const currentUrl = window.location.href;
   initMenu();
 
@@ -64,6 +70,9 @@ function initEachPage() {
 init();
 initEachPage();
 
+document.addEventListener("turbolinks:visit", () => {
+  document.body.dataset.blaeoPlusInitialized = "false";
+});
 document.addEventListener("turbolinks:load", initEachPage);
 
 console.log("BLAEO+ successfully loaded");

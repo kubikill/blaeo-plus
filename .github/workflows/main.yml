@@ -1,6 +1,8 @@
 name: Upload assets to tags
 
-on: push
+on:
+  release:
+    types: [published]
 
 jobs:
   build:
