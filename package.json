@@ -3,7 +3,8 @@
   "version": "1.0.2",
   "description": "A userscript for Backlog Assassins Extraordinaire that adds new features and QoL improvements to the site.",
   "author": {
-    "name": "kubikill"
+    "name": "kubikill",
+    "email": "jakubtopolinski@mailbox.org"
   },
   "homepage": "https://github.com/kubikill/blaeo-plus",
   "bugs": {
