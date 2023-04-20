@@ -14,7 +14,7 @@ A userscript for Backlog Assassins Extraordinaire that adds new features and QoL
 ## Images
 
 ![](https://i.imgur.com/lTzxMaE.png)
-![](https://i.imgur.com/Tg8LspX.png)
+![](https://i.imgur.com/OW9oIg5.png)
 
 ## Tested on
 
