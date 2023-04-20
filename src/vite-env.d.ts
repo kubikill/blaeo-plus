@@ -8,8 +8,6 @@ declare module "$" {
   export * from "vite-plugin-monkey/dist/client";
 }
 
-declare const APP_VERSION: string;
-
 // if set mountGmApi=true
 // type MonkeyWindow = import('vite-plugin-monkey/dist/client').MonkeyWindow;
 // declare const unsafeWindow: MonkeyWindow['unsafeWindow'];

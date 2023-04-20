@@ -1,13 +1,14 @@
 import "@/app.scss";
 import { options } from "@/globals";
 import addHeaderShortcuts from "@/modules/header/shortcuts";
-import addMobileMessageBadge from "@/modules/header/mobileMessageBadge";
+import initMobileMessageIcon from "@/modules/header/mobileMessageIcon";
 import { initMenu } from "@/modules/options/menu";
 import { initFilter } from "@/modules/games/filter";
 import { initHltbTimes } from "@/modules/games/hltbTimes";
 import addCommentPreview from "./modules/comments/commentPreview";
 import { initSaveLoad } from "./modules/newPost/saveLoad";
 import { hltbLastUpdate, syncHltb } from "./lib/hltbService";
+import initMobileLayout from "./modules/posts/mobileLayout";
 
 function checkIfProgressPage(url: string) {
   return (
@@ -43,7 +44,7 @@ function initEachPage() {
   }
 
   if (options.modules.header.mobileMessageBadge) {
-    addMobileMessageBadge();
+    initMobileMessageIcon();
   }
 
   if (
@@ -56,6 +57,10 @@ function initEachPage() {
 
   if (options.modules.games.hltbIntegration.enabled) {
     initHltbTimes();
+  }
+
+  if (options.modules.posts.mobileLayout) {
+    initMobileLayout();
   }
 
   if (options.modules.newPosts.saving) {

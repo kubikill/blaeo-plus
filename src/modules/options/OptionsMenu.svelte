@@ -1,5 +1,4 @@
 <script>
-  import { enqueueEntireLibrary } from "@/lib/hltbService";
   import { BP_VERSION, options } from "@/globals";
   import { GM_setValue } from "vite-plugin-monkey/dist/client";
   import OptionsItem from "./OptionsItem.svelte";
@@ -34,7 +33,7 @@
           id="bp-options-modules-header-mobile-message-badge"
           bind:boundValue={options.modules.header.mobileMessageBadge}
         >
-          Show unread messages badge on mobile header
+          Show unread messages link on mobile header without having to expand it
         </OptionsToggle>
       </OptionsItem>
 
@@ -96,11 +95,17 @@
         </div> -->
       </OptionsItem>
 
-      <!-- <OptionsItem title="Posts" titleClass="h3">
-        <OptionsToggle id="bp-options-modules-posts-saving" bind:boundValue={options.modules.newPosts.saving}>
+      <OptionsItem title="Posts" titleClass="h3">
+        <OptionsToggle id="bp-options-modules-posts-mobile-layout" bind:boundValue={options.modules.posts.mobileLayout}>
+          Enable alternative post layout on mobile for more horizontal space
+        </OptionsToggle>
+      </OptionsItem>
+
+      <OptionsItem title="New post" titleClass="h3">
+        <OptionsToggle id="bp-options-modules-newposts-saving" bind:boundValue={options.modules.newPosts.saving}>
           Add saving/loading posts
         </OptionsToggle>
-      </OptionsItem> -->
+      </OptionsItem>
       <OptionsItem title="Comments" titleClass="h3">
         <OptionsToggle id="bp-options-modules-comments-previews" bind:boundValue={options.modules.comments.previews}>
           Add preview button

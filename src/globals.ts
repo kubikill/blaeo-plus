@@ -1,7 +1,8 @@
 import { GM_xmlhttpRequest, GM_getValue } from "vite-plugin-monkey/dist/client";
 import { mergeDeep } from "@/lib/utilities";
+import packageJson from "../package.json";
 
-export const BP_VERSION = APP_VERSION;
+export const BP_VERSION = packageJson.version;
 
 export const options = mergeDeep(
   {
@@ -25,6 +26,9 @@ export const options = mergeDeep(
           },
           addHltbLinks: true,
         },
+      },
+      posts: {
+        mobileLayout: true,
       },
       newPosts: {
         saving: false,

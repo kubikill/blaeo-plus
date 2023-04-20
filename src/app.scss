@@ -22,6 +22,33 @@
   }
 }
 
+.bp-mobile-messages {
+  float: right;
+  padding: 15px 0;
+  margin-right: 20px;
+}
+
+body.bp-mobile-post-layout {
+  @media (max-width: 768px) {
+    .post {
+      > .avatar {
+        float: none !important;
+        margin-bottom: 0;
+      }
+
+      > .body {
+        margin-top: -50px;
+
+        > a[href^="/users"] {
+          display: block;
+          margin-bottom: 25px;
+          margin-left: 50px;
+        }
+      }
+    }
+  }
+}
+
 .navbar .navbar-header .navbar-toggle .badge {
   position: absolute;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
