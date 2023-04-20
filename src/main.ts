@@ -8,7 +8,8 @@ import { initHltbTimes } from "@/modules/games/hltbTimes";
 import addCommentPreview from "./modules/comments/commentPreview";
 import { initSaveLoad } from "./modules/newPost/saveLoad";
 import { hltbLastUpdate, syncHltb } from "./lib/hltbService";
-import initMobileLayout from "./modules/posts/mobileLayout";
+import initMobilePostLayout from "./modules/posts/mobileLayout";
+import initMobileCommentLayout from "./modules/comments/mobileLayout";
 
 function checkIfProgressPage(url: string) {
   return (
@@ -60,7 +61,11 @@ function initEachPage() {
   }
 
   if (options.modules.posts.mobileLayout) {
-    initMobileLayout();
+    initMobilePostLayout();
+  }
+
+  if (options.modules.comments.mobileLayout) {
+    initMobileCommentLayout();
   }
 
   if (options.modules.newPosts.saving) {

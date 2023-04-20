@@ -49,6 +49,32 @@ body.bp-mobile-post-layout {
   }
 }
 
+body.bp-mobile-comment-layout {
+  @media (max-width: 768px) {
+    .comment {
+      > .avatar {
+        float: none !important;
+        margin-bottom: 0;
+      }
+
+      > .body {
+        margin-top: -50px;
+
+        &.text-muted {
+          margin-top: -55px;
+          padding-left: 64px;
+        }
+
+        > a[href^="/users"] {
+          display: block;
+          margin-bottom: 25px;
+          margin-left: 50px;
+        }
+      }
+    }
+  }
+}
+
 .navbar .navbar-header .navbar-toggle .badge {
   position: absolute;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;

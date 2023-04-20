@@ -110,6 +110,12 @@
         <OptionsToggle id="bp-options-modules-comments-previews" bind:boundValue={options.modules.comments.previews}>
           Add preview button
         </OptionsToggle>
+        <OptionsToggle
+          id="bp-options-modules-comments-mobile-layout"
+          bind:boundValue={options.modules.comments.mobileLayout}
+        >
+          Enable alternative comment layout on mobile for more horizontal space
+        </OptionsToggle>
       </OptionsItem>
     </div>
     <div class="modal-footer" />
