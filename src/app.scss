@@ -30,7 +30,7 @@
 
 body.bp-mobile-post-layout {
   @media (max-width: 768px) {
-    .post {
+    *:not([data-endless^="/users/"]) > .post {
       > .avatar {
         float: none !important;
         margin-bottom: 0;
