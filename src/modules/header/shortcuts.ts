@@ -1,6 +1,8 @@
 // Add shortcuts to the user dropdown in navbar
 
-export default function addHeaderShortcuts() {
+import { removeNodeIfExists } from "@/lib/utilities";
+
+export function addHeaderShortcuts() {
   const headerDropdown = document.querySelector("#navbar .navbar-right > .btn-group > .dropdown-menu");
 
   if (!headerDropdown) {
@@ -8,5 +10,12 @@ export default function addHeaderShortcuts() {
   }
 
   const headerDropdownProfileLink = headerDropdown.firstElementChild;
-  headerDropdownProfileLink.insertAdjacentHTML("afterend", '<li><a href="/posts/new">New post</a></li>');
+  headerDropdownProfileLink.insertAdjacentHTML(
+    "afterend",
+    '<li class="bp-new-post-shortcut"><a href="/posts/new">New post</a></li>'
+  );
+}
+
+export function cleanupHeaderShortcuts() {
+  removeNodeIfExists("#navbar .navbar-right .bp-new-post-shortcut");
 }

@@ -1,3 +1,4 @@
+import { removeNodeIfExists } from "@/lib/utilities";
 import { GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
 
 const previewButtonHtml = `
@@ -6,7 +7,7 @@ const previewButtonHtml = `
   </button>
 `;
 
-export default function addCommentPreview() {
+export function addCommentPreview() {
   const newCommentForm = document.getElementById("new-comment");
 
   if (!newCommentForm) {
@@ -30,8 +31,6 @@ export default function addCommentPreview() {
     "focus",
     async () => {
       const authenticityToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]').content;
-
-      console.log(authenticityToken);
 
       previewButton.disabled = false;
 
@@ -63,4 +62,9 @@ export default function addCommentPreview() {
     },
     { once: true }
   );
+}
+
+export function cleanupCommentPreview() {
+  removeNodeIfExists("#main .bp-comment-preview-button");
+  removeNodeIfExists("#main .bp-comment-preview");
 }

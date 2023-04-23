@@ -1,6 +1,6 @@
 import { hltbData } from "@/lib/hltbService";
 import GameFilters from "@/modules/games/GameFilters.svelte";
-import { options } from "@/globals";
+import { addedComponents, options } from "@/globals";
 
 function runFilters(
   games: NodeListOf<HTMLTableRowElement | HTMLDivElement | HTMLLIElement>,
@@ -348,6 +348,8 @@ export function initFilter(isProgressPage) {
             showModesFilter: showModesFilter,
           },
         });
+
+        addedComponents.push(gameFilters);
 
         gameFilters.$on("filters-changed", () => {
           runFilters(games, filterOptions, progresses, gamesContainer);

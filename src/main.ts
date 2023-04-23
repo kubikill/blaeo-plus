@@ -1,11 +1,11 @@
 import "@/app.scss";
-import { options } from "@/globals";
-import addHeaderShortcuts from "@/modules/header/shortcuts";
-import initMobileMessageIcon from "@/modules/header/mobileMessageIcon";
-import { initMenu } from "@/modules/options/menu";
+import { addedComponents, options } from "@/globals";
+import { addHeaderShortcuts, cleanupHeaderShortcuts } from "@/modules/header/shortcuts";
+import { initMobileMessageIcon, cleanupMobileMessageIcon } from "@/modules/header/mobileMessageIcon";
+import { cleanupOptionsMenu, initOptionsMenu } from "@/modules/options/menu";
 import { initFilter } from "@/modules/games/filter";
-import { initHltbTimes } from "@/modules/games/hltbTimes";
-import addCommentPreview from "./modules/comments/commentPreview";
+import { cleanupHltbTimes, initHltbTimes } from "@/modules/games/hltbTimes";
+import { addCommentPreview, cleanupCommentPreview } from "./modules/comments/commentPreview";
 import { initSaveLoad } from "./modules/newPost/saveLoad";
 import { hltbLastUpdate, syncHltb } from "./lib/hltbService";
 import initMobilePostLayout from "./modules/posts/mobileLayout";
@@ -21,6 +21,18 @@ function checkIfProgressPage(url: string) {
   );
 }
 
+function cleanup() {
+  addedComponents.forEach((component) => {
+    component.$destroy();
+  });
+
+  cleanupMobileMessageIcon();
+  cleanupHeaderShortcuts();
+  cleanupOptionsMenu();
+  cleanupCommentPreview();
+  cleanupHltbTimes();
+}
+
 function init() {
   if (options.modules.games.hltbIntegration.enabled) {
     if (hltbLastUpdate.getTime() < Date.now() - 86400) {
@@ -29,7 +41,6 @@ function init() {
     }
   }
 }
-
 function initEachPage() {
   if (document.body.dataset.blaeoPlusInitialized === "true") {
     return;
@@ -37,8 +48,10 @@ function initEachPage() {
 
   document.body.dataset.blaeoPlusInitialized = "true";
 
+  cleanup();
+
   const currentUrl = window.location.href;
-  initMenu();
+  initOptionsMenu();
 
   if (options.modules.header.shortcuts) {
     addHeaderShortcuts();

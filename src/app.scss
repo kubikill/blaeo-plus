@@ -1,16 +1,16 @@
-.bp-settings {
+.bp-options-button {
   display: block;
   appearance: none;
-  background-color: transparent;
   border: none;
-  width: 100%;
-  text-align: left;
-  color: #777;
+  background-color: transparent;
   padding: 5px 15px 5px 25px;
+  width: 100%;
+  color: #777;
+  text-align: left;
 
   @media (min-width: 768px) {
-    color: #333;
     padding: 3px 20px;
+    color: #333;
   }
 
   &:hover {
@@ -24,8 +24,8 @@
 
 .bp-mobile-messages {
   float: right;
-  padding: 15px 0;
   margin-right: 20px;
+  padding: 15px 0;
 }
 
 body.bp-mobile-post-layout {
@@ -77,12 +77,29 @@ body.bp-mobile-comment-layout {
 
 .navbar .navbar-header .navbar-toggle .badge {
   position: absolute;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 10px;
-  background-color: #d9534f;
-  padding: 2px 4px;
-  border-radius: 4px;
   top: unset;
   right: -0.5em;
   bottom: -0.25em;
+  border-radius: 4px;
+  background-color: #d9534f;
+  padding: 2px 4px;
+  font-size: 10px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.bp-list-hltb-info {
+  @media (max-width: 700px) {
+    margin-top: 4px;
+    margin-left: 10px;
+  }
+  @media (min-width: 700px) {
+    display: table-cell;
+    width: 20%;
+    text-align: right;
+  }
+}
+
+.game-media .bp-hltb-logo {
+  margin-left: 4px;
+  height: 16px;
 }

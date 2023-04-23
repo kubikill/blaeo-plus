@@ -1,6 +1,8 @@
 // Add a messages button
 
-export default function initMobileMessageIcon() {
+import { removeNodeIfExists } from "@/lib/utilities";
+
+export function initMobileMessageIcon() {
   const navbarMessagesButton = document.querySelector('#navbar .navbar-right [href="/replies"]') as HTMLAnchorElement;
 
   if (!navbarMessagesButton) {
@@ -15,4 +17,8 @@ export default function initMobileMessageIcon() {
   navbarMenuToggle.insertAdjacentElement("afterend", navbarMessagesButtonClone);
 
   navbarMessagesButton.classList.add("hidden-xs", "hidden-sm");
+}
+
+export function cleanupMobileMessageIcon() {
+  removeNodeIfExists("#navbar .bp-mobile-messages");
 }

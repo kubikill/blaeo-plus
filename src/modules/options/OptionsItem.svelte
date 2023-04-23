@@ -14,8 +14,8 @@
   details {
     summary {
       display: list-item;
-      font-family: Oswald, Arial, sans-serif;
       line-height: 1.3;
+      font-family: Oswald, Arial, sans-serif;
     }
 
     .content {
@@ -31,8 +31,8 @@
 
   @keyframes details-show {
     from {
-      opacity: 0;
       transform: var(--details-translate, translateY(-0.5em));
+      opacity: 0;
     }
   }
 </style>

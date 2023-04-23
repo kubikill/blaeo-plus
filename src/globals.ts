@@ -4,6 +4,8 @@ import packageJson from "../package.json";
 
 export const BP_VERSION = packageJson.version;
 
+export const addedComponents = [];
+
 export const options = mergeDeep(
   {
     modules: {

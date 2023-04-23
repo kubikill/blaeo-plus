@@ -3,6 +3,11 @@ type TagOption = {
   color: string;
 };
 
+type blaeoPlusSave = {
+  name: string;
+  content: string;
+};
+
 interface JQuery<Element> {
   sortable_table(mode: string, columnIndex: number, order: boolean): null;
 }

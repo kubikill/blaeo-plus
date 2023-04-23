@@ -33,3 +33,19 @@ export function mergeDeep(target: object, ...sources: any[]) {
 
   return mergeDeep(target, ...sources);
 }
+
+export function removeNodeIfExists(selectors: string) {
+  const querySelectorResult = document.querySelector(selectors);
+
+  if (querySelectorResult) {
+    querySelectorResult.remove();
+  }
+}
+
+export function removeAllNodesIfExist(selectors: string) {
+  const querySelectorResult = document.querySelectorAll(selectors);
+
+  querySelectorResult.forEach((element) => {
+    element.remove();
+  });
+}
