@@ -10,7 +10,7 @@ export function syncHltbGames() {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET",
-      url: "https://blaeoplus.kubikill.tk/hltb/game-list",
+      url: "https://blaeoplus.kubikill.dev/hltb/game-list",
       nocache: true,
       responseType: "json",
       anonymous: true,
@@ -35,7 +35,7 @@ export function syncHltbExcludedGames() {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET",
-      url: "https://blaeoplus.kubikill.tk/hltb/excluded-games",
+      url: "https://blaeoplus.kubikill.dev/hltb/excluded-games",
       nocache: true,
       responseType: "json",
       anonymous: true,
@@ -75,7 +75,7 @@ export function enqueueHltbData(games: Array<any>) {
       headers: {
         "Content-Type": "application/json",
       },
-      url: "https://blaeoplus.kubikill.tk/hltb/enqueue-games",
+      url: "https://blaeoplus.kubikill.dev/hltb/enqueue-games",
       nocache: true,
       responseType: "json",
       anonymous: true,
@@ -120,7 +120,7 @@ export function enqueueEntireLibrary() {
       headers: {
         "Content-Type": "application/json",
       },
-      url: "https://blaeoplus.kubikill.tk/hltb/enqueue-games",
+      url: "https://blaeoplus.kubikill.dev/hltb/enqueue-games",
       nocache: true,
       responseType: "json",
       anonymous: true,
