@@ -10,19 +10,17 @@ import { initSaveLoad } from "./modules/newPost/saveLoad";
 import { hltbLastUpdate, syncHltb } from "./lib/hltbService";
 import initMobilePostLayout from "./modules/posts/mobileLayout";
 import initMobileCommentLayout from "./modules/comments/mobileLayout";
+import { linuxLastUpdate, syncLinux, syncLinuxGames } from "./lib/linuxService";
+import { cleanupProtonDb, initProtonDb } from "./modules/games/protonDb";
+import { initDeckVerified } from "./modules/games/deckVerified";
+import type { SvelteComponent } from "svelte";
 
 function checkIfProgressPage(url: string) {
-  return (
-    url.includes("games/wont-play") ||
-    url.includes("games/never-played") ||
-    url.includes("games/unfinished") ||
-    url.includes("games/beaten") ||
-    url.includes("games/completed")
-  );
+  return url.includes("games/wont-play") || url.includes("games/never-played") || url.includes("games/unfinished") || url.includes("games/beaten") || url.includes("games/completed");
 }
 
 function cleanup() {
-  addedComponents.forEach((component) => {
+  addedComponents.forEach((component: SvelteComponent) => {
     component.$destroy();
   });
 
@@ -31,6 +29,7 @@ function cleanup() {
   cleanupOptionsMenu();
   cleanupCommentPreview();
   cleanupHltbTimes();
+  cleanupProtonDb();
 }
 
 function init() {
@@ -38,6 +37,13 @@ function init() {
     if (hltbLastUpdate.getTime() < Date.now() - 86400) {
       // if last sync was at least 1 day ago
       syncHltb();
+    }
+  }
+
+  if (options.modules.games.protonDbIntegration.enabled || options.modules.games.deckVerifiedIntegration.enabled) {
+    if (linuxLastUpdate.getTime() < Date.now() - 86400) {
+      // if last sync was at least 1 day ago
+      syncLinuxGames();
     }
   }
 }
@@ -61,16 +67,20 @@ function initEachPage() {
     initMobileMessageIcon();
   }
 
-  if (
-    options.modules.games.filters.progress ||
-    options.modules.games.filters.tags ||
-    (options.modules.games.filters.modes && options.modules.games.hltbIntegration.enabled)
-  ) {
+  if (options.modules.games.filters.progress || options.modules.games.filters.tags || (options.modules.games.filters.modes && options.modules.games.hltbIntegration.enabled)) {
     initFilter(checkIfProgressPage(currentUrl));
   }
 
   if (options.modules.games.hltbIntegration.enabled) {
     initHltbTimes();
+  }
+
+  if (options.modules.games.protonDbIntegration.enabled) {
+    initProtonDb();
+  }
+
+  if (options.modules.games.deckVerifiedIntegration.enabled) {
+    initDeckVerified();
   }
 
   if (options.modules.posts.mobileLayout) {

@@ -1,14 +1,13 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
   import { GM_getValue, GM_setValue } from "vite-plugin-monkey/dist/client";
 
-  let saves = GM_getValue("post-saves", [{ name: "test" }]) as blaeoPlusSave[];
-  let autosaves = GM_getValue("post-autosaves", []) as blaeoPlusSave[];
+  let saves = GM_getValue("post-saves", [{ name: "test" }]) as BlaeoPlusSave[];
+  let autosaves = GM_getValue("post-autosaves", []) as BlaeoPlusSave[];
   let isLoadModalVisible = false;
   let isSaveModalVisible = false;
   let isNewSaveModalVisible = false;
   let newSaveName = "";
-  let currentSave: blaeoPlusSave;
+  let currentSave: BlaeoPlusSave;
   let currentSaveIndex = 0;
   let deleteConfirm = false;
   let message = "";
@@ -16,7 +15,7 @@
   const postContent = document.querySelector("form#new_post #post_text") as HTMLTextAreaElement;
   const previewButton = document.querySelector("form#new_post #get-preview");
 
-  function showMessage(newMessage) {
+  function showMessage(newMessage: string) {
     message = newMessage;
     isMessageVisible = true;
     setTimeout(() => {
@@ -24,13 +23,13 @@
     }, 5000);
   }
 
-  function showLoadModal(save: blaeoPlusSave, index: number) {
+  function showLoadModal(save: BlaeoPlusSave, index: number) {
     isLoadModalVisible = true;
     currentSave = save;
     currentSaveIndex = index;
   }
 
-  function showSaveModal(save: blaeoPlusSave, index: number) {
+  function showSaveModal(save: BlaeoPlusSave, index: number) {
     isSaveModalVisible = true;
     currentSave = save;
     currentSaveIndex = index;
@@ -111,7 +110,9 @@
     showMessage("Autosave created!");
   }
 
-  previewButton.addEventListener("click", createAutosave);
+  if (previewButton) {
+    previewButton.addEventListener("click", createAutosave);
+  }
   window.addEventListener("beforeunload", createAutosave, { once: true });
   document.addEventListener("turbolinks:visit", createAutosave, { once: true });
 </script>
@@ -166,7 +167,7 @@
 <span class="text-success bp-save-alert" class:show-alert={isMessageVisible}>{message}</span>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="bp-load-screen bp-modal" class:visible={isLoadModalVisible} on:click|self={closeLoadModal}>
+<div class="bp-load-screen bp-modal" role="presentation" class:visible={isLoadModalVisible} on:click|self={closeLoadModal}>
   <div class="modal-content">
     <div class="modal-header">
       <h2>Loading save: {currentSave?.name}</h2>
@@ -191,7 +192,7 @@
 </div>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="bp-save-screen bp-modal" class:visible={isSaveModalVisible} on:click|self={closeSaveModal}>
+<div class="bp-save-screen bp-modal" role="presentation" class:visible={isSaveModalVisible} on:click|self={closeSaveModal}>
   <div class="modal-content">
     <div class="modal-header">
       <h2>Saving over save: {currentSave?.name}</h2>
@@ -220,7 +221,7 @@
 </div>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="bp-new-save-screen bp-modal" class:visible={isNewSaveModalVisible} on:click|self={closeNewSaveModal}>
+<div class="bp-new-save-screen bp-modal" role="presentation" class:visible={isNewSaveModalVisible} on:click|self={closeNewSaveModal}>
   <div class="modal-content">
     <div class="modal-header">
       <h2>Creating new save</h2>

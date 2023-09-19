@@ -1,9 +1,10 @@
-import { addedComponents } from "@/globals";
+import { addedComponents, options } from "@/globals";
 import OptionsMenu from "./OptionsMenu.svelte";
 import { removeNodeIfExists } from "@/lib/utilities";
+import type { SvelteComponent } from "svelte";
 
 export function initOptionsMenu() {
-  const headerDropdown = document.querySelector("#navbar .navbar-right > .btn-group > .dropdown-menu");
+  const headerDropdown = document.querySelector("#navbar .navbar-right > .btn-group > .dropdown-menu") as HTMLElement;
   if (!headerDropdown) {
     return;
   }
@@ -13,22 +14,23 @@ export function initOptionsMenu() {
     target: document.body,
     props: {
       showOptions: false,
+      options: options,
     },
-  });
+  }) as SvelteComponent;
 
   addedComponents.push(optionsMenuComponent);
 
-  const headerDropdownSettingsLink = headerDropdown.querySelector('[href="/settings"]').parentElement;
+  const headerDropdownSettingsLink = headerDropdown!.querySelector('[href="/settings"]')!.parentElement;
 
   let optionsButtonTemplate = document.createElement("template");
   optionsButtonTemplate.innerHTML =
     '<li><button type="button" class="bp-options-button">BLAEO+ settings</button></li>'.trim();
-  let optionsButton = optionsButtonTemplate.content.firstElementChild;
-  optionsButton.addEventListener("click", () => {
+  let optionsButton = optionsButtonTemplate.content.firstElementChild as HTMLButtonElement;
+  optionsButton!.addEventListener("click", () => {
     optionsMenuComponent.$set({ showOptions: true });
   });
 
-  headerDropdownSettingsLink.insertAdjacentElement("afterend", optionsButton);
+  headerDropdownSettingsLink!.insertAdjacentElement("afterend", optionsButton);
 }
 
 export function cleanupOptionsMenu() {

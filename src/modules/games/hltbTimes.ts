@@ -3,7 +3,7 @@ import { options } from "@/globals";
 import { enqueueHltbData, hltbExcludedGames, hltbData } from "@/lib/hltbService";
 import { removeAllNodesIfExist } from "@/lib/utilities";
 
-function getHltbGameData(steamId) {
+function getHltbGameData(steamId: number) {
   let gameData = {
     mainCompString: "Unknown",
     extraCompString: "Unknown",
@@ -14,7 +14,7 @@ function getHltbGameData(steamId) {
     gameStatus: "Unknown",
   };
 
-  if (hltbExcludedGames.includes(+steamId)) {
+  if (hltbExcludedGames.includes(steamId)) {
     gameData.mainCompString = gameData.extraCompString = gameData.everythingCompString = "N/A";
   } else if (hltbData && hltbData[steamId]) {
     if (hltbData[steamId].hltbId != -1) {
@@ -108,17 +108,19 @@ function getHltbGameData(steamId) {
   return gameData;
 }
 
-function getHltbHtml(steamId: string, mode: string) {
+function getHltbHtml(steamId: number, mode: string): string {
   let gameData = getHltbGameData(steamId);
   switch (mode) {
     case "table":
       return getHltbTableHtml(steamId, gameData);
     case "list":
       return getHltbListHtml(steamId, gameData);
+      default:
+        return '';
   }
 }
 
-function getHltbTableHtml(steamId: string, gameData: any) {
+function getHltbTableHtml(steamId: number, gameData: any): string {
   let html = "";
 
   if (gameData.gameObj) {
@@ -203,7 +205,7 @@ function getHltbTableHtml(steamId: string, gameData: any) {
   return html;
 }
 
-function getHltbListHtml(steamId: string, gameData: any) {
+function getHltbListHtml(steamId: number, gameData: any): string {
   let html = `<div class="bp-list-hltb-info">`;
 
   if (gameData.gameObj) {
@@ -365,8 +367,8 @@ export async function initHltbTimes() {
 
       if (gameTableGroups) {
         if (
-          gameTableHeader.firstElementChild.textContent.trim() === "#" ||
-          gameTableHeader.firstElementChild.textContent.trim() === "Date Won"
+          gameTableHeader!.firstElementChild!.textContent!.trim() === "#" ||
+          gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won"
         ) {
           gameTableGroups.innerHTML = `
             <col class="bp-hltb-element" style="width: 1%;">
@@ -407,11 +409,11 @@ export async function initHltbTimes() {
         }
       }
 
-      const queryList = [];
+      const queryList = [] as QueryGame[];
 
       games.forEach((game) => {
         const steamStoreLink = game.querySelector('a[href*="store.steampowered.com/app/"]') as HTMLAnchorElement;
-        const steamId = steamStoreLink.href.match(/app\/(\d+)/)[1];
+        const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1];
 
         if (game.tagName === "TR") {
           game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "table"));
@@ -434,7 +436,7 @@ export async function initHltbTimes() {
             );
           }
 
-          const gameName = game.querySelector("td:not(.text-right, .achievements)").firstChild.textContent.trim();
+          const gameName = game!.querySelector("td:not(.text-right, .achievements)")!.firstChild!.textContent!.trim();
 
           if (hltbData && !hltbData[steamId] && !hltbExcludedGames.includes(+steamId)) {
             queryList.push({
@@ -463,7 +465,7 @@ export async function initHltbTimes() {
 
           if (gameHeading && hltbData && !hltbData[steamId] && !hltbExcludedGames.includes(+steamId)) {
             queryList.push({
-              name: gameHeading.textContent,
+              name: gameHeading.textContent || '',
               steamId: steamId,
             });
           }

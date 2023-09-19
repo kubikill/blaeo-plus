@@ -16,7 +16,7 @@ export function isObject(item: any) {
   return item && typeof item === "object" && !Array.isArray(item);
 }
 
-export function mergeDeep(target: object, ...sources: any[]) {
+export function mergeDeep(target: any, ...sources: any[]) {
   if (!sources.length) return target;
   const source = sources.shift();
 
@@ -48,4 +48,14 @@ export function removeAllNodesIfExist(selectors: string) {
   querySelectorResult.forEach((element) => {
     element.remove();
   });
+}
+
+export function getAuthenticityToken(): string {
+  const authenticityTokenElement = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]');
+
+  if (authenticityTokenElement) {
+    return authenticityTokenElement.content;
+  }
+
+  return "";
 }

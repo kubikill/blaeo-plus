@@ -1,8 +1,8 @@
 <script lang="ts">
   import Toggle from "svelte-switcher";
 
-  export let boundValue;
-  export let id;
+  export let boundValue: any;
+  export let id: any;
   export let disabled = true;
 
   let flippedDisabled = false;
@@ -19,6 +19,8 @@
 
 {#if $$slots.description === true}
   <details class="toggle-row toggleable">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <summary class="toggle-item" on:click={handleSummaryClick}>
       <Toggle {id} bind:checked={boundValue} bind:disabled={flippedDisabled} />
       <slot />
@@ -39,7 +41,8 @@
 <style lang="scss">
   details {
     .content {
-      margin-left: 8px;
+      margin-bottom: 24px;
+      margin-left: 16px;
     }
     &[open] {
       .content {

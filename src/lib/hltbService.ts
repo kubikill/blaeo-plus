@@ -3,7 +3,7 @@ import { splitArrayIntoChunks } from "./utilities";
 import { getUserGames, getUserName, userData } from "@/globals";
 
 export let hltbExcludedGames = JSON.parse(GM_getValue("hltb-excluded-games", "[]") || "[]");
-export let hltbData = JSON.parse(GM_getValue("hltb-data", "{}") || "{}");
+export let hltbData = JSON.parse(GM_getValue("hltb-data", "{}") || "{}") as GameInfo;
 export let hltbLastUpdate = new Date(GM_getValue("hltb-last-update", 0));
 
 export function syncHltbGames() {
@@ -85,7 +85,7 @@ export function enqueueHltbData(games: Array<any>) {
       }),
       onload: (response) => {
         if (response.status === 201) {
-          console.log(`Successfully enqueued games. Games in queue: ${response.response.gamesInQueue}`);
+          console.log(`Successfully enqueued games. Games in HLTB queue: ${response.response.gamesInHltbQueue}`);
         } else {
           console.error(`Failed to enqueue library chunk. Details: ${response.responseText}`);
         }

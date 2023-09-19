@@ -10,10 +10,9 @@ export function addHeaderShortcuts() {
   }
 
   const headerDropdownProfileLink = headerDropdown.firstElementChild;
-  headerDropdownProfileLink.insertAdjacentHTML(
-    "afterend",
-    '<li class="bp-new-post-shortcut"><a href="/posts/new">New post</a></li>'
-  );
+  if (headerDropdownProfileLink) {
+    headerDropdownProfileLink.insertAdjacentHTML("afterend", '<li class="bp-new-post-shortcut"><a href="/posts/new">New post</a></li>');
+  }
 }
 
 export function cleanupHeaderShortcuts() {

@@ -1,6 +1,6 @@
-<script>
-  export let title;
-  export let titleClass;
+<script lang="ts">
+  export let title: string;
+  export let titleClass: string;
 </script>
 
 <details open>
@@ -14,6 +14,7 @@
   details {
     summary {
       display: list-item;
+      cursor: pointer;
       line-height: 1.3;
       font-family: Oswald, Arial, sans-serif;
     }

@@ -9,7 +9,7 @@ export function initSaveLoad() {
   }
 
   const buttonGroup = newPostForm.querySelector("div:last-child");
-  const previewButton = buttonGroup.querySelector("#get-preview").nextElementSibling;
+  const previewButton = buttonGroup!.querySelector("#get-preview")!.nextElementSibling;
 
   const saveLoadComponent = new SaveLoad({
     target: buttonGroup,

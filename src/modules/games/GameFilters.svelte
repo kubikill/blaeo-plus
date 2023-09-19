@@ -3,10 +3,10 @@
   import MultiSelect from "svelte-multiselect";
 
   export let filters = {
-    progresses: [],
-    modes: [],
-    availableTags: [],
-    tags: [],
+    progresses: [] as any[],
+    modes: [] as any[],
+    availableTags: [] as any[],
+    tags: [] as any[],
   };
   export let gameStats: {
     "wont-play": number;
@@ -24,8 +24,8 @@
     total: number;
   };
 
-  export let progresses;
-  export let modes;
+  export let progresses: any;
+  export let modes: any;
   export let showProgressFilter = true;
   export let showTagsFilter = true;
   export let showModesFilter = true;
@@ -58,15 +58,15 @@
     return 0;
   });
 
-  let selectedTags = [];
-  let selectedModes = [];
+  let selectedTags = [] as any[];
+  let selectedModes = [] as any[];
 
   function changeMode() {
     filters.modes = selectedModes;
     dispatch("filters-changed");
   }
 
-  function toggleProgress(progress) {
+  function toggleProgress(progress: string) {
     progresses[progress] = !progresses[progress];
     dispatch("filters-changed");
   }

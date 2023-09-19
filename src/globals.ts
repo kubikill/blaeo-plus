@@ -1,12 +1,12 @@
 import { GM_xmlhttpRequest, GM_getValue } from "vite-plugin-monkey/dist/client";
-import { mergeDeep } from "@/lib/utilities";
-import packageJson from "../package.json";
+import { getAuthenticityToken, mergeDeep } from "@/lib/utilities";
+import type { SvelteComponent } from "svelte";
 
-export const BP_VERSION = packageJson.version;
+export const BP_VERSION = "1.1.0";
 
-export const addedComponents = [];
+export const addedComponents = [] as SvelteComponent[];
 
-export const options = mergeDeep(
+export let options = mergeDeep(
   {
     modules: {
       header: {
@@ -28,12 +28,19 @@ export const options = mergeDeep(
           },
           addHltbLinks: true,
         },
+        protonDbIntegration: {
+          enabled: false,
+          addProtonDbLink: true,
+        },
+        deckVerifiedIntegration: {
+          enabled: false,
+        },
       },
       posts: {
         mobileLayout: true,
       },
       newPosts: {
-        saving: false,
+        saving: true,
       },
       comments: {
         previews: true,
@@ -41,20 +48,23 @@ export const options = mergeDeep(
       },
     },
   },
-  JSON.parse(GM_getValue("bp-options", "{}"))
-);
+  JSON.parse(GM_getValue("bp-options", "{}")),
+) as Options;
 
 export let userData = {
   name: "",
   games: [],
 };
 
+export let authenticityToken = getAuthenticityToken();
+
 export function getUserName() {
-  const blaeoProfileLink = document.querySelector(
-    '#navbar .navbar-right .btn-group a[href^="/users/"]'
-  ) as HTMLAnchorElement;
+  const blaeoProfileLink = document.querySelector('#navbar .navbar-right .btn-group a[href^="/users/"]') as HTMLAnchorElement;
   if (blaeoProfileLink) {
-    userData.name = blaeoProfileLink.href.match(/\/users\/([\w+]+)$/)[1];
+    const name = blaeoProfileLink.href.match(/\/users\/([\w+]+)$/);
+    if (name) {
+      userData.name = name[1];
+    }
   }
 }
 

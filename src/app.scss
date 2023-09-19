@@ -89,12 +89,14 @@ body.bp-mobile-comment-layout {
 
 .bp-list-hltb-info {
   @media (max-width: 700px) {
+    flex-grow: 1;
     margin-top: 4px;
     margin-left: 10px;
+    width: 40%;
   }
   @media (min-width: 700px) {
     display: table-cell;
-    width: 20%;
+    width: 140px;
     text-align: right;
   }
 }
@@ -102,4 +104,83 @@ body.bp-mobile-comment-layout {
 .game-media .bp-hltb-logo {
   margin-left: 4px;
   height: 16px;
+}
+
+.bp-protondb-rating {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 4px;
+  min-width: 100px;
+  height: 24px;
+  color: #000;
+  font-weight: 400;
+  text-transform: uppercase;
+
+  &-unknown {
+    text-transform: unset;
+  }
+
+  &-borked {
+    background-color: #ff0000;
+  }
+
+  &-bronze {
+    background-color: #cd7f32;
+  }
+
+  &-silver {
+    background-color: #a6a6a6;
+  }
+
+  &-gold {
+    background-color: #cfb53b;
+  }
+
+  &-platinum {
+    background-color: #b4c7dc;
+  }
+
+  &-no-data {
+    background-color: #444444;
+    color: #fff;
+  }
+
+  svg {
+    margin-right: 4px;
+  }
+}
+
+.bp-linux-media {
+  display: table-cell;
+  width: 50%;
+  text-align: right;
+  margin-top: 8px;
+
+  @media (min-width: 700px) {
+    width: 100px;
+    margin-top: 0;
+
+    .bp-deckverified-element {
+      margin-top: 4px;
+    }
+  }
+}
+
+.game-media {
+  display: flex;
+  flex-wrap: wrap;
+
+  @media (min-width: 600px) {
+    flex-wrap: nowrap;
+  }
+}
+
+.media-body {
+  flex-grow: 1;
+  width: 100%;
+
+  @media (min-width: 400px) {
+    width: 45%;
+  }
 }

@@ -1,5 +1,6 @@
 import { removeNodeIfExists } from "@/lib/utilities";
 import { GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
+import { authenticityToken } from "@/globals";
 
 const previewButtonHtml = `
   <button class="bp-comment-preview-button btn btn-default" type="button" disabled>
@@ -17,11 +18,11 @@ export function addCommentPreview() {
   const textarea = document.getElementById("comment_text") as HTMLTextAreaElement;
   const buttonGroup = newCommentForm.querySelector(".form-group:last-child");
 
-  buttonGroup.insertAdjacentHTML("afterbegin", previewButtonHtml);
-  newCommentForm.insertAdjacentHTML(
-    "beforeend",
-    '<div class="bp-comment-preview" style="display: none">Preview:<div class="bp-comment-preview-content"></div></div>'
-  );
+  if (buttonGroup) {
+    buttonGroup.insertAdjacentHTML("afterbegin", previewButtonHtml);
+  }
+
+  newCommentForm.insertAdjacentHTML("beforeend", '<div class="bp-comment-preview" style="display: none">Preview:<div class="bp-comment-preview-content"></div></div>');
 
   const previewButton = newCommentForm.querySelector(".bp-comment-preview-button") as HTMLButtonElement;
   const previewContainer = newCommentForm.querySelector(".bp-comment-preview") as HTMLElement;
@@ -30,8 +31,6 @@ export function addCommentPreview() {
   textarea.addEventListener(
     "focus",
     async () => {
-      const authenticityToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]').content;
-
       previewButton.disabled = false;
 
       previewButton.addEventListener("click", () => {
@@ -56,11 +55,13 @@ export function addCommentPreview() {
               console.error(`Failed preview: ${response.responseText}`);
             }
           },
-          onerror: (error) => {},
+          onerror: (error) => {
+            console.error(`Failed preview: ${error.responseText}`);
+          },
         });
       });
     },
-    { once: true }
+    { once: true },
   );
 }
 

@@ -14,7 +14,10 @@ export function initMobileMessageIcon() {
   const navbarMessagesButtonClone = navbarMessagesButton.cloneNode(true) as HTMLAnchorElement;
   navbarMessagesButtonClone.classList.add("hidden-md", "hidden-lg");
   navbarMessagesButtonClone.classList.add("bp-mobile-messages");
-  navbarMenuToggle.insertAdjacentElement("afterend", navbarMessagesButtonClone);
+  
+  if (navbarMenuToggle) {
+    navbarMenuToggle.insertAdjacentElement("afterend", navbarMessagesButtonClone);
+  }
 
   navbarMessagesButton.classList.add("hidden-xs", "hidden-sm");
 }
