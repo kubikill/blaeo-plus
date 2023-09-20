@@ -43,6 +43,8 @@ function getProtonDbHtml(steamId: number, mode: string): string {
       return getProtonDbTableHtml(steamId);
     case "list":
       return getProtonDbListHtml(steamId);
+    case "grid":
+      return getProtonDbGridHtml(steamId);
     default:
       return "";
   }
@@ -93,7 +95,7 @@ function getProtonDbListHtml(steamId: number) {
   } else if (linuxData[steamId].protonDbProvRating != "unknown") {
     html += `
       <div class="bp-linux-media">
-        <div class="bp-protondb-element bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating}" title="provisional rating based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
+        <div class="bp-protondb-element bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
           ${provisionalIcon} ${linuxData[steamId].protonDbProvRating}
         </div>
       </div>
@@ -109,14 +111,53 @@ function getProtonDbListHtml(steamId: number) {
   return html;
 }
 
+function getProtonDbGridHtml(steamId: number) {
+  let html = "";
+
+  if (linuxData[steamId].protonDbRating != "unknown" && linuxData[steamId].protonDbRating != "pending") {
+    html += `
+      <div class="bp-linux-grid">
+        <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-element bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbRating === "no data" ? "no-data" : linuxData[steamId].protonDbRating}" 
+        title="based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
+          ${linuxData[steamId].protonDbRating}
+        </a>
+      </div>
+    `;
+  } else if (linuxData[steamId].protonDbProvRating != "unknown") {
+    html += `
+      <div class="bp-linux-grid">
+        <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-element bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${
+          linuxData[steamId].protonDbReports ?? 0
+        } report(s)">
+          ${provisionalIcon} ${linuxData[steamId].protonDbProvRating}
+        </a>
+      </div>
+  `;
+  } else {
+    html += `
+    <div class="bp-linux-grid">
+      <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-element bp-protondb-rating bp-protondb-rating-unknown">unknown</a>
+    </div>
+    `;
+  }
+
+  return html;
+}
+
 export async function initProtonDb() {
   let gameContainer = document.querySelector("#games") as HTMLElement;
   if (!gameContainer) {
     if (document.querySelector("#main > .game.game-media")) {
       gameContainer = document.querySelector("#main") as HTMLElement;
+    } else if (document.querySelector("#main > ul.games")) {
+      gameContainer = document.querySelector("#main > ul.games") as HTMLElement;
     } else {
       return;
     }
+  }
+
+  if (gameContainer.classList.contains("games") && gameContainer.tagName === "UL") {
+    gameContainer.classList.add("bp-game-list");
   }
 
   let checkInterval: ReturnType<typeof setInterval>;
@@ -201,6 +242,10 @@ export async function initProtonDb() {
 
             mediaBody!.insertAdjacentHTML("beforeend", getProtonDbHtml(steamId, "list"));
           }
+        } else if (game.classList.contains("game-thumbnail")) {
+          const caption = game.querySelector(".caption");
+
+          caption!.insertAdjacentHTML("beforeend", getProtonDbHtml(steamId, "grid"));
         }
       });
     }

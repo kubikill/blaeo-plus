@@ -34,6 +34,9 @@ let options = mergeDeep(
         deckVerifiedIntegration: {
           enabled: false,
         },
+        lists: {
+          quickRearrange: true,
+        },
       },
       posts: {
         mobileLayout: true,

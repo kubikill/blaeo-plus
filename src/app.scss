@@ -125,6 +125,11 @@ body.bp-mobile-comment-layout {
   font-weight: 400;
   text-transform: uppercase;
 
+  &:hover,
+  &:focus {
+    color: #000;
+  }
+
   &-unknown {
     text-transform: unset;
   }
@@ -152,6 +157,11 @@ body.bp-mobile-comment-layout {
   &-no-data {
     background-color: #444444;
     color: #fff;
+
+    &:hover,
+    &:focus {
+      color: #fff;
+    }
   }
 
   svg {
@@ -221,4 +231,23 @@ body.bp-mobile-comment-layout {
     max-width: 100%;
     height: auto;
   }
+}
+
+.bp-game-list {
+  .game-thumbnail .caption {
+    min-height: 58px;
+    height: auto;
+  }
+}
+
+.bp-linux-grid {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+  margin-bottom: 8px;
+}
+
+.bp-dropdown-container {
+  display: inline-block;
 }

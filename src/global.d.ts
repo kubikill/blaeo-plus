@@ -49,6 +49,9 @@ type Options = {
       deckVerifiedIntegration: {
         enabled: boolean;
       };
+      lists: {
+        quickRearrange: boolean;
+      };
     };
     posts: {
       mobileLayout: boolean;

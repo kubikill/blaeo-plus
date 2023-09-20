@@ -2,7 +2,6 @@ import DeckModal from "@/modules/games/DeckModal.svelte";
 import { linuxData } from "@/lib/linuxService";
 import { removeAllNodesIfExist } from "@/lib/utilities";
 import DeckBadge from "@/modules/games/DeckBadge.svelte";
-import type { SvelteComponent } from "svelte";
 
 const deckRatingScore = {
   unknown: -1,
@@ -22,6 +21,8 @@ function getDeckVerifiedHtml(steamId: number, mode: string): string {
       return getDeckVerifiedTableHtml(steamId);
     case "list":
       return getDeckVerifiedListHtml(steamId);
+    case "grid":
+      return getDeckVerifiedGridHtml(steamId);
     default:
       return "";
   }
@@ -46,7 +47,25 @@ function getDeckVerifiedTableHtml(steamId: number): string {
 function getDeckVerifiedListHtml(steamId: number) {
   let html = "";
 
-  if (linuxData[steamId].protonDbRating != "unknown" && linuxData[steamId].protonDbRating != "pending") {
+  if (linuxData[steamId].deckRating != "unknown") {
+    html += `
+    <div class="bp-deckverified-element"></div>
+    `;
+  } else {
+    html += `
+    <div class="bp-deckverified-element bp-deckverified-unknown">
+      ???
+    </div>
+    `;
+  }
+
+  return html;
+}
+
+function getDeckVerifiedGridHtml(steamId: number) {
+  let html = "";
+
+  if (linuxData[steamId].deckRating != "unknown") {
     html += `
     <div class="bp-deckverified-element"></div>
     `;
@@ -66,9 +85,15 @@ export async function initDeckVerified() {
   if (!gameContainer) {
     if (document.querySelector("#main > .game.game-media")) {
       gameContainer = document.querySelector("#main") as HTMLElement;
+    } else if (document.querySelector("#main > ul.games")) {
+      gameContainer = document.querySelector("#main > ul.games") as HTMLElement;
     } else {
       return;
     }
+  }
+
+  if (gameContainer.classList.contains("games") && gameContainer.tagName === "ul") {
+    gameContainer.classList.add("bp-game-list");
   }
 
   const deckModalComponent = new DeckModal({
@@ -161,6 +186,17 @@ export async function initDeckVerified() {
             const mediaBody = game.querySelector(".media-body");
 
             mediaBody!.insertAdjacentHTML("beforeend", getDeckVerifiedHtml(steamId, "list"));
+          }
+        } else if (game.classList.contains("game-thumbnail")) {
+          gameName = game.querySelector(".title")?.textContent;
+          const linuxCell = game.querySelector(".bp-linux-grid");
+
+          if (linuxCell) {
+            linuxCell.insertAdjacentHTML("beforeend", getDeckVerifiedHtml(steamId, "grid"));
+          } else {
+            const caption = game.querySelector(".caption");
+
+            caption?.insertAdjacentHTML("beforeend", `<div class="bp-linux-grid">${getDeckVerifiedHtml(steamId, "grid")}</div>`);
           }
         }
 

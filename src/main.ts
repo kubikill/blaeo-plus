@@ -17,6 +17,7 @@ import { initDeckVerified } from "./modules/games/deckVerified";
 import type { SvelteComponent } from "svelte";
 import initBlacklist from "./modules/users/blacklist";
 import { get } from "svelte/store";
+import initListQuickRearrange from "./modules/list/quickRearrange";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
@@ -109,6 +110,10 @@ function initEachPage(): void {
 
   if (options.modules.comments.previews) {
     addCommentPreview();
+  }
+
+  if (options.modules.games.lists.quickRearrange) {
+    initListQuickRearrange();
   }
 }
 

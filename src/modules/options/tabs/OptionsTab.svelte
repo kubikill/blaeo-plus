@@ -87,6 +87,20 @@
         </p>
       </div>
     </OptionsToggle>
+
+    <h4>Lists</h4>
+
+    <OptionsToggle id="bp-options-modules-games-lists-quick-rearrange" bind:boundValue={$optionsStore.modules.games.lists.quickRearrange}>
+      Add quick rearrange button
+      <div slot="description">
+        <p>
+          Adds a button to quickly rearrange games by name, playtime or HLTB time to beat.<br />
+          HLTB integration must be enabled in order to sort by HLTB time to beat.
+        </p>
+        <p>To use quick rearrange, go to the chosen list's rearrange page then click the "Quick rearrange" button at the top of the page.</p>
+      </div></OptionsToggle
+    >
+
     <!-- <button class="toggle-item-sub" on:click={enqueueEntireLibrary}>Submit your library for enqueueing</button>
         <div class="toggle-item-sub">
           You can use this button to send your entire BLAEO library to the BLAEO+ backend for fetching times.
