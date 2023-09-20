@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { GM_setValue } from "vite-plugin-monkey/dist/client";
   import { blaeoPlusLogo } from "@/assets/icons";
   import OptionsTab from "./tabs/OptionsTab.svelte";
   import Tabs from "@/lib/Tabs.svelte";
   import AboutTab from "./tabs/AboutTab.svelte";
   import ChangelogTab from "./tabs/ChangelogTab.svelte";
+  import BlacklistTab from "./tabs/BlacklistTab.svelte";
   export let showOptions: boolean;
-  export let options: Options;
 
   let activeTab = 0;
 
@@ -16,8 +15,6 @@
       activeTab = 0;
     }, 1000);
   }
-
-  $: GM_setValue("bp-options", JSON.stringify(options));
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -32,7 +29,8 @@
     <div class="modal-body">
       <Tabs
         tabs={[
-          { name: "Options", content: OptionsTab, props: { options: options } },
+          { name: "Options", content: OptionsTab },
+          { name: "Blacklist", content: BlacklistTab },
           { name: "Changelog", content: ChangelogTab },
           { name: "About", content: AboutTab },
         ]}
@@ -62,7 +60,7 @@
     height: 100%;
 
     @media (min-width: 768px) {
-      padding: 64px;
+      padding: 32px 64px;
     }
 
     &.visible {
@@ -74,6 +72,8 @@
       display: flex;
       flex-direction: column;
       max-height: 100%;
+      max-width: 800px;
+      margin: 0 auto;
     }
 
     .modal-header {

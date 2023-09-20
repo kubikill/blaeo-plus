@@ -1,6 +1,13 @@
 import { hltbData } from "@/lib/hltbService";
 import GameFilters from "@/modules/games/GameFilters.svelte";
-import { addedComponents, options } from "@/globals";
+import { addedComponents } from "@/globals";
+import { optionsStore } from "@/lib/store";
+import { get } from "svelte/store";
+
+let options = get(optionsStore) as Options;
+optionsStore.subscribe((value) => {
+  options = value;
+});
 
 function runFilters(games: NodeListOf<HTMLTableRowElement | HTMLDivElement | HTMLLIElement>, filters: any, progresses: any, gamesContainer: HTMLElement) {
   if (filters) {

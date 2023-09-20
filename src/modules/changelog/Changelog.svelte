@@ -8,7 +8,12 @@
       </ul>
     </li>
     <li>Added ProtonDB and Steam Deck Verified status filters</li>
-    <li>TODO Added blacklists; can be used to collapse or hide posts and/or comments</li>
+    <li>
+      Added blacklists; can be used to collapse or completely hide posts and/or comments
+      <ul>
+        <li>Defaults to hiding post and comments completely; visit options to adjust</li>
+      </ul>
+    </li>
     <li>TODO Added list rearrangers; can be used to quickly rearrange games by name or HLTB times</li>
     <li>TODO Added update notifier</li>
     <li>Added option to show HLTB times in one column in table view</li>

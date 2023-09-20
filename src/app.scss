@@ -30,7 +30,7 @@
 
 body.bp-mobile-post-layout {
   @media (max-width: 768px) {
-    *:not([data-endless^="/users/"]) > .post {
+    *:not([data-endless^="/users/"]) > .post:not(.blocked) {
       > .avatar {
         float: none !important;
         margin-bottom: 0;
@@ -190,5 +190,35 @@ body.bp-mobile-comment-layout {
 
   @media (min-width: 400px) {
     width: 45%;
+  }
+}
+
+.reply .post.blocked {
+  margin-bottom: 0;
+}
+
+.post.blocked {
+  display: none;
+  &.collapsed {
+    display: block;
+    min-height: 70px;
+
+    + .post,
+    + .comment {
+      display: none;
+    }
+  }
+
+  .avatar > svg {
+    width: 38px;
+    padding: 10px;
+    line-height: 1.42857;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: all 0.2s ease-in-out;
+    display: inline-block;
+    max-width: 100%;
+    height: auto;
   }
 }

@@ -1,3 +1,7 @@
+interface Window {
+  updateOptions: function;
+}
+
 type TagOption = {
   label: string;
   color: string;
@@ -6,6 +10,12 @@ type TagOption = {
 type BlaeoPlusSave = {
   name: string;
   content: string;
+};
+
+type Blacklist = {
+  [key: string]: {
+    note: string;
+  };
 };
 
 type Options = {
@@ -50,7 +60,15 @@ type Options = {
       previews: boolean;
       mobileLayout: boolean;
     };
+    users: {
+      blacklist: {
+        enabled: boolean;
+        postBehavior: "none" | "hide" | "collapse" | "collapse-with-uncollapse";
+        commentBehavior: "none" | "hide" | "collapse" | "collapse-with-uncollapse";
+      };
+    };
   };
+  blacklist: Blacklist;
 };
 
 type QueryGame = {

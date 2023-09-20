@@ -1,7 +1,13 @@
 import { protonDbLogo, provisionalIcon } from "@/assets/icons";
-import { options } from "@/globals";
+import { optionsStore } from "@/lib/store";
 import { linuxData } from "@/lib/linuxService";
 import { removeAllNodesIfExist } from "@/lib/utilities";
+import { get } from "svelte/store";
+
+let options = get(optionsStore) as Options;
+optionsStore.subscribe((value) => {
+  options = value;
+});
 
 const protonDbRatingScore = {
   unknown: -1,

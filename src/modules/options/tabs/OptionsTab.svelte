@@ -1,47 +1,44 @@
 <script lang="ts">
-  import { GM_setValue } from "vite-plugin-monkey/dist/client";
   import OptionsItem from "../OptionsItem.svelte";
   import OptionsToggle from "../OptionsToggle.svelte";
 
-  export let options: Options;
-
-  $: GM_setValue("bp-options", JSON.stringify(options));
+  import { optionsStore } from "@/lib/store";
 </script>
 
 <div>
   <p>Settings are saved automatically and are applied on refresh.</p>
 
   <OptionsItem title="Header" titleClass="h3">
-    <OptionsToggle id="bp-options-modules-header-shortcuts" bind:boundValue={options.modules.header.shortcuts}>Add "New Post" shortcut to avatar dropdown</OptionsToggle>
-    <OptionsToggle id="bp-options-modules-header-mobile-message-badge" bind:boundValue={options.modules.header.mobileMessageBadge}>Show unread messages link on mobile header without having to expand it</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-header-shortcuts" bind:boundValue={$optionsStore.modules.header.shortcuts}>Add "New Post" shortcut to avatar dropdown</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-header-mobile-message-badge" bind:boundValue={$optionsStore.modules.header.mobileMessageBadge}>Show unread messages link on mobile header without having to expand it</OptionsToggle>
   </OptionsItem>
 
   <OptionsItem title="Games" titleClass="h3">
     <h4>Integrations</h4>
 
-    <OptionsToggle id="bp-options-modules-games-hltb-integration-enabled" bind:boundValue={options.modules.games.hltbIntegration.enabled}>
+    <OptionsToggle id="bp-options-modules-games-hltb-integration-enabled" bind:boundValue={$optionsStore.modules.games.hltbIntegration.enabled}>
       Enable How Long to Beat integration
       <div slot="description">
         <p>Display how long it takes to beat games on any games page on BLAEO. Currently works only when using table or list view.</p>
-        <OptionsToggle id="bp-options-modules-games-hltb-integration-displaycolumns-main" bind:boundValue={options.modules.games.hltbIntegration.displayColumns.main}>Show "Main" time to beat column</OptionsToggle>
-        <OptionsToggle id="bp-options-modules-games-hltb-integration-displaycolumns-extra" bind:boundValue={options.modules.games.hltbIntegration.displayColumns["+extra"]}>Show "Main + Extra" time to beat column</OptionsToggle>
+        <OptionsToggle id="bp-options-modules-games-hltb-integration-displaycolumns-main" bind:boundValue={$optionsStore.modules.games.hltbIntegration.displayColumns.main}>Show "Main" time to beat column</OptionsToggle>
+        <OptionsToggle id="bp-options-modules-games-hltb-integration-displaycolumns-extra" bind:boundValue={$optionsStore.modules.games.hltbIntegration.displayColumns["+extra"]}>Show "Main + Extra" time to beat column</OptionsToggle>
 
-        <OptionsToggle id="bp-options-modules-games-hltb-integration-displaycolumns-100" bind:boundValue={options.modules.games.hltbIntegration.displayColumns["100%"]}>Show "100%" time to beat column</OptionsToggle>
+        <OptionsToggle id="bp-options-modules-games-hltb-integration-displaycolumns-100" bind:boundValue={$optionsStore.modules.games.hltbIntegration.displayColumns["100%"]}>Show "100%" time to beat column</OptionsToggle>
 
-        <OptionsToggle id="bp-options-modules-games-hltb-integration-add-hltb-links" bind:boundValue={options.modules.games.hltbIntegration.addHltbLinks}>Add links to HLTB pages</OptionsToggle>
-        <OptionsToggle id="bp-options-modules-games-hltb-integration-one-column-mode" bind:boundValue={options.modules.games.hltbIntegration.oneColumnMode}>Show times in one column in table view</OptionsToggle>
+        <OptionsToggle id="bp-options-modules-games-hltb-integration-add-hltb-links" bind:boundValue={$optionsStore.modules.games.hltbIntegration.addHltbLinks}>Add links to HLTB pages</OptionsToggle>
+        <OptionsToggle id="bp-options-modules-games-hltb-integration-one-column-mode" bind:boundValue={$optionsStore.modules.games.hltbIntegration.oneColumnMode}>Show times in one column in table view</OptionsToggle>
       </div>
     </OptionsToggle>
 
-    <OptionsToggle id="bp-options-modules-games-protondb-integration-enabled" bind:boundValue={options.modules.games.protonDbIntegration.enabled}>
+    <OptionsToggle id="bp-options-modules-games-protondb-integration-enabled" bind:boundValue={$optionsStore.modules.games.protonDbIntegration.enabled}>
       Enable ProtonDB integration
       <div slot="description">
         <p>Display ProtonDB ratings for games on any games page on BLAEO. Currently works only when using table or list view.</p>
-        <OptionsToggle id="bp-options-modules-games-protondb-integration-add-protondb-links" bind:boundValue={options.modules.games.protonDbIntegration.addProtonDbLinks}>Add links to ProtonDB pages</OptionsToggle>
+        <OptionsToggle id="bp-options-modules-games-protondb-integration-add-protondb-links" bind:boundValue={$optionsStore.modules.games.protonDbIntegration.addProtonDbLinks}>Add links to ProtonDB pages</OptionsToggle>
       </div>
     </OptionsToggle>
 
-    <OptionsToggle id="bp-options-modules-games-protondb-integration-enabled" bind:boundValue={options.modules.games.deckVerifiedIntegration.enabled}>
+    <OptionsToggle id="bp-options-modules-games-protondb-integration-enabled" bind:boundValue={$optionsStore.modules.games.deckVerifiedIntegration.enabled}>
       Enable Steam Deck Verified integration
       <div slot="description">
         <p>Display Steam Deck Verified ratings for games on any games page on BLAEO. Currently works only when using table or list view.</p>
@@ -50,9 +47,9 @@
 
     <h4>Filters</h4>
 
-    <OptionsToggle id="bp-options-modules-games-filters-progress" bind:boundValue={options.modules.games.filters.progress}>Add progress filters</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-games-filters-progress" bind:boundValue={$optionsStore.modules.games.filters.progress}>Add progress filters</OptionsToggle>
 
-    <OptionsToggle id="bp-options-modules-games-filters-tags" bind:boundValue={options.modules.games.filters.tags}>
+    <OptionsToggle id="bp-options-modules-games-filters-tags" bind:boundValue={$optionsStore.modules.games.filters.tags}>
       Add tag filters
       <div slot="description">
         <p>
@@ -61,7 +58,7 @@
       </div>
     </OptionsToggle>
 
-    <OptionsToggle id="bp-options-modules-games-filters-modes" bind:boundValue={options.modules.games.filters.modes} bind:disabled={options.modules.games.hltbIntegration.enabled}>
+    <OptionsToggle id="bp-options-modules-games-filters-modes" bind:boundValue={$optionsStore.modules.games.filters.modes} bind:disabled={$optionsStore.modules.games.hltbIntegration.enabled}>
       Add mode filters
       <div slot="description">
         <p>
@@ -71,7 +68,7 @@
       </div>
     </OptionsToggle>
 
-    <OptionsToggle id="bp-options-modules-games-filters-protondb-ratings" bind:boundValue={options.modules.games.filters.protonDbRatings} bind:disabled={options.modules.games.protonDbIntegration.enabled}>
+    <OptionsToggle id="bp-options-modules-games-filters-protondb-ratings" bind:boundValue={$optionsStore.modules.games.filters.protonDbRatings} bind:disabled={$optionsStore.modules.games.protonDbIntegration.enabled}>
       Add ProtonDB rating filters
       <div slot="description">
         <p>
@@ -81,7 +78,7 @@
       </div>
     </OptionsToggle>
 
-    <OptionsToggle id="bp-options-modules-games-filters-deckverified-statuses" bind:boundValue={options.modules.games.filters.deckVerifiedStatuses} bind:disabled={options.modules.games.deckVerifiedIntegration.enabled}>
+    <OptionsToggle id="bp-options-modules-games-filters-deckverified-statuses" bind:boundValue={$optionsStore.modules.games.filters.deckVerifiedStatuses} bind:disabled={$optionsStore.modules.games.deckVerifiedIntegration.enabled}>
       Add Deck Verified status filters
       <div slot="description">
         <p>
@@ -97,11 +94,11 @@
   </OptionsItem>
 
   <OptionsItem title="Posts" titleClass="h3">
-    <OptionsToggle id="bp-options-modules-posts-mobile-layout" bind:boundValue={options.modules.posts.mobileLayout}>Enable alternative post layout on mobile for more horizontal space</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-posts-mobile-layout" bind:boundValue={$optionsStore.modules.posts.mobileLayout}>Enable alternative post layout on mobile for more horizontal space</OptionsToggle>
   </OptionsItem>
 
   <OptionsItem title="New post" titleClass="h3">
-    <OptionsToggle id="bp-options-modules-newposts-saving" bind:boundValue={options.modules.newPosts.saving}>
+    <OptionsToggle id="bp-options-modules-newposts-saving" bind:boundValue={$optionsStore.modules.newPosts.saving}>
       Add saving/loading post drafts
       <div slot="description">
         <p>
@@ -112,8 +109,39 @@
   </OptionsItem>
 
   <OptionsItem title="Comments" titleClass="h3">
-    <OptionsToggle id="bp-options-modules-comments-previews" bind:boundValue={options.modules.comments.previews}>Add preview comment button</OptionsToggle>
-    <OptionsToggle id="bp-options-modules-comments-mobile-layout" bind:boundValue={options.modules.comments.mobileLayout}>Enable alternative comment layout on mobile for more horizontal space</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-comments-previews" bind:boundValue={$optionsStore.modules.comments.previews}>Add preview comment button</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-comments-mobile-layout" bind:boundValue={$optionsStore.modules.comments.mobileLayout}>Enable alternative comment layout on mobile for more horizontal space</OptionsToggle>
+  </OptionsItem>
+
+  <OptionsItem title="Users" titleClass="h3">
+    <OptionsToggle id="bp-options-modules-users-blacklist-enabled" bind:boundValue={$optionsStore.modules.users.blacklist.enabled}>
+      Enable blacklists
+      <div slot="description">
+        <p>
+          Allows users to be blacklisted, which will hide or collapse their posts and/or comments.<br />
+          Note that the inbox will still notify you if a blocked user replies to you and if comments are set to be hidden, they'll be collapsed instead.
+        </p>
+        <p>Users can be blocked by visiting their profile and clicking the blacklist button next to the subscribe button under the profile description.</p>
+        <div>
+          <select id="bp-options-modules-users-blacklist-post-behavior" bind:value={$optionsStore.modules.users.blacklist.postBehavior}>
+            <option value="hide">Hide</option>
+            <option value="collapse">Collapse</option>
+            <option value="collapse-with-uncollapse">Collapse w/ uncollapse</option>
+            <option value="none">None</option>
+          </select>
+          <label for="bp-options-modules-users-blacklist-post-behavior">Behavior of posts from blacklisted users</label>
+        </div>
+        <div>
+          <select id="bp-options-modules-users-blacklist-comment-behavior" bind:value={$optionsStore.modules.users.blacklist.commentBehavior}>
+            <option value="hide">Hide</option>
+            <option value="collapse">Collapse</option>
+            <option value="collapse-with-uncollapse">Collapse w/ uncollapse</option>
+            <option value="none">None</option>
+          </select>
+          <label for="bp-options-modules-users-blacklist-comment-behavior">Behavior of comments from blacklisted users</label>
+        </div>
+      </div>
+    </OptionsToggle>
   </OptionsItem>
 </div>
 
@@ -178,5 +206,9 @@
     .toggle-item-sub {
       margin-left: 8px;
     }
+  }
+
+  label {
+    font-weight: 400;
   }
 </style>

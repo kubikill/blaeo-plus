@@ -1,7 +1,13 @@
 import { hltbLogo } from "@/assets/icons";
-import { options } from "@/globals";
 import { enqueueHltbData, hltbExcludedGames, hltbData } from "@/lib/hltbService";
 import { removeAllNodesIfExist } from "@/lib/utilities";
+import { optionsStore } from "@/lib/store";
+import { get } from "svelte/store";
+
+let options = get(optionsStore) as Options;
+optionsStore.subscribe((value) => {
+  options = value;
+});
 
 function getHltbGameData(steamId: number) {
   let gameData = {

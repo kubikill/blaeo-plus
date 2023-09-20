@@ -1,5 +1,6 @@
 import "@/app.scss";
-import { addedComponents, options } from "@/globals";
+import { optionsStore } from "./lib/store";
+import { addedComponents } from "@/globals";
 import { addHeaderShortcuts, cleanupHeaderShortcuts } from "@/modules/header/shortcuts";
 import { initMobileMessageIcon, cleanupMobileMessageIcon } from "@/modules/header/mobileMessageIcon";
 import { cleanupOptionsMenu, initOptionsMenu } from "@/modules/options/menu";
@@ -14,6 +15,13 @@ import { linuxLastUpdate, syncLinux, syncLinuxGames } from "./lib/linuxService";
 import { cleanupProtonDb, initProtonDb } from "./modules/games/protonDb";
 import { initDeckVerified } from "./modules/games/deckVerified";
 import type { SvelteComponent } from "svelte";
+import initBlacklist from "./modules/users/blacklist";
+import { get } from "svelte/store";
+
+let options = get(optionsStore) as Options;
+optionsStore.subscribe((value) => {
+  options = value;
+});
 
 function checkIfProgressPage(url: string): boolean {
   return url.includes("games/wont-play") || url.includes("games/never-played") || url.includes("games/unfinished") || url.includes("games/beaten") || url.includes("games/completed");
@@ -58,6 +66,10 @@ function initEachPage(): void {
 
   const currentUrl = window.location.href;
   initOptionsMenu();
+
+  if (options.modules.users.blacklist.enabled) {
+    initBlacklist();
+  }
 
   if (options.modules.header.shortcuts) {
     addHeaderShortcuts();
