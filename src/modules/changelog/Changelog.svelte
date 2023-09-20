@@ -7,13 +7,16 @@
         <li>Not enabled by default; visit options to enable</li>
       </ul>
     </li>
-    <li>TODO Added ProtonDB and Steam Deck Verified status filters</li>
+    <li>Added ProtonDB and Steam Deck Verified status filters</li>
     <li>TODO Added blacklists; can be used to collapse or hide posts and/or comments</li>
     <li>TODO Added list rearrangers; can be used to quickly rearrange games by name or HLTB times</li>
     <li>TODO Added update notifier</li>
-    <li>TODO Added option to show HLTB times in one column in table view</li>
+    <li>Added option to show HLTB times in one column in table view</li>
+    <ul>
+      <li>Not enabled by default; visit options to enable</li>
+    </ul>
     <li>Added changelog and about tabs to the options menu</li>
-    <li>Save/load post draft feature is now enabled by default</li>
+    <li>Save/load post draft feature is now enabled by default on new installs</li>
     <li>Code cleanup and refactoring</li>
     <li>Updated project dependencies</li>
   </ul>

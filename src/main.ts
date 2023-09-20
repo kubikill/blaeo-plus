@@ -15,11 +15,11 @@ import { cleanupProtonDb, initProtonDb } from "./modules/games/protonDb";
 import { initDeckVerified } from "./modules/games/deckVerified";
 import type { SvelteComponent } from "svelte";
 
-function checkIfProgressPage(url: string) {
+function checkIfProgressPage(url: string): boolean {
   return url.includes("games/wont-play") || url.includes("games/never-played") || url.includes("games/unfinished") || url.includes("games/beaten") || url.includes("games/completed");
 }
 
-function cleanup() {
+function cleanup(): void {
   addedComponents.forEach((component: SvelteComponent) => {
     component.$destroy();
   });
@@ -32,7 +32,7 @@ function cleanup() {
   cleanupProtonDb();
 }
 
-function init() {
+function init(): void {
   if (options.modules.games.hltbIntegration.enabled) {
     if (hltbLastUpdate.getTime() < Date.now() - 86400) {
       // if last sync was at least 1 day ago
@@ -47,7 +47,7 @@ function init() {
     }
   }
 }
-function initEachPage() {
+function initEachPage(): void {
   if (document.body.dataset.blaeoPlusInitialized === "true") {
     return;
   }

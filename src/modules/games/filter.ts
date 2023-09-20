@@ -2,12 +2,7 @@ import { hltbData } from "@/lib/hltbService";
 import GameFilters from "@/modules/games/GameFilters.svelte";
 import { addedComponents, options } from "@/globals";
 
-function runFilters(
-  games: NodeListOf<HTMLTableRowElement | HTMLDivElement | HTMLLIElement>,
-  filters,
-  progresses,
-  gamesContainer
-) {
+function runFilters(games: NodeListOf<HTMLTableRowElement | HTMLDivElement | HTMLLIElement>, filters: any, progresses: any, gamesContainer: HTMLElement) {
   if (filters) {
     let tagFilters = [];
     let tagFilterString = "";
@@ -15,14 +10,15 @@ function runFilters(
     let tagFilterAnd = false;
     let modeStrict = false;
     let modeNot = false;
+    let includeProtonDbProvisional = false;
 
-    if (filters.tags.find((tag) => tag.value === "not-tags")) {
+    if (filters.tags.find((tag: { value: string }) => tag.value === "not-tags")) {
       tagFilterType = "not-tags";
     } else if (filters.tags.length > 0) {
       tagFilterType = "tags";
     }
 
-    if (filters.tags.find((tag) => tag.value === "and-tags")) {
+    if (filters.tags.find((tag: { value: string }) => tag.value === "and-tags")) {
       tagFilterAnd = true;
     }
 
@@ -36,12 +32,16 @@ function runFilters(
       tagFilterString = tagFilters.join(", ");
     }
 
-    if (filters.modes.find((mode) => mode.value === "strict")) {
+    if (filters.modes.find((mode: { value: string }) => mode.value === "strict")) {
       modeStrict = true;
     }
 
-    if (filters.modes.find((mode) => mode.value === "not")) {
+    if (filters.modes.find((mode: { value: string }) => mode.value === "not")) {
       modeNot = true;
+    }
+
+    if (filters.protonDbRatings.find((rating: { value: string }) => rating.value === "provisional")) {
+      includeProtonDbProvisional = true;
     }
 
     gameLoop: for (let game of games) {
@@ -88,16 +88,16 @@ function runFilters(
       }
 
       const steamStoreLink = game.querySelector('a[href*="store.steampowered.com/app/"]') as HTMLAnchorElement;
-      const steamId = steamStoreLink.href.match(/app\/(\d+)/)[1];
+      const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1];
 
       if (modeStrict) {
         if (
           JSON.stringify(hltbData[steamId]?.type ?? []) !=
           JSON.stringify(
             Array.from(
-              filters.modes.filter((mode) => mode.value != "strict" && mode.value != "not"),
-              (mode: any) => mode.value
-            )
+              filters.modes.filter((mode: { value: string }) => mode.value != "strict" && mode.value != "not"),
+              (mode: any) => mode.value,
+            ),
           )
         ) {
           game.style.display = "none";
@@ -116,6 +116,43 @@ function runFilters(
             game.style.display = "none";
             continue gameLoop;
           }
+        }
+      }
+
+      let protonRatingFound = false;
+      let protonDbRatings = Array.from(
+        filters.protonDbRatings.filter((rating: { value: string }) => rating.value != "provisional"),
+        (rating: any) => rating.value,
+      );
+
+      if (protonDbRatings.length > 0) {
+        for (let rating of protonDbRatings) {
+          const ratingElement = game.querySelector(`.bp-protondb-rating-${rating}`);
+          if (ratingElement && (includeProtonDbProvisional || !game.querySelector(`.bp-protondb-rating-provisional`))) {
+            protonRatingFound = true;
+            break;
+          }
+        }
+        if (!protonRatingFound) {
+          game.style.display = "none";
+          continue gameLoop;
+        }
+      }
+
+      let deckVerifiedStatusFound = false;
+      let deckVerifiedStatuses = Array.from(filters.deckVerifiedStatuses, (status: any) => status.value);
+
+      if (deckVerifiedStatuses.length > 0) {
+        for (let status of deckVerifiedStatuses) {
+          const statusBadge = game.querySelector(`.bp-deckverified-${status}`);
+          if (statusBadge) {
+            deckVerifiedStatusFound = true;
+            break;
+          }
+        }
+        if (!deckVerifiedStatusFound) {
+          game.style.display = "none";
+          continue gameLoop;
         }
       }
 
@@ -160,7 +197,7 @@ function runFilters(
   }
 }
 
-export function initFilter(isProgressPage) {
+export function initFilter(isProgressPage: boolean) {
   const gamesTable = document.querySelector("table#games") as HTMLElement;
   const gamesList = document.querySelector("div#games") as HTMLElement;
   const gamesGrid = document.querySelector("#main > ul.games") as HTMLElement;
@@ -186,14 +223,14 @@ export function initFilter(isProgressPage) {
 
         if (fallbackGamesList) {
           const progressBar = gamesContainer.querySelector(".list-progress");
-          progressBar.insertAdjacentElement("afterend", filterContainer);
+          if (progressBar) {
+            progressBar.insertAdjacentElement("afterend", filterContainer);
+          }
         } else {
           gamesContainer.insertAdjacentElement("beforebegin", filterContainer);
         }
 
-        const games = gamesContainer.querySelectorAll(".game") as NodeListOf<
-          HTMLTableRowElement | HTMLDivElement | HTMLLIElement
-        >;
+        const games = gamesContainer.querySelectorAll(".game") as NodeListOf<HTMLTableRowElement | HTMLDivElement | HTMLLIElement>;
 
         const tags = Array.from(gamesContainer.querySelectorAll("a.list-tag")) as HTMLAnchorElement[];
         const tagMap = new Map([
@@ -264,29 +301,21 @@ export function initFilter(isProgressPage) {
           }
         }
 
-        gameStats["wont-play-percent"] = (
-          Math.floor((gameStats["wont-play"] / gameStats["total"]) * 10000) / 100
-        ).toFixed(2);
-        gameStats["never-played-percent"] = (
-          Math.floor((gameStats["never-played"] / gameStats["total"]) * 10000) / 100
-        ).toFixed(2);
-        gameStats["unfinished-percent"] = (
-          Math.floor((gameStats["unfinished"] / gameStats["total"]) * 10000) / 100
-        ).toFixed(2);
+        gameStats["wont-play-percent"] = (Math.floor((gameStats["wont-play"] / gameStats["total"]) * 10000) / 100).toFixed(2);
+        gameStats["never-played-percent"] = (Math.floor((gameStats["never-played"] / gameStats["total"]) * 10000) / 100).toFixed(2);
+        gameStats["unfinished-percent"] = (Math.floor((gameStats["unfinished"] / gameStats["total"]) * 10000) / 100).toFixed(2);
         gameStats["beaten-percent"] = (Math.floor((gameStats["beaten"] / gameStats["total"]) * 10000) / 100).toFixed(2);
-        gameStats["completed-percent"] = (
-          Math.floor((gameStats["completed"] / gameStats["total"]) * 10000) / 100
-        ).toFixed(2);
+        gameStats["completed-percent"] = (Math.floor((gameStats["completed"] / gameStats["total"]) * 10000) / 100).toFixed(2);
 
-        gameStats["uncategorized-percent"] = (
-          Math.floor((gameStats["uncategorized"] / gameStats["total"]) * 10000) / 100
-        ).toFixed(2);
+        gameStats["uncategorized-percent"] = (Math.floor((gameStats["uncategorized"] / gameStats["total"]) * 10000) / 100).toFixed(2);
 
         const filterOptions = {
           progresses: [] as string[],
           modes: [],
           availableTags: tagMap,
           tags: [],
+          protonDbRatings: [] as string[],
+          deckVerifiedStatuses: [] as string[],
         };
 
         const progresses = {
@@ -331,10 +360,83 @@ export function initFilter(isProgressPage) {
           },
         ];
 
-        let showProgressFilter =
-          options.modules.games.filters.progress && !document.querySelector("#main .list-progress") && !isProgressPage;
+        const protonDbRatings = [
+          {
+            label: "Include provisional ratings",
+            value: "provisional",
+            color: "#000000",
+            sortValue: 0,
+          },
+          {
+            label: "Platinum",
+            value: "platinum",
+            color: "#b4c7dc",
+            sortValue: 1,
+          },
+          {
+            label: "Gold",
+            value: "gold",
+            color: "#cfb53b",
+            sortValue: 2,
+          },
+          {
+            label: "Silver",
+            value: "silver",
+            color: "#a6a6a6",
+            sortValue: 3,
+          },
+          {
+            label: "Bronze",
+            value: "bronze",
+            color: "#cd7f32",
+            sortValue: 4,
+          },
+          {
+            label: "Borked",
+            value: "borked",
+            color: "#ff0000",
+            sortValue: 5,
+          },
+          {
+            label: "No data",
+            value: "no-data",
+            color: "#444444",
+            sortValue: 6,
+          },
+        ];
+
+        const deckVerifiedStatuses = [
+          {
+            label: "Verified",
+            value: "verified",
+            color: "#59bf40",
+            sortValue: 1,
+          },
+          {
+            label: "Playable",
+            value: "playable",
+            color: "#ffc82c",
+            sortValue: 2,
+          },
+          {
+            label: "Unplayable",
+            value: "unplayable",
+            color: "#8c8e8f",
+            sortValue: 3,
+          },
+          {
+            label: "Untested",
+            value: "untested",
+            color: "#8c8e8f",
+            sortValue: 4,
+          },
+        ];
+
+        let showProgressFilter = options.modules.games.filters.progress && !document.querySelector("#main .list-progress") && !isProgressPage;
         let showTagsFilter = options.modules.games.filters.tags && !gamesGrid;
         let showModesFilter = options.modules.games.filters.modes && options.modules.games.hltbIntegration.enabled;
+        let showProtonDbFilter = options.modules.games.filters.protonDbRatings && options.modules.games.protonDbIntegration.enabled;
+        let showDeckVerifiedFilter = options.modules.games.filters.deckVerifiedStatuses && options.modules.games.deckVerifiedIntegration.enabled;
 
         const gameFilters = new GameFilters({
           target: filterContainer,
@@ -343,9 +445,13 @@ export function initFilter(isProgressPage) {
             gameStats: gameStats,
             progresses: progresses,
             modes: modes,
+            protonDbRatings: protonDbRatings,
+            deckVerifiedStatuses: deckVerifiedStatuses,
             showProgressFilter: showProgressFilter,
             showTagsFilter: showTagsFilter,
             showModesFilter: showModesFilter,
+            showProtonDbFilter: showProtonDbFilter,
+            showDeckVerifiedFilter: showDeckVerifiedFilter,
           },
         });
 

@@ -18,6 +18,7 @@
 
   <OptionsItem title="Games" titleClass="h3">
     <h4>Integrations</h4>
+
     <OptionsToggle id="bp-options-modules-games-hltb-integration-enabled" bind:boundValue={options.modules.games.hltbIntegration.enabled}>
       Enable How Long to Beat integration
       <div slot="description">
@@ -28,8 +29,10 @@
         <OptionsToggle id="bp-options-modules-games-hltb-integration-displaycolumns-100" bind:boundValue={options.modules.games.hltbIntegration.displayColumns["100%"]}>Show "100%" time to beat column</OptionsToggle>
 
         <OptionsToggle id="bp-options-modules-games-hltb-integration-add-hltb-links" bind:boundValue={options.modules.games.hltbIntegration.addHltbLinks}>Add links to HLTB pages</OptionsToggle>
+        <OptionsToggle id="bp-options-modules-games-hltb-integration-one-column-mode" bind:boundValue={options.modules.games.hltbIntegration.oneColumnMode}>Show times in one column in table view</OptionsToggle>
       </div>
     </OptionsToggle>
+
     <OptionsToggle id="bp-options-modules-games-protondb-integration-enabled" bind:boundValue={options.modules.games.protonDbIntegration.enabled}>
       Enable ProtonDB integration
       <div slot="description">
@@ -37,14 +40,18 @@
         <OptionsToggle id="bp-options-modules-games-protondb-integration-add-protondb-links" bind:boundValue={options.modules.games.protonDbIntegration.addProtonDbLinks}>Add links to ProtonDB pages</OptionsToggle>
       </div>
     </OptionsToggle>
+
     <OptionsToggle id="bp-options-modules-games-protondb-integration-enabled" bind:boundValue={options.modules.games.deckVerifiedIntegration.enabled}>
       Enable Steam Deck Verified integration
       <div slot="description">
         <p>Display Steam Deck Verified ratings for games on any games page on BLAEO. Currently works only when using table or list view.</p>
       </div>
     </OptionsToggle>
+
     <h4>Filters</h4>
+
     <OptionsToggle id="bp-options-modules-games-filters-progress" bind:boundValue={options.modules.games.filters.progress}>Add progress filters</OptionsToggle>
+
     <OptionsToggle id="bp-options-modules-games-filters-tags" bind:boundValue={options.modules.games.filters.tags}>
       Add tag filters
       <div slot="description">
@@ -60,6 +67,26 @@
         <p>
           Adds filtering games by singleplayer, multiplayer or coop.<br />
           Requires How Long to Beat integration.
+        </p>
+      </div>
+    </OptionsToggle>
+
+    <OptionsToggle id="bp-options-modules-games-filters-protondb-ratings" bind:boundValue={options.modules.games.filters.protonDbRatings} bind:disabled={options.modules.games.protonDbIntegration.enabled}>
+      Add ProtonDB rating filters
+      <div slot="description">
+        <p>
+          Adds filtering games by ProtonDB ratings.<br />
+          Requires ProtonDB integration.
+        </p>
+      </div>
+    </OptionsToggle>
+
+    <OptionsToggle id="bp-options-modules-games-filters-deckverified-statuses" bind:boundValue={options.modules.games.filters.deckVerifiedStatuses} bind:disabled={options.modules.games.deckVerifiedIntegration.enabled}>
+      Add Deck Verified status filters
+      <div slot="description">
+        <p>
+          Adds filtering games by Steam Deck Verified statuses.<br />
+          Requires Steam Deck Verified integration.
         </p>
       </div>
     </OptionsToggle>

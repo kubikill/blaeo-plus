@@ -100,7 +100,9 @@
     }
 
     .modal-body {
-      overflow: auto;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .toggle-item-sub {

@@ -18,6 +18,8 @@ export let options = mergeDeep(
           progress: true,
           tags: true,
           modes: true,
+          protonDbRatings: true,
+          deckVerifiedStatuses: true,
         },
         hltbIntegration: {
           enabled: true,
@@ -26,6 +28,7 @@ export let options = mergeDeep(
             "+extra": true,
             "100%": true,
           },
+          oneColumnMode: false,
           addHltbLinks: true,
         },
         protonDbIntegration: {

@@ -37,8 +37,8 @@ function getProtonDbHtml(steamId: number, mode: string): string {
       return getProtonDbTableHtml(steamId);
     case "list":
       return getProtonDbListHtml(steamId);
-      default:
-        return "";
+    default:
+      return "";
   }
 }
 
@@ -56,7 +56,7 @@ function getProtonDbTableHtml(steamId: number): string {
   } else if (linuxData[steamId].protonDbProvRating != "unknown") {
     html += `
     <td class="text-right bp-protondb-element" data-value="${getProtonDbScore(steamId)}">
-        <div class="bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating}" title="provisional rating based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
+        <div class="bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
           ${provisionalIcon} ${linuxData[steamId].protonDbProvRating}
         </div>
     </td>
@@ -127,7 +127,7 @@ export async function initProtonDb() {
           "afterend",
           `
             <th class="text-right bp-protondb-element" data-bp-protondb="asc">ProtonDB rating <i class="fa fa-sort"></i></th>
-          `
+          `,
         );
 
         const gameProtonDbHeader = gameContainer.querySelector("tr > th[data-bp-protondb]") as HTMLElement;
@@ -171,7 +171,7 @@ export async function initProtonDb() {
               <li class="bp-protondb-element" style="vertical-align: middle">
                 <a href="https://www.protondb.com/app/${steamId}" aria-label="ProtonDB game page" title="ProtonDB game page">${protonDbLogo}</a>
               </li>
-            `
+            `,
             );
           }
         } else if (game.classList.contains("game-media")) {
@@ -182,7 +182,7 @@ export async function initProtonDb() {
               "beforeend",
               `
               <a class="bp-protondb-element" href="https://www.protondb.com/app/${steamId}" aria-label="ProtonDB game page" title="ProtonDB game page">${protonDbLogo}</a>
-            `
+            `,
             );
           }
 

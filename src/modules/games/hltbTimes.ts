@@ -108,15 +108,19 @@ function getHltbGameData(steamId: number) {
   return gameData;
 }
 
-function getHltbHtml(steamId: number, mode: string): string {
+function getHltbHtml(steamId: number, mode: string, oneColumnMode: boolean): string {
   let gameData = getHltbGameData(steamId);
   switch (mode) {
     case "table":
+      if (oneColumnMode) {
+        return getHltbTableOneColumnHtml(steamId, gameData);
+      }
+
       return getHltbTableHtml(steamId, gameData);
     case "list":
       return getHltbListHtml(steamId, gameData);
-      default:
-        return '';
+    default:
+      return "";
   }
 }
 
@@ -127,9 +131,7 @@ function getHltbTableHtml(steamId: number, gameData: any): string {
     if (gameData.gameObj.type.includes("sp")) {
       if (options.modules.games.hltbIntegration.displayColumns.main) {
         html += `
-          <td class="text-right bp-hltb-element" data-value="${
-            hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.main ?? -1
-          }">
+          <td class="text-right bp-hltb-element" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.main ?? -1}">
             <div title="based on ${gameData.gameObj?.mainCount ?? 0} report(s)">${gameData.mainCompString}</div>
           </td>
         `;
@@ -137,9 +139,7 @@ function getHltbTableHtml(steamId: number, gameData: any): string {
 
       if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
         html += `
-        <td class="text-right bp-hltb-element" data-value="${
-          hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.extra ?? -1
-        }">
+        <td class="text-right bp-hltb-element" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.extra ?? -1}">
           <div title="based on ${gameData.gameObj?.extraCount ?? 0} report(s)">${gameData.extraCompString}</div>
         </td>
         `;
@@ -147,31 +147,21 @@ function getHltbTableHtml(steamId: number, gameData: any): string {
 
       if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
         html += `
-            <td class="text-right bp-hltb-element" data-value="${
-              hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.everything ?? -1
-            }">
-              <div title="based on ${gameData.gameObj?.everythingCount ?? 0} report(s)">${
-          gameData.everythingCompString
-        }</div>
+            <td class="text-right bp-hltb-element" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.everything ?? -1}">
+              <div title="based on ${gameData.gameObj?.everythingCount ?? 0} report(s)">${gameData.everythingCompString}</div>
             </td>
             `;
       }
     } else {
       html += `
-        <td class="text-center bp-hltb-element" colspan="3" data-value="${
-          hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.mp ?? -1
-        }">`;
+        <td class="text-center bp-hltb-element" colspan="3" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.mp ?? -1}">`;
 
       if (gameData.gameObj.type.includes("mp")) {
-        html += `<span title="based on ${gameData.gameObj?.mpCount ?? 0} report(s)">MP: ${
-          gameData.mpCompString
-        } </span>`;
+        html += `<span title="based on ${gameData.gameObj?.mpCount ?? 0} report(s)">MP: ${gameData.mpCompString} </span>`;
       }
 
       if (gameData.gameObj.type.includes("coop")) {
-        html += `<span title="based on ${gameData.gameObj?.coopCount ?? 0} report(s)">Co-op: ${
-          gameData.coopCompString
-        }</span>`;
+        html += `<span title="based on ${gameData.gameObj?.coopCount ?? 0} report(s)">Co-op: ${gameData.coopCompString}</span>`;
       }
 
       html += `</td>`;
@@ -201,6 +191,62 @@ function getHltbTableHtml(steamId: number, gameData: any): string {
     `;
     }
   }
+
+  return html;
+}
+
+function getHltbTableOneColumnHtml(steamId: number, gameData: any): string {
+  let html = `<td class="text-right bp-hltb-element">`;
+
+  if (gameData.gameObj) {
+    if (gameData.gameObj.type.includes("sp")) {
+      if (options.modules.games.hltbIntegration.displayColumns.main) {
+        html += `
+          <div class="bp-hltb-element" title="based on ${gameData.gameObj?.mainCount ?? 0} report(s)">
+            <div class="bp-hltb-one-column"><span class="bp-hltb-one-column-label">Main:</span> ${gameData.mainCompString}</div>
+          </div>
+        `;
+      }
+
+      if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
+        html += `
+          <div class="bp-hltb-element" title="based on ${gameData.gameObj?.extraCount ?? 0} report(s)">
+            <div class="bp-hltb-one-column"><span class="bp-hltb-one-column-label">+Extra:</span> ${gameData.extraCompString}</div>
+          </div>
+        `;
+      }
+
+      if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
+        html += `
+          <div class="bp-hltb-element" title="based on ${gameData.gameObj?.everythingCount ?? 0} report(s)">
+            <div class="bp-hltb-one-column"><span class="bp-hltb-one-column-label">100%:</span> ${gameData.everythingCompString}</div>
+          </div>
+        `;
+      }
+    } else {
+      if (gameData.gameObj.type.includes("mp")) {
+        html += `
+          <div class="bp-hltb-element bp-hltb-one-column" title="based on ${gameData.gameObj?.mpCount ?? 0} report(s)">
+          <span class="bp-hltb-one-column-label">MP:</span> ${gameData.mpCompString} 
+          </div>
+        `;
+      }
+
+      if (gameData.gameObj.type.includes("coop")) {
+        html += `
+          <div class="bp-hltb-element bp-hltb-one-column" title="based on ${gameData.gameObj?.coopCount ?? 0} report(s)">
+          <span class="bp-hltb-one-column-label">Co-op:</span> ${gameData.coopCompString}
+          </div>
+        `;
+      }
+    }
+  } else {
+    html += `
+      <div>${gameData.gameStatus}</div>
+    `;
+  }
+
+  html += `</td>`;
 
   return html;
 }
@@ -281,6 +327,7 @@ export async function initHltbTimes() {
       const gameTableHeader = gameContainer.querySelector("tr") as HTMLTableRowElement;
       const gameTableGroups = gameContainer.querySelector("colgroup") as HTMLElement;
       const games = gameContainer.querySelectorAll(".game") as NodeListOf<HTMLElement>;
+      const oneColumnMode = options.modules.games.hltbIntegration.oneColumnMode;
 
       let colspan = 0;
 
@@ -291,23 +338,37 @@ export async function initHltbTimes() {
       }
 
       if (options.modules.games.hltbIntegration.displayColumns)
-        if (gameTableHeader) {
+        if (gameTableHeader && oneColumnMode) {
+          gameTableHeader.insertAdjacentHTML(
+            "beforeend",
+            `
+            <th class="text-right bp-hltb-element" data-bp-ttb-main="asc">Time to beat <i class="fa fa-sort"></i></th>
+          `,
+          );
+
+          const gameTtbMainHeader = gameTableHeader.querySelector("[data-bp-ttb-main]") as HTMLElement;
+
+          gameTtbMainHeader.addEventListener("click", () => {
+            $(gameContainer).sortable_table("sort", $(gameTtbMainHeader).index(), gameTtbMainHeader.dataset.bpTtbMain === "asc");
+            if (gameTtbMainHeader.dataset.bpTtbMain === "asc") {
+              gameTtbMainHeader.dataset.bpTtbMain = "desc";
+            } else {
+              gameTtbMainHeader.dataset.bpTtbMain = "asc";
+            }
+          });
+        } else if (gameTableHeader) {
           if (options.modules.games.hltbIntegration.displayColumns.main) {
             gameTableHeader.insertAdjacentHTML(
               "beforeend",
               `
               <th class="text-right bp-hltb-element" data-bp-ttb-main="asc">TTB Main <i class="fa fa-sort"></i></th>
-            `
+            `,
             );
 
             const gameTtbMainHeader = gameTableHeader.querySelector("[data-bp-ttb-main]") as HTMLElement;
 
             gameTtbMainHeader.addEventListener("click", () => {
-              $(gameContainer).sortable_table(
-                "sort",
-                $(gameTtbMainHeader).index(),
-                gameTtbMainHeader.dataset.bpTtbMain === "asc"
-              );
+              $(gameContainer).sortable_table("sort", $(gameTtbMainHeader).index(), gameTtbMainHeader.dataset.bpTtbMain === "asc");
               if (gameTtbMainHeader.dataset.bpTtbMain === "asc") {
                 gameTtbMainHeader.dataset.bpTtbMain = "desc";
               } else {
@@ -321,17 +382,13 @@ export async function initHltbTimes() {
               "beforeend",
               `
               <th class="text-right bp-hltb-element" data-bp-ttb-extra="asc">TTB +Extra <i class="fa fa-sort"></i></th>
-            `
+            `,
             );
 
             const gameTtbExtraHeader = gameTableHeader.querySelector("[data-bp-ttb-extra]") as HTMLElement;
 
             gameTtbExtraHeader.addEventListener("click", () => {
-              $(gameContainer).sortable_table(
-                "sort",
-                $(gameTtbExtraHeader).index(),
-                gameTtbExtraHeader.dataset.bpTtbExtra === "asc"
-              );
+              $(gameContainer).sortable_table("sort", $(gameTtbExtraHeader).index(), gameTtbExtraHeader.dataset.bpTtbExtra === "asc");
               if (gameTtbExtraHeader.dataset.bpTtbExtra === "asc") {
                 gameTtbExtraHeader.dataset.bpTtbExtra = "desc";
               } else {
@@ -345,17 +402,13 @@ export async function initHltbTimes() {
               "beforeend",
               `
               <th class="text-right bp-hltb-element" data-bp-ttb-everything="asc">TTB 100% <i class="fa fa-sort"></i></th>
-            `
+            `,
             );
 
             const gameTtbEverythingHeader = gameTableHeader.querySelector("[data-bp-ttb-everything]") as HTMLElement;
 
             gameTtbEverythingHeader.addEventListener("click", () => {
-              $(gameContainer).sortable_table(
-                "sort",
-                $(gameTtbEverythingHeader).index(),
-                gameTtbEverythingHeader.dataset.bpTtbEverything === "asc"
-              );
+              $(gameContainer).sortable_table("sort", $(gameTtbEverythingHeader).index(), gameTtbEverythingHeader.dataset.bpTtbEverything === "asc");
               if (gameTtbEverythingHeader.dataset.bpTtbEverything === "asc") {
                 gameTtbEverythingHeader.dataset.bpTtbEverything = "desc";
               } else {
@@ -366,45 +419,50 @@ export async function initHltbTimes() {
         }
 
       if (gameTableGroups) {
-        if (
-          gameTableHeader!.firstElementChild!.textContent!.trim() === "#" ||
-          gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won"
-        ) {
+        if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won") {
           gameTableGroups.innerHTML = `
-            <col class="bp-hltb-element" style="width: 1%;">
-            <col class="bp-hltb-element">
-            <col class="bp-hltb-element" style="width: 130px">
-            <col class="bp-hltb-element" style="width: 130px">
-          `;
+          <col class="bp-hltb-element" style="width: 1%;">
+          <col class="bp-hltb-element">
+          <col class="bp-hltb-element" style="width: 130px">
+          <col class="bp-hltb-element" style="width: 130px">
+        `;
 
-          if (options.modules.games.hltbIntegration.displayColumns.main) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${155 - 15 * colspan}px;">`;
-          }
+          if (oneColumnMode) {
+            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 160px;">`;
+          } else {
+            if (options.modules.games.hltbIntegration.displayColumns.main) {
+              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
+            }
 
-          if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${155 - 15 * colspan}px;">`;
-          }
+            if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
+              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
+            }
 
-          if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${155 - 15 * colspan}px;">`;
+            if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
+              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
+            }
           }
         } else {
           gameTableGroups.innerHTML = `
             <col>
-            <col>
+            <col style="width: 130px">
             <col style="width: 130px">
           `;
 
-          if (options.modules.games.hltbIntegration.displayColumns.main) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${155 - 15 * colspan}px;">`;
-          }
+          if (oneColumnMode) {
+            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 160px;">`;
+          } else {
+            if (options.modules.games.hltbIntegration.displayColumns.main) {
+              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
+            }
 
-          if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${155 - 15 * colspan}px;">`;
-          }
+            if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
+              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
+            }
 
-          if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${155 - 15 * colspan}px;">`;
+            if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
+              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
+            }
           }
         }
       }
@@ -416,23 +474,18 @@ export async function initHltbTimes() {
         const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1];
 
         if (game.tagName === "TR") {
-          game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "table"));
+          game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "table", oneColumnMode));
 
           const gameToolbar = game.querySelector(".toolbar");
 
-          if (
-            options.modules.games.hltbIntegration.addHltbLinks &&
-            gameToolbar &&
-            hltbData[steamId] &&
-            hltbData[steamId].hltbId != -1
-          ) {
+          if (options.modules.games.hltbIntegration.addHltbLinks && gameToolbar && hltbData[steamId] && hltbData[steamId].hltbId != -1) {
             gameToolbar.insertAdjacentHTML(
               "beforeend",
               `
               <li class="bp-hltb-element" style="vertical-align: middle">
                 <a href="https://howlongtobeat.com/game/${hltbData[steamId].hltbId}" aria-label="HLTB game page" title="HLTB game page">${hltbLogo}</a>
               </li>
-            `
+            `,
             );
           }
 
@@ -445,27 +498,22 @@ export async function initHltbTimes() {
             });
           }
         } else if (game.classList.contains("game-media")) {
-          game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "list"));
+          game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "list", oneColumnMode));
 
           const gameHeading = game.querySelector("h4.media-heading");
 
-          if (
-            options.modules.games.hltbIntegration.addHltbLinks &&
-            gameHeading &&
-            hltbData[steamId] &&
-            hltbData[steamId].hltbId != -1
-          ) {
+          if (options.modules.games.hltbIntegration.addHltbLinks && gameHeading && hltbData[steamId] && hltbData[steamId].hltbId != -1) {
             gameHeading.insertAdjacentHTML(
               "beforeend",
               `
               <a href="https://howlongtobeat.com/game/${hltbData[steamId].hltbId}" aria-label="HLTB game page" title="HLTB game page">${hltbLogo}</a>
-            `
+            `,
             );
           }
 
           if (gameHeading && hltbData && !hltbData[steamId] && !hltbExcludedGames.includes(+steamId)) {
             queryList.push({
-              name: gameHeading.textContent || '',
+              name: gameHeading.textContent || "",
               steamId: steamId,
             });
           }

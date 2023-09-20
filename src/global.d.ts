@@ -19,6 +19,8 @@ type Options = {
         progress: boolean;
         tags: boolean;
         modes: boolean;
+        protonDbRatings: boolean;
+        deckVerifiedStatuses: boolean;
       };
       hltbIntegration: {
         enabled: boolean;
@@ -27,6 +29,7 @@ type Options = {
           "+extra": boolean;
           "100%": boolean;
         };
+        oneColumnMode: boolean;
         addHltbLinks: boolean;
       };
       protonDbIntegration: {

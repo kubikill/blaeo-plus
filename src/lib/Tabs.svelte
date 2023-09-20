@@ -15,11 +15,13 @@
   {/each}
 </ul>
 
-{#each tabs as tab, idx}
-  <div role="tabpanel" hidden={idx != activeTab} id={slugify(`options-${tab.name}`)}>
-    <svelte:component this={tab.content} {...tab.props} />
-  </div>
-{/each}
+<div class="tab-container">
+  {#each tabs as tab, idx}
+    <div role="tabpanel" hidden={idx != activeTab} id={slugify(`options-${tab.name}`)}>
+      <svelte:component this={tab.content} {...tab.props} />
+    </div>
+  {/each}
+</div>
 
 <style lang="scss">
   .tab {
@@ -43,5 +45,9 @@
     border: 1px solid #ddd;
     border-bottom-color: transparent;
     cursor: default;
+  }
+
+  .tab-container {
+    overflow: auto;
   }
 </style>

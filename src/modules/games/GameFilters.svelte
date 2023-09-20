@@ -7,6 +7,8 @@
     modes: [] as any[],
     availableTags: [] as any[],
     tags: [] as any[],
+    protonDbRatings: [] as any[],
+    deckVerifiedStatuses: [] as any[],
   };
   export let gameStats: {
     "wont-play": number;
@@ -26,9 +28,13 @@
 
   export let progresses: any;
   export let modes: any;
+  export let protonDbRatings: any;
+  export let deckVerifiedStatuses: any;
   export let showProgressFilter = true;
   export let showTagsFilter = true;
   export let showModesFilter = true;
+  export let showProtonDbFilter = true;
+  export let showDeckVerifiedFilter = true;
 
   const dispatch = createEventDispatcher();
 
@@ -60,6 +66,8 @@
 
   let selectedTags = [] as any[];
   let selectedModes = [] as any[];
+  let selectedProtonDbRatings = [] as any[];
+  let selectedDeckVerifiedStatuses = [] as any[];
 
   function changeMode() {
     filters.modes = selectedModes;
@@ -68,6 +76,16 @@
 
   function toggleProgress(progress: string) {
     progresses[progress] = !progresses[progress];
+    dispatch("filters-changed");
+  }
+
+  function changeProtonDbRating() {
+    filters.protonDbRatings = selectedProtonDbRatings;
+    dispatch("filters-changed");
+  }
+
+  function changeDeckVerifiedStatus() {
+    filters.deckVerifiedStatuses = selectedDeckVerifiedStatuses;
     dispatch("filters-changed");
   }
 </script>
@@ -139,13 +157,32 @@
     </div>
   {/if}
   {#if showTagsFilter}
-    <div class="bp-filters-wrapper">
+    <div class="bp-filters-wrapper bp-filters-tags">
+      <MultiSelect bind:selected={selectedTags} on:change={changeTag} options={availableTags} outerDivClass="bp-tag-select" placeholder={"Tags"} selectedOptionsDraggable={false}>
+        <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
+          {option.label}
+        </div>
+      </MultiSelect>
+    </div>
+  {/if}
+  {#if showModesFilter}
+    <div class="bp-filters-wrapper bp-filters-modes">
+      <MultiSelect bind:selected={selectedModes} on:change={changeMode} options={modes} outerDivClass="bp-tag-select" placeholder={"Modes"} sortSelected={(a, b) => a.sortValue - b.sortValue} selectedOptionsDraggable={false}>
+        <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
+          {option.label}
+        </div>
+      </MultiSelect>
+    </div>
+  {/if}
+  {#if showProtonDbFilter}
+    <div class="bp-filters-wrapper bp-filters-protondb">
       <MultiSelect
-        bind:selected={selectedTags}
-        on:change={changeTag}
-        options={availableTags}
-        outerDivClass="bp-tag-select"
-        placeholder={"Tags"}
+        bind:selected={selectedProtonDbRatings}
+        on:change={changeProtonDbRating}
+        options={protonDbRatings}
+        outerDivClass="bp-protondbstatuses-select"
+        placeholder={"ProtonDB ratings"}
+        sortSelected={(a, b) => a.sortValue - b.sortValue}
         selectedOptionsDraggable={false}
       >
         <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
@@ -154,14 +191,14 @@
       </MultiSelect>
     </div>
   {/if}
-  {#if showModesFilter}
-    <div class="bp-filters-wrapper">
+  {#if showDeckVerifiedFilter}
+    <div class="bp-filters-wrapper bp-filters-deckverified">
       <MultiSelect
-        bind:selected={selectedModes}
-        on:change={changeMode}
-        options={modes}
-        outerDivClass="bp-tag-select"
-        placeholder={"Modes"}
+        bind:selected={selectedDeckVerifiedStatuses}
+        on:change={changeDeckVerifiedStatus}
+        options={deckVerifiedStatuses}
+        outerDivClass="bp-protondbstatuses-select"
+        placeholder={"Steam Deck Verified statuses"}
         sortSelected={(a, b) => a.sortValue - b.sortValue}
         selectedOptionsDraggable={false}
       >
@@ -175,11 +212,16 @@
 
 <style lang="scss" global>
   .bp-filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 8px;
+
     button {
       appearance: none;
       border: none;
       padding-right: 0;
     }
+
     .bp-filters-wrapper {
       display: flex;
       flex-wrap: wrap;
@@ -187,6 +229,8 @@
 
       div.multiselect {
         margin-bottom: 8px !important;
+        flex-grow: 1;
+
         &.bp-progress-select {
           width: 100%;
 
@@ -195,10 +239,6 @@
             margin-right: 8px;
             flex-shrink: 0;
           }
-        }
-
-        &.bp-tag-select {
-          flex-grow: 1;
         }
 
         > ul.options > li {
@@ -251,6 +291,8 @@
 
   div.list-progress {
     display: flex;
+    width: 100%;
+
     .game-uncategorized {
       background-color: #ddd;
 
@@ -263,6 +305,24 @@
       .game-uncategorized {
         color: #555;
       }
+    }
+  }
+
+  .bp-filters-tags {
+    width: 100%;
+  }
+
+  .bp-filters-modes,
+  .bp-filters-protondb,
+  .bp-filters-deckverified {
+    width: 100%;
+    @media (min-width: 768px) {
+      width: 40%;
+      flex-grow: 1;
+    }
+
+    @media (min-width: 1024px) {
+      width: 30%;
     }
   }
 </style>
