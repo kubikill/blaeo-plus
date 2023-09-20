@@ -15,7 +15,7 @@
       </ul>
     </li>
     <li>Added quick rearranging to rearrange game lists by name, playtime or HLTB time to beat</li>
-    <li>TODO Added update notifier</li>
+    <li>Added update notifier</li>
     <li>Added option to show HLTB times in one column in table view</li>
     <ul>
       <li>Disabled by default; visit options to enable</li>

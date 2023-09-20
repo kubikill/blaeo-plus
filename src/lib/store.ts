@@ -55,6 +55,9 @@ let options = mergeDeep(
           commentBehavior: "hide",
         },
       },
+      misc: {
+        updateNotifier: true,
+      },
     },
     blacklist: {},
   },

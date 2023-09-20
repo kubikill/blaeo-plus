@@ -40,6 +40,7 @@
     "vite-plugin-monkey": "^3.5.0"
   },
   "dependencies": {
+    "compare-versions": "^6.1.0",
     "slugify": "^1.6.6",
     "svelte-multiselect": "^10.1.0",
     "svelte-switcher": "^1.0.2"

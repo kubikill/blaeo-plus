@@ -157,6 +157,10 @@
       </div>
     </OptionsToggle>
   </OptionsItem>
+
+  <OptionsItem title="Misc" titleClass="h3">
+    <OptionsToggle id="bp-options-modules-misc-update-notifier" bind:boundValue={$optionsStore.modules.misc.updateNotifier}>Notify me about updates</OptionsToggle>
+  </OptionsItem>
 </div>
 
 <style lang="scss">

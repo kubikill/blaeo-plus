@@ -504,6 +504,7 @@ __metadata:
     "@sveltejs/vite-plugin-svelte": ^2.4.6
     "@tsconfig/svelte": ^5.0.2
     "@types/jquery": ^3.5.19
+    compare-versions: ^6.1.0
     prettier: ^3.0.3
     prettier-plugin-css-order: ^2.0.0
     prettier-plugin-svelte: ^2.10.1
@@ -658,6 +659,13 @@ __metadata:
   bin:
     color-support: bin.js
   checksum: 9b7356817670b9a13a26ca5af1c21615463b500783b739b7634a0c2047c16cef4b2865d7576875c31c3cddf9dd621fa19285e628f20198b233a5cfdda6d0793b
+  languageName: node
+  linkType: hard
+
+"compare-versions@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "compare-versions@npm:6.1.0"
+  checksum: d4e2a45706a023d8d0b6680338b66b79e20bd02d1947f0ac6531dab634cbed89fa373b3f03d503c5e489761194258d6e1bae67a07f88b1efc61648454f2d47e7
   languageName: node
   linkType: hard
 

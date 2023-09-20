@@ -70,6 +70,9 @@ type Options = {
         commentBehavior: "none" | "hide" | "collapse" | "collapse-with-uncollapse";
       };
     };
+    misc: {
+      updateNotifier: boolean;
+    };
   };
   blacklist: Blacklist;
 };

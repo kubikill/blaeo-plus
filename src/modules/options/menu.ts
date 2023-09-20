@@ -1,4 +1,4 @@
-import { addedComponents } from "@/globals";
+import { addedComponents, optionsMenuComponent } from "@/globals";
 import OptionsMenu from "./OptionsMenu.svelte";
 import { removeNodeIfExists } from "@/lib/utilities";
 import type { SvelteComponent } from "svelte";
@@ -17,7 +17,7 @@ export function initOptionsMenu() {
   }
 
   // Render options menu
-  const optionsMenuComponent = new OptionsMenu({
+  const optionsMenu = new OptionsMenu({
     target: document.body,
     props: {
       showOptions: false,
@@ -25,7 +25,9 @@ export function initOptionsMenu() {
     },
   }) as SvelteComponent;
 
-  addedComponents.push(optionsMenuComponent);
+  addedComponents.push(optionsMenu);
+
+  optionsMenuComponent.component = optionsMenu;
 
   const headerDropdownSettingsLink = headerDropdown!.querySelector('[href="/settings"]')!.parentElement;
 
@@ -33,7 +35,7 @@ export function initOptionsMenu() {
   optionsButtonTemplate.innerHTML = '<li><button type="button" class="bp-options-button">BLAEO+ settings</button></li>'.trim();
   let optionsButton = optionsButtonTemplate.content.firstElementChild as HTMLButtonElement;
   optionsButton!.addEventListener("click", () => {
-    optionsMenuComponent.$set({ showOptions: true });
+    optionsMenu.$set({ showOptions: true });
   });
 
   headerDropdownSettingsLink!.insertAdjacentElement("afterend", optionsButton);

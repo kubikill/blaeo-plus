@@ -1,6 +1,6 @@
 import "@/app.scss";
 import { optionsStore } from "./lib/store";
-import { addedComponents } from "@/globals";
+import { BP_VERSION, addedComponents } from "@/globals";
 import { addHeaderShortcuts, cleanupHeaderShortcuts } from "@/modules/header/shortcuts";
 import { initMobileMessageIcon, cleanupMobileMessageIcon } from "@/modules/header/mobileMessageIcon";
 import { cleanupOptionsMenu, initOptionsMenu } from "@/modules/options/menu";
@@ -18,6 +18,8 @@ import type { SvelteComponent } from "svelte";
 import initBlacklist from "./modules/users/blacklist";
 import { get } from "svelte/store";
 import initListQuickRearrange from "./modules/list/quickRearrange";
+import initUpdateNotifier from "./modules/changelog/updateNotifier";
+import { GM_setValue } from "vite-plugin-monkey/dist/client";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
@@ -114,6 +116,12 @@ function initEachPage(): void {
 
   if (options.modules.games.lists.quickRearrange) {
     initListQuickRearrange();
+  }
+
+  if (options.modules.misc.updateNotifier) {
+    initUpdateNotifier();
+  } else {
+    GM_setValue("bp-last-version", BP_VERSION);
   }
 }
 
