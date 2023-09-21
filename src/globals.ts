@@ -2,29 +2,13 @@ import { GM_getValue, GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
 import { getAuthenticityToken } from "@/lib/utilities";
 import type { SvelteComponent } from "svelte";
 
-function getLastVersion() {
-  let lastVersion = GM_getValue("bp-last-version", "");
-
-  if (!lastVersion) {
-    if (GM_getValue("bp-options", false)) {
-      lastVersion = "1.0.4";
-    } else {
-      lastVersion = BP_VERSION;
-    }
-  }
-
-  return lastVersion;
-}
-
-export const BP_VERSION = "1.1.0";
+export const BP_VERSION = "1.1.1";
 
 export const addedComponents = [] as SvelteComponent[];
 
 export let optionsMenuComponent = {
   component: null as SvelteComponent | null,
 };
-
-export let lastVersion = getLastVersion();
 
 export let userData = {
   name: "",

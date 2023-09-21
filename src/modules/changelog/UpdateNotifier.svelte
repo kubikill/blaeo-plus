@@ -3,7 +3,7 @@
   import Changelog from "./Changelog.svelte";
   import { blaeoPlusLogo } from "@/assets/icons";
   import OptionsToggle from "../options/OptionsToggle.svelte";
-  import { optionsStore } from "@/lib/store";
+  import { lastVersionStore, optionsStore } from "@/lib/store";
   import { GM_setValue } from "vite-plugin-monkey/dist/client";
   import OptionsMenu from "../options/OptionsMenu.svelte";
 
@@ -17,20 +17,20 @@
 
   function hideModal() {
     showModal = false;
-    GM_setValue("bp-last-version", BP_VERSION);
+    $lastVersionStore = BP_VERSION;
   }
 </script>
 
 <div class="bp-update-notifier-modal" class:visible={showModal === true}>
   <div class="modal-content">
     <div class="modal-header">
-      <h2 class="modal-header-heading">{@html blaeoPlusLogo} BLAEO+ updated to {BP_VERSION}!</h2>
+      <h2 class="modal-header-heading">{@html blaeoPlusLogo} BLAEO+ updated to v{BP_VERSION}!</h2>
       <button type="button" aria-label="Close" on:click={hideModal}>
         <i class="fa fa-close" />
       </button>
     </div>
     <div class="modal-body">
-      <h3>A new update for BLAEO+ has been installed. Changelog available below:</h3>
+      <p>A new update for BLAEO+ has been installed. Changelog available below:</p>
       <Changelog />
     </div>
     <div class="modal-footer">

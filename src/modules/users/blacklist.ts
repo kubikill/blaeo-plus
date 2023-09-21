@@ -2,11 +2,12 @@ import BlacklistButton from "@/modules/users/BlacklistButton.svelte";
 import { optionsStore } from "@/lib/store";
 import { get } from "svelte/store";
 import { blacklistIcon } from "@/assets/icons";
+import { addedComponents } from "@/globals";
+import { removeAllNodesIfExist } from "@/lib/utilities";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
   options = value;
-  console.log(options);
 });
 
 function handlePostBlock(name: string, element: HTMLElement) {
@@ -20,7 +21,7 @@ function handlePostBlock(name: string, element: HTMLElement) {
     element.insertAdjacentHTML(
       "beforebegin",
       `
-      <div class="panel-default post blocked collapsed">
+      <div class="bp-blacklist panel-default post blocked collapsed">
         <div class="avatar">${blacklistIcon}</div>
         <div class="body">
           <div class="markdown">
@@ -37,7 +38,7 @@ function handlePostBlock(name: string, element: HTMLElement) {
     element.insertAdjacentHTML(
       "beforebegin",
       `
-      <div class="panel-default post blocked collapsed">
+      <div class="bp-blacklist panel-default post blocked collapsed">
         <div class="avatar">${blacklistIcon}</div>
         <div class="body">
           <div class="markdown">
@@ -64,7 +65,7 @@ function handleCommentBlock(name: string, element: HTMLElement) {
     element.insertAdjacentHTML(
       "beforebegin",
       `
-      <div class="panel-default post blocked collapsed">
+      <div class="bp-blacklist panel-default post blocked collapsed">
         <div class="avatar">${blacklistIcon}</div>
         <div class="body">
           <div class="markdown">
@@ -81,7 +82,7 @@ function handleCommentBlock(name: string, element: HTMLElement) {
     element.insertAdjacentHTML(
       "beforebegin",
       `
-      <div class="panel-default post blocked collapsed">
+      <div class="bp-blacklist panel-default post blocked collapsed">
         <div class="avatar">${blacklistIcon}</div>
         <div class="body">
           <div class="markdown">
@@ -164,5 +165,11 @@ export default function initBlacklist() {
         name: profileName[1],
       },
     });
+
+    addedComponents.push(blacklistButtonComponent);
   }
+}
+
+export function cleanupBlacklist() {
+  removeAllNodesIfExist(".bp-blacklist");
 }

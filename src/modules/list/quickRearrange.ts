@@ -1,3 +1,4 @@
+import { addedComponents } from "@/globals";
 import QuickRearrangeModal from "./QuickRearrangeModal.svelte";
 
 export default function initListQuickRearrange() {
@@ -12,8 +13,6 @@ export default function initListQuickRearrange() {
   // read list id from current url, then save it to listId variable
   const listId = window.location.pathname.match(/\/lists\/(\w+)/)?.[1];
 
-  console.log(listId);
-
   const automaticRearrangeModal = new QuickRearrangeModal({
     target: heading,
     props: {
@@ -22,4 +21,6 @@ export default function initListQuickRearrange() {
       gameContainer: listRearrange,
     },
   });
+
+  addedComponents.push(automaticRearrangeModal);
 }

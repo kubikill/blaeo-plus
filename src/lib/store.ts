@@ -1,6 +1,21 @@
 import { writable } from "svelte/store";
 import { mergeDeep } from "./utilities";
 import { GM_getValue, GM_setValue } from "vite-plugin-monkey/dist/client";
+import { BP_VERSION } from "@/globals";
+
+function getLastVersion() {
+  let lastVersion = GM_getValue("bp-last-version", "");
+
+  if (!lastVersion) {
+    if (GM_getValue("bp-options", false)) {
+      lastVersion = "1.0.4";
+    } else {
+      lastVersion = BP_VERSION;
+    }
+  }
+
+  return lastVersion;
+}
 
 let options = mergeDeep(
   {
@@ -68,4 +83,10 @@ export const optionsStore = writable(options);
 
 optionsStore.subscribe((value) => {
   GM_setValue("bp-options", JSON.stringify(value));
+});
+
+export const lastVersionStore = writable(getLastVersion());
+
+lastVersionStore.subscribe((value) => {
+  GM_setValue("bp-last-version", value);
 });

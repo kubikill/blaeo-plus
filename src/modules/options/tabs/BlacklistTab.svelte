@@ -4,8 +4,6 @@
   function removeFromBlacklist(event: MouseEvent) {
     const target = event.target as HTMLButtonElement;
 
-    console.log(target);
-
     if (target.classList.contains("confirm")) {
       delete $optionsStore.blacklist[target.dataset.name];
       $optionsStore = $optionsStore;

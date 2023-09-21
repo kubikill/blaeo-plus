@@ -2,6 +2,7 @@ import DeckModal from "@/modules/games/DeckModal.svelte";
 import { linuxData } from "@/lib/linuxService";
 import { removeAllNodesIfExist } from "@/lib/utilities";
 import DeckBadge from "@/modules/games/DeckBadge.svelte";
+import { addedComponents } from "@/globals";
 
 const deckRatingScore = {
   unknown: -1,
@@ -103,6 +104,8 @@ export async function initDeckVerified() {
     },
   });
 
+  addedComponents.push(deckModalComponent);
+
   let checkInterval: ReturnType<typeof setInterval>;
   checkInterval = setInterval(() => {
     if (!gameContainer.dataset.delayedLast) {
@@ -164,7 +167,7 @@ export async function initDeckVerified() {
         let gameName;
 
         if (game.tagName === "TR") {
-          gameName = game.querySelector("td:first-child")?.firstChild?.textContent;
+          gameName = game.querySelector("td:not(.text-right)")?.firstChild?.textContent;
           const protonDbCell = game.querySelector("td.bp-protondb-element") as HTMLTableCellElement;
 
           if (protonDbCell) {
@@ -211,6 +214,8 @@ export async function initDeckVerified() {
               modal: deckModalComponent,
             },
           });
+
+          addedComponents.push(deckBadge);
         }
       });
     }
@@ -218,5 +223,5 @@ export async function initDeckVerified() {
 }
 
 export function cleanupDeckVerified() {
-  removeAllNodesIfExist("#games .bp-deckverified-element");
+  removeAllNodesIfExist(".bp-deckverified-element, .bp-linux-media, .bp-linux-grid");
 }

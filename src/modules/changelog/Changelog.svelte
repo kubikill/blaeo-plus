@@ -1,5 +1,12 @@
 <div class="main">
-  <h3>v1.1.0</h3>
+  <h3>v1.1.1 - September 21st, 2023</h3>
+  <ul>
+    <li>Fixed update notice appearing again after navigating to other pages without refreshing</li>
+    <li>Fixed ProtonDB and Steam Deck Verified data being synced on each visit to BLAEO (now syncs once every 24 hours)</li>
+    <li>Fixed wrong game name being used in Steam Deck Verified detail modals on list pages</li>
+    <li>Fixed missing cleanup logic for HTML elements created by BLAEO+</li>
+  </ul>
+  <h3>v1.1.0 - September 20th, 2023</h3>
   <ul>
     <li>
       Added ProtonDB and Steam Deck Verified integration
@@ -25,11 +32,11 @@
     <li>Code cleanup and refactoring</li>
     <li>Updated project dependencies</li>
   </ul>
-  <h3>v1.0.4</h3>
+  <h3>v1.0.4 - June 21st, 2023</h3>
   <ul>
     <li>Change URL address of BLAEO+ backend due to expiration of previous domain</li>
   </ul>
-  <h3>v1.0.3</h3>
+  <h3>v1.0.3 - April 23rd, 2023</h3>
   <ul>
     <li>Added post saving/loading</li>
     <li>Adjustments to the options menu layout</li>
@@ -38,13 +45,13 @@
     <li>Fix duplicated elements from BLAEO+ when using browser back/return buttons</li>
     <li>Updated project dependencies</li>
   </ul>
-  <h3>v1.0.2</h3>
+  <h3>v1.0.2 - April 20th, 2023</h3>
   <ul>
     <li>Add alternative mobile layouts for posts and comments</li>
     <li>Replace mobile message badge with link - now messages can be accessed without having to expand the header menu</li>
     <li>Fix script sometimes being initialized twice</li>
   </ul>
-  <h3>v1.0.1</h3>
+  <h3>v1.0.1 - April 16th, 2023</h3>
   <ul>
     <li>Automatically send games to the backend if there is no data on them</li>
     <li>Add userscript metadata, including download/update links as well as homepage and support URL</li>
@@ -52,7 +59,7 @@
     <li>Fix preview comments feature not working due to invalid authenticity token</li>
     <li>Fix unfinished save/load feature being enabled by default</li>
   </ul>
-  <h3>v1.0.0</h3>
+  <h3>v1.0.0 - April 16th, 2023</h3>
   <ul>
     <li>Initial release</li>
   </ul>

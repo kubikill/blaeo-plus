@@ -1,11 +1,12 @@
-import { BP_VERSION, lastVersion, optionsMenuComponent } from "@/globals";
+import { BP_VERSION, addedComponents, optionsMenuComponent } from "@/globals";
 import UpdateNotifier from "./UpdateNotifier.svelte";
 import type { SvelteComponent } from "svelte";
 import { compare } from "compare-versions/lib/esm/compare";
+import { get } from "svelte/store";
+import { lastVersionStore } from "@/lib/store";
 
 export default function initUpdateNotifier() {
-  console.log(BP_VERSION, lastVersion, compare(BP_VERSION, lastVersion, ">"));
-  if (compare(BP_VERSION, lastVersion, ">")) {
+  if (compare(BP_VERSION, get(lastVersionStore), ">")) {
     const updateNotifierComponent = new UpdateNotifier({
       target: document.body,
       props: {
@@ -13,6 +14,8 @@ export default function initUpdateNotifier() {
         optionsMenu: optionsMenuComponent.component,
       },
     }) as SvelteComponent;
+
+    addedComponents.push(updateNotifierComponent);
 
     setTimeout(() => {
       updateNotifierComponent.$set({ showModal: true });

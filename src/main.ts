@@ -11,11 +11,11 @@ import { initSaveLoad } from "./modules/newPost/saveLoad";
 import { hltbLastUpdate, syncHltb } from "./lib/hltbService";
 import initMobilePostLayout from "./modules/posts/mobileLayout";
 import initMobileCommentLayout from "./modules/comments/mobileLayout";
-import { linuxLastUpdate, syncLinux, syncLinuxGames } from "./lib/linuxService";
+import { linuxLastUpdate, syncLinux } from "./lib/linuxService";
 import { cleanupProtonDb, initProtonDb } from "./modules/games/protonDb";
-import { initDeckVerified } from "./modules/games/deckVerified";
+import { cleanupDeckVerified, initDeckVerified } from "./modules/games/deckVerified";
 import type { SvelteComponent } from "svelte";
-import initBlacklist from "./modules/users/blacklist";
+import initBlacklist, { cleanupBlacklist } from "./modules/users/blacklist";
 import { get } from "svelte/store";
 import initListQuickRearrange from "./modules/list/quickRearrange";
 import initUpdateNotifier from "./modules/changelog/updateNotifier";
@@ -41,6 +41,8 @@ function cleanup(): void {
   cleanupCommentPreview();
   cleanupHltbTimes();
   cleanupProtonDb();
+  cleanupDeckVerified();
+  cleanupBlacklist();
 }
 
 function init(): void {
@@ -54,7 +56,7 @@ function init(): void {
   if (options.modules.games.protonDbIntegration.enabled || options.modules.games.deckVerifiedIntegration.enabled) {
     if (linuxLastUpdate.getTime() < Date.now() - 86400) {
       // if last sync was at least 1 day ago
-      syncLinuxGames();
+      syncLinux();
     }
   }
 }

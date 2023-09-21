@@ -253,5 +253,5 @@ export async function initProtonDb() {
 }
 
 export function cleanupProtonDb() {
-  removeAllNodesIfExist("#games .bp-protondb-element");
+  removeAllNodesIfExist(".bp-protondb-element, .bp-linux-media, .bp-linux-grid");
 }
