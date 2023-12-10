@@ -103,7 +103,7 @@
       mpOnlyListArray.oldList = await getList(mpOnlyList[0].value);
     }
 
-    if (endlessBehavior === "separate" && endlessList?.[0] && mpOnlyList[0].value !== endlessList[0].value) {
+    if (endlessBehavior === "separate" && endlessList?.[0] && (!mpOnlyList[0] || mpOnlyList[0].value !== endlessList[0].value)) {
       endlessListArray.oldList = await getList(endlessList[0].value);
     }
 
@@ -394,24 +394,26 @@
       progressTotal++;
     }
 
-    if (endlessBehavior === "separate" && endlessList?.[0] && mpOnlyList[0].value !== endlessList[0].value) {
+    if (endlessBehavior === "separate" && endlessList?.[0] && (!mpOnlyList?.[0] || mpOnlyList[0].value !== endlessList[0].value)) {
       progressTotal++;
     }
 
     for (let list of listArray) {
-      $listBackupStore.push({
-        id: list.tagId[0].value,
-        name: list.tagId[0].label,
-        color: list.oldList?.color ?? "",
-        date: new Date().toLocaleString(),
-        dateIso: new Date().toISOString(),
-        games: list.oldList?.games ?? [],
-      });
+      if (list.tagId?.[0]) {
+        $listBackupStore.push({
+          id: list.tagId[0].value,
+          name: list.tagId[0].label,
+          color: list.oldList?.color ?? "",
+          date: new Date().toLocaleString(),
+          dateIso: new Date().toISOString(),
+          games: list.oldList?.games ?? [],
+        });
 
-      await setList(
-        list.tagId[0].value,
-        list.games.map((game) => game.id),
-      );
+        await setList(
+          list.tagId[0].value,
+          list.games.map((game) => game.id),
+        );
+      }
 
       progress++;
     }
@@ -434,7 +436,7 @@
       progress++;
     }
 
-    if (endlessBehavior === "separate" && endlessList?.[0] && mpOnlyList[0].value !== endlessList[0].value) {
+    if (endlessBehavior === "separate" && endlessList?.[0] && (!mpOnlyList[0] || mpOnlyList[0].value !== endlessList[0].value)) {
       $listBackupStore.push({
         id: endlessList[0].value,
         name: endlessList[0].label,
@@ -590,10 +592,16 @@
         <Tabs
           tabs={[
             ...listArray.map((list) => {
-              return { name: list.tagId[0].label, content: ListPreview, props: { list } };
+              if (list?.tagId[0]) {
+                return { name: list.tagId[0].label, content: ListPreview, props: { list } };
+              } else {
+                return null;
+              }
             }),
             mpOnlyBehavior === "separate" && mpOnlyListArray.oldList ? { name: mpOnlyListArray.oldList.name, content: ListPreview, props: { list: mpOnlyListArray } } : null,
-            endlessBehavior === "separate" && endlessListArray.oldList && mpOnlyList?.[0].value !== endlessList?.[0].value ? { name: endlessListArray.oldList.name, content: ListPreview, props: { list: endlessListArray } } : null,
+            endlessBehavior === "separate" && endlessListArray.oldList && (!mpOnlyList[0] || mpOnlyList?.[0].value !== endlessList?.[0].value)
+              ? { name: endlessListArray.oldList.name, content: ListPreview, props: { list: endlessListArray } }
+              : null,
           ]}
           bind:activeTab
         />
