@@ -70,7 +70,7 @@
 </script>
 
 <div>
-  {#each sortedList as list (list.id)}
+  {#each sortedList as list}
     <div>
       <h3><a href="https://www.backlog-assassins.net/lists/{list.id}/">{list.name}</a> - {list.games.length} games</h3>
       <p>Backup date: {list.date}</p>

@@ -32,6 +32,8 @@
   let endlessList: { label: any; value: any; color: any }[] = [];
   let lists = [] as { id: string; name: string; color: string }[];
   let activeTab = 0;
+  let progress = 0;
+  let progressTotal = 0;
 
   const listEntries = document.querySelectorAll("table.lists-table[data-rearrange] tr[data-item]") as NodeListOf<HTMLTableRowElement>;
   for (let listEntry of listEntries) {
@@ -385,6 +387,17 @@
   async function sendLists() {
     status = "sending";
 
+    progress = 0;
+    progressTotal = listArray.length;
+
+    if (mpOnlyBehavior === "separate" && mpOnlyList?.[0]) {
+      progressTotal++;
+    }
+
+    if (endlessBehavior === "separate" && endlessList?.[0] && mpOnlyList[0].value !== endlessList[0].value) {
+      progressTotal++;
+    }
+
     for (let list of listArray) {
       $listBackupStore.push({
         id: list.tagId[0].value,
@@ -399,6 +412,8 @@
         list.tagId[0].value,
         list.games.map((game) => game.id),
       );
+
+      progress++;
     }
 
     if (mpOnlyBehavior === "separate" && mpOnlyList?.[0]) {
@@ -415,6 +430,8 @@
         mpOnlyList[0].value,
         mpOnlyListArray.games.map((game) => game.id),
       );
+
+      progress++;
     }
 
     if (endlessBehavior === "separate" && endlessList?.[0] && mpOnlyList[0].value !== endlessList[0].value) {
@@ -431,6 +448,8 @@
         endlessList[0].value,
         endlessListArray.games.map((game) => game.id),
       );
+
+      progress++;
     }
 
     $listBackupStore = $listBackupStore;
@@ -582,6 +601,11 @@
 
       {#if status === "sending"}
         <p>Sending lists to BLAEO...</p>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax={progressTotal} style="width: {(progress / progressTotal) * 100}%">
+            {progress} / {progressTotal}
+          </div>
+        </div>
       {/if}
 
       {#if status === "done"}

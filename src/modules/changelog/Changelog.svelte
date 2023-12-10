@@ -1,7 +1,14 @@
 <div class="main">
   <h3>v1.2.0 - December, 2023</h3>
   <ul>
-    <li>Added option to automatically add games to lists by their HLTB times</li>
+    <li>
+      Added option to automatically add games to lists by their HLTB times in the "Manage list" section in BLAEO settings
+      <ul>
+        <li>Games can be excluded by progress</li>
+        <li>MP-only and endless game can be ignored or added to separate lists</li>
+        <li>Backups are created before submitting lists to BLAEO (can be accessed through BLAEO+ settings)</li>
+      </ul>
+    </li>
     <li>Endless games are now marked with an icon shown near the main time to beat field</li>
     <li>Refactored links to ProtonDB pages - now ratings link to ProtonDB and the "Add links to ProtonDB pages" option was removed since it's no longer needed</li>
     <li>Fixed some BLAEO+ styles unintentionally leaking into user posts</li>
