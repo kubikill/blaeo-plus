@@ -2,7 +2,7 @@ import { GM_getValue, GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
 import { getAuthenticityToken } from "@/lib/utilities";
 import type { SvelteComponent } from "svelte";
 
-export const BP_VERSION = "1.1.1";
+export const BP_VERSION = "1.2.0";
 
 export const addedComponents = [] as SvelteComponent[];
 
@@ -27,7 +27,7 @@ export function getUserName() {
   }
 }
 
-export function getUserGames(name: string) {
+export function getUserGames(name: string): Promise<BlaeoGamesJson> {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET",

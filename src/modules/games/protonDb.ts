@@ -1,4 +1,4 @@
-import { protonDbLogo, provisionalIcon } from "@/assets/icons";
+import { provisionalIcon } from "@/assets/icons";
 import { optionsStore } from "@/lib/store";
 import { linuxData } from "@/lib/linuxService";
 import { removeAllNodesIfExist } from "@/lib/utilities";
@@ -30,6 +30,10 @@ const protonDbRatingColors = {
 };
 
 function getProtonDbScore(steamId: number): number {
+  if (!linuxData[steamId]) {
+    return protonDbRatingScore.unknown;
+  }
+
   if (linuxData[steamId].protonDbRating != "unknown" && linuxData[steamId].protonDbRating != "pending") {
     return protonDbRatingScore[linuxData[steamId].protonDbRating];
   } else {
@@ -53,20 +57,32 @@ function getProtonDbHtml(steamId: number, mode: string): string {
 function getProtonDbTableHtml(steamId: number): string {
   let html = "";
 
+  if (!linuxData[steamId]) {
+    html += `
+    <td class="text-right bp-protondb-element" data-value="unknown">
+        <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-rating bp-protondb-rating-unknown">unknown</a>
+    </td>`;
+    return html;
+  }
+
   if (linuxData[steamId].protonDbRating != "unknown" && linuxData[steamId].protonDbRating != "pending") {
     html += `
     <td class="text-right bp-protondb-element" data-value="${getProtonDbScore(steamId)}">
-        <div class="bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbRating === "no data" ? "no-data" : linuxData[steamId].protonDbRating}" title="based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
+        <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbRating === "no data" ? "no-data" : linuxData[steamId].protonDbRating}" title="based on ${
+          linuxData[steamId].protonDbReports ?? 0
+        } report(s)">
           ${linuxData[steamId].protonDbRating}
-        </div>
+        </a>
     </td>
     `;
   } else if (linuxData[steamId].protonDbProvRating != "unknown") {
     html += `
     <td class="text-right bp-protondb-element" data-value="${getProtonDbScore(steamId)}">
-        <div class="bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
+        <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${
+          linuxData[steamId].protonDbReports ?? 0
+        } report(s)">
           ${provisionalIcon} ${linuxData[steamId].protonDbProvRating}
-        </div>
+        </a>
     </td>
   `;
   } else {
@@ -82,6 +98,14 @@ function getProtonDbTableHtml(steamId: number): string {
 
 function getProtonDbListHtml(steamId: number) {
   let html = "";
+
+  if (!linuxData[steamId]) {
+    html += `
+    <div class="bp-linux-media">
+    <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-element bp-protondb-rating bp-protondb-rating-unknown">unknown</a>
+    </div>`;
+    return html;
+  }
 
   if (linuxData[steamId].protonDbRating != "unknown" && linuxData[steamId].protonDbRating != "pending") {
     html += `
@@ -113,6 +137,14 @@ function getProtonDbListHtml(steamId: number) {
 
 function getProtonDbGridHtml(steamId: number) {
   let html = "";
+
+  if (!linuxData[steamId]) {
+    html += `
+    <div class="bp-linux-grid">
+      <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-element bp-protondb-rating bp-protondb-rating-unknown">unknown</a>
+    </div>`;
+    return html;
+  }
 
   if (linuxData[steamId].protonDbRating != "unknown" && linuxData[steamId].protonDbRating != "pending") {
     html += `
@@ -166,17 +198,26 @@ export async function initProtonDb() {
       clearInterval(checkInterval);
 
       const gameTableHeader = gameContainer.querySelector("tr > th:nth-child(3)") as HTMLTableCellElement;
+      const gameTableFullHeader = gameContainer.querySelector("tr") as HTMLTableRowElement;
       const gameTableGroups = gameContainer.querySelector("colgroup") as HTMLElement;
       const games = gameContainer.querySelectorAll(".game") as NodeListOf<HTMLElement>;
 
       if (gameTableHeader) {
-        gameTableHeader.insertAdjacentHTML(
-          "afterend",
-          `
-            <th class="text-right bp-protondb-element" data-bp-protondb="asc">ProtonDB rating <i class="fa fa-sort"></i></th>
-          `,
-        );
-
+        if (gameTableFullHeader!.firstChild!.textContent!.trim() === "#" || gameTableFullHeader!.firstElementChild!.textContent!.trim() === "Date Won" || gameTableHeader!.textContent!.trim() === "Playtime This Month") {
+          gameTableFullHeader.querySelector("th:nth-child(4)").insertAdjacentHTML(
+            "afterend",
+            `
+              <th class="text-right bp-protondb-element" data-bp-protondb="asc">ProtonDB rating <i class="fa fa-sort"></i></th>
+            `,
+          );
+        } else {
+          gameTableHeader.insertAdjacentHTML(
+            "afterend",
+            `
+              <th class="text-right bp-protondb-element" data-bp-protondb="asc">ProtonDB rating <i class="fa fa-sort"></i></th>
+            `,
+          );
+        }
         const gameProtonDbHeader = gameContainer.querySelector("tr > th[data-bp-protondb]") as HTMLElement;
 
         gameProtonDbHeader.addEventListener("click", () => {
@@ -190,7 +231,7 @@ export async function initProtonDb() {
       }
 
       if (gameTableGroups) {
-        if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won") {
+        if (gameTableFullHeader!.firstChild!.textContent!.trim() === "#" || gameTableFullHeader!.firstElementChild!.textContent!.trim() === "Date Won" || gameTableHeader!.textContent!.trim() === "Playtime This Month") {
           const afterColgroup = gameTableGroups.querySelector("col:nth-child(4)");
 
           afterColgroup!.insertAdjacentHTML("afterend", `<col class="bp-protondb-element" style="width: 100px">`);
@@ -206,33 +247,14 @@ export async function initProtonDb() {
         const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1];
 
         if (game.tagName === "TR") {
-          const nameCell = game.querySelector("td:nth-child(3)");
+          let nameCell;
+          if (gameTableFullHeader!.firstChild!.textContent!.trim() === "#" || gameTableFullHeader!.firstElementChild!.textContent!.trim() === "Date Won" || gameTableHeader!.textContent!.trim() === "Playtime This Month") {
+            nameCell = game.querySelector("td:nth-child(4)");
+          } else {
+            nameCell = game.querySelector("td:nth-child(3)");
+          }
           nameCell!.insertAdjacentHTML("afterend", getProtonDbHtml(steamId, "table"));
-
-          const gameToolbar = game.querySelector(".toolbar");
-
-          if (options.modules.games.protonDbIntegration.addProtonDbLinks && gameToolbar && linuxData[steamId]) {
-            gameToolbar.insertAdjacentHTML(
-              "beforeend",
-              `
-              <li class="bp-protondb-element" style="vertical-align: middle">
-                <a href="https://www.protondb.com/app/${steamId}" aria-label="ProtonDB game page" title="ProtonDB game page">${protonDbLogo}</a>
-              </li>
-            `,
-            );
-          }
         } else if (game.classList.contains("game-media")) {
-          const gameHeading = game.querySelector("h4.media-heading");
-
-          if (options.modules.games.protonDbIntegration.addProtonDbLinks && gameHeading && linuxData[steamId]) {
-            gameHeading.insertAdjacentHTML(
-              "beforeend",
-              `
-              <a class="bp-protondb-element" href="https://www.protondb.com/app/${steamId}" aria-label="ProtonDB game page" title="ProtonDB game page">${protonDbLogo}</a>
-            `,
-            );
-          }
-
           const hltbCell = game.querySelector(".bp-list-hltb-info");
 
           if (hltbCell) {

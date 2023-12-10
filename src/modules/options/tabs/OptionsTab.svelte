@@ -98,8 +98,20 @@
           HLTB integration must be enabled in order to sort by HLTB time to beat.
         </p>
         <p>To use quick rearrange, go to the chosen list's rearrange page then click the "Quick rearrange" button at the top of the page.</p>
-      </div></OptionsToggle
-    >
+      </div>
+    </OptionsToggle>
+
+    <OptionsToggle id="bp-options-modules-games-lists-automatic-hltb" bind:boundValue={$optionsStore.modules.games.lists.automaticHltb} bind:disabled={$optionsStore.modules.games.hltbIntegration.enabled}>
+      Add "add games by HLTB times" button
+      <div slot="description">
+        <p>
+          Adds a button to automatically add games to multiple lists by HLTB time to beat.<br />
+          Also allows MP-only and endless games to be ignored/added to separate lists.<br />
+          Requires HLTB integration to be enabled.
+        </p>
+        <p>To use this feature, go to BLAEO settings -&gt; "Manage lists" then click the "Add games by HLTB times" button.</p>
+      </div>
+    </OptionsToggle>
 
     <!-- <button class="toggle-item-sub" on:click={enqueueEntireLibrary}>Submit your library for enqueueing</button>
         <div class="toggle-item-sub">

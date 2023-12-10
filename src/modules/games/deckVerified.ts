@@ -93,7 +93,7 @@ export async function initDeckVerified() {
     }
   }
 
-  if (gameContainer.classList.contains("games") && gameContainer.tagName === "ul") {
+  if (gameContainer.classList.contains("games") && gameContainer.tagName === "UL") {
     gameContainer.classList.add("bp-game-list");
   }
 
@@ -113,6 +113,7 @@ export async function initDeckVerified() {
 
       const protonDbHeader = gameContainer.querySelector("tr > th[data-bp-protondb]") as HTMLElement;
       const gameTableHeader = gameContainer.querySelector("tr > th:nth-child(3)") as HTMLTableCellElement;
+      const gameTableFullHeader = gameContainer.querySelector("tr") as HTMLTableRowElement;
       const gameTableGroups = gameContainer.querySelector("colgroup") as HTMLElement;
       const games = gameContainer.querySelectorAll(".game") as NodeListOf<HTMLElement>;
 
@@ -124,12 +125,21 @@ export async function initDeckVerified() {
           `,
         );
       } else if (gameTableHeader) {
-        gameTableHeader.insertAdjacentHTML(
-          "afterend",
-          `
-            <th class="text-right bp-deckverified-element" data-bp-deckverified="asc">Deck <i class="fa fa-sort"></i></th>
-          `,
-        );
+        if (gameTableHeader.textContent!.trim() === "Playtime This Month") {
+          gameTableFullHeader.querySelector("th:nth-child(4)").insertAdjacentHTML(
+            "afterend",
+            `
+              <th class="text-right bp-deckverified-element" data-bp-deckverified="asc">Deck <i class="fa fa-sort"></i></th>
+            `,
+          );
+        } else {
+          gameTableHeader.insertAdjacentHTML(
+            "afterend",
+            `
+              <th class="text-right bp-deckverified-element" data-bp-deckverified="asc">Deck <i class="fa fa-sort"></i></th>
+            `,
+          );
+        }
       }
 
       const gameDeckVerifiedHeader = gameContainer.querySelector("tr > th[data-bp-deckverified]") as HTMLElement;
@@ -150,7 +160,7 @@ export async function initDeckVerified() {
           const afterColgroup = gameTableGroups.querySelector("col.bp-protondb-element");
 
           afterColgroup!.insertAdjacentHTML("afterend", `<col class="bp-deckverified-element" style="width: 50px">`);
-        } else if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won") {
+        } else if (gameTableFullHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableFullHeader!.firstElementChild!.textContent!.trim() === "Date Won" || gameTableHeader.textContent!.trim() === "Playtime This Month") {
           const afterColgroup = gameTableGroups.querySelector("col:nth-child(4)");
 
           afterColgroup!.insertAdjacentHTML("afterend", `<col class="bp-deckverified-element" style="width: 50px">`);
@@ -173,7 +183,14 @@ export async function initDeckVerified() {
           if (protonDbCell) {
             protonDbCell.insertAdjacentHTML("afterend", getDeckVerifiedHtml(steamId, "table"));
           } else {
-            const nameCell = game.querySelector("td:nth-child(3)") as HTMLTableCellElement;
+            let nameCell;
+
+            if (gameTableHeader.textContent!.trim() === "Playtime This Month") {
+              nameCell = game.querySelector("td:nth-child(4)") as HTMLTableCellElement;
+            } else {
+              nameCell = game.querySelector("td:nth-child(3)") as HTMLTableCellElement;
+            }
+
             nameCell.insertAdjacentHTML("afterend", getDeckVerifiedHtml(steamId, "table"));
           }
         } else if (game.classList.contains("game-media")) {

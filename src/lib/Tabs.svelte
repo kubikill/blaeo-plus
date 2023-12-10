@@ -7,19 +7,27 @@
 
 <ul class="nav nav-tabs" role="tablist">
   {#each tabs as tab, idx}
-    <li role="presentation" class:active={idx === activeTab}>
-      <button class="tab" on:click={() => (activeTab = idx)} role="tab" aria-controls={slugify(`options-${tab.name}`)}>
-        {tab.name}
-      </button>
-    </li>
+    {#if tab}
+      <li role="presentation" class:active={idx === activeTab}>
+        <button class="tab" on:click={() => (activeTab = idx)} role="tab" aria-controls={slugify(`options-${tab.name}`)}>
+          {tab.name}
+        </button>
+      </li>
+    {/if}
   {/each}
 </ul>
 
 <div class="tab-container">
   {#each tabs as tab, idx}
-    <div role="tabpanel" hidden={idx != activeTab} id={slugify(`options-${tab.name}`)}>
-      <svelte:component this={tab.content} {...tab.props} />
-    </div>
+    {#if tab}
+      <div role="tabpanel" hidden={idx != activeTab} id={slugify(`options-${tab.name}`)}>
+        {#if typeof tab.content === "function"}
+          <svelte:component this={tab.content} {...tab.props} />
+        {:else}
+          {tab.content}
+        {/if}
+      </div>
+    {/if}
   {/each}
 </div>
 

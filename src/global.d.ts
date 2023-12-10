@@ -44,13 +44,13 @@ type Options = {
       };
       protonDbIntegration: {
         enabled: boolean;
-        addProtonDbLinks: boolean;
       };
       deckVerifiedIntegration: {
         enabled: boolean;
       };
       lists: {
         quickRearrange: boolean;
+        automaticHltb: boolean;
       };
     };
     posts: {
@@ -88,6 +88,7 @@ type GameInfo = {
   [key: number]: {
     hltbId: number;
     type: GameTypes[];
+    endless: boolean;
     avgComp: number;
     main?: number;
     mainCount?: number;
@@ -106,6 +107,7 @@ type DeckInfo = {
   type: "success" | "warning" | "unsupported" | "info";
   message: string;
 };
+
 type LinuxData = {
   protonDbRating: "unknown" | "no data" | "pending" | "borked" | "bronze" | "silver" | "gold" | "platinum";
   protonDbProvRating: "unknown" | "no data" | "pending" | "borked" | "bronze" | "silver" | "gold" | "platinum";
@@ -116,6 +118,56 @@ type LinuxData = {
 
 type LinuxDataList = {
   [key: number]: LinuxData;
+};
+
+type AutomaticHltbTagInfo = {
+  playtime: number | string;
+  tagId: array;
+  games: any[];
+  newGames: any[];
+  oldList: BlaeoListJson | null;
+};
+
+type BlaeoGameEntry = {
+  value?: any;
+  id: string;
+  steam_id: number;
+  name: string;
+  playtime: number;
+  progress: string;
+  achievements: {
+    unlocked: number;
+    total: number;
+  };
+};
+
+type BlaeoGamesJson = BlaeoGameEntry[];
+
+type BlaeoGamesSteamIdJson = {
+  [key: string]: BlaeoGameEntry;
+};
+
+type BlaeoListGameEntry = {
+  position: number;
+  steam_id: number;
+  name: string;
+  playtime: number;
+  progress: string;
+};
+
+type BlaeoListJson = {
+  name: string;
+  color: string;
+  games: BlaeoListGameEntry[];
+};
+
+type ListBackup = {
+  id: string;
+  name: string;
+  color: string;
+  date: string;
+  dateIso: string;
+  games: BlaeoListGameEntry[];
 };
 
 interface JQuery<Element> {

@@ -192,14 +192,14 @@ body.bp-mobile-comment-layout {
   @media (min-width: 600px) {
     flex-wrap: nowrap;
   }
-}
 
-.media-body {
-  flex-grow: 1;
-  width: 100%;
+  .media-body {
+    flex-grow: 1;
+    width: 100%;
 
-  @media (min-width: 400px) {
-    width: 45%;
+    @media (min-width: 400px) {
+      width: 45%;
+    }
   }
 }
 

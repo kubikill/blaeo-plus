@@ -1,7 +1,41 @@
 import { authenticityToken } from "@/globals";
 import { GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
 
-export function getGamesFromList(listId: string) {
+export function getLists() {
+  return new Promise((resolve, reject) => {
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: `https://www.backlog-assassins.net/settings/lists`,
+      nocache: true,
+      responseType: "document",
+      onload: (response) => {
+        if (response.status === 200) {
+          const lists = [] as { id: string; name: string; color: string }[];
+
+          const listEntries = response.response.querySelectorAll("table.lists-table[data-rearrange] tr[data-item]") as NodeListOf<HTMLTableRowElement>;
+          for (let listEntry of listEntries) {
+            lists.push({
+              id: listEntry.getAttribute("data-item") as string,
+              name: listEntry.querySelector("td:first-child > span")?.textContent?.trim() as string,
+              color: listEntry.style.borderLeftColor,
+            });
+          }
+
+          resolve(lists);
+        } else {
+          console.error(`Failed (probably) to get lists from BLAEO. Details: ${response.responseText}`);
+          reject(response.responseText);
+        }
+      },
+      onerror: (error) => {
+        console.error(`Failed to get lists from BLAEO. Details: ${error}`);
+        reject(error);
+      },
+    });
+  });
+}
+
+export function getList(listId: string): Promise<BlaeoListJson> {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET",
@@ -10,9 +44,9 @@ export function getGamesFromList(listId: string) {
       responseType: "json",
       onload: (response) => {
         if (response.status === 200) {
-          resolve(response.response);
+          resolve(response.response.list);
         } else {
-          console.error(`Failed (probably) to get games from a BLAEO list. Details: ${response.responseText}`);
+          console.error(`Failed to get games from a BLAEO list. Details: ${response.responseText}`);
           reject(response.responseText);
         }
       },

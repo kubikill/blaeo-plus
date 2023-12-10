@@ -1,4 +1,4 @@
-import { hltbLogo } from "@/assets/icons";
+import { hltbLogo, infinityIcon } from "@/assets/icons";
 import { enqueueHltbData, hltbExcludedGames, hltbData } from "@/lib/hltbService";
 import { removeAllNodesIfExist } from "@/lib/utilities";
 import { optionsStore } from "@/lib/store";
@@ -138,6 +138,7 @@ function getHltbTableHtml(steamId: number, gameData: any): string {
       if (options.modules.games.hltbIntegration.displayColumns.main) {
         html += `
           <td class="text-right bp-hltb-element" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.main ?? -1}">
+            ${gameData.gameObj?.endless ? infinityIcon : ""}
             <div title="based on ${gameData.gameObj?.mainCount ?? 0} report(s)">${gameData.mainCompString}</div>
           </td>
         `;
@@ -206,6 +207,9 @@ function getHltbTableOneColumnHtml(steamId: number, gameData: any): string {
 
   if (gameData.gameObj) {
     if (gameData.gameObj.type.includes("sp")) {
+      if (gameData.gameObj.endless) {
+        html += `${infinityIcon}`;
+      }
       if (options.modules.games.hltbIntegration.displayColumns.main) {
         html += `
           <div class="bp-hltb-element" title="based on ${gameData.gameObj?.mainCount ?? 0} report(s)">
@@ -265,7 +269,7 @@ function getHltbListHtml(steamId: number, gameData: any): string {
       if (options.modules.games.hltbIntegration.displayColumns.main) {
         html += `
           <div class="bp-hltb-element" title="based on ${gameData.gameObj?.mainCount ?? 0} report(s)">
-            <div>Main: ${gameData.mainCompString}</div>
+            <div>${gameData.gameObj?.endless ? infinityIcon : ""} Main: ${gameData.mainCompString}</div>
           </div>
         `;
       }
@@ -425,7 +429,7 @@ export async function initHltbTimes() {
         }
 
       if (gameTableGroups) {
-        if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won") {
+        if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won" || gameTableHeader.children[2].textContent!.trim() === "Playtime This Month") {
           gameTableGroups.innerHTML = `
           <col class="bp-hltb-element" style="width: 1%;">
           <col class="bp-hltb-element">

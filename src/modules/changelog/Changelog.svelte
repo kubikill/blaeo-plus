@@ -1,4 +1,15 @@
 <div class="main">
+  <h3>v1.2.0 - December, 2023</h3>
+  <ul>
+    <li>Added option to automatically add games to lists by their HLTB times</li>
+    <li>Endless games are now marked with an icon shown near the main time to beat field</li>
+    <li>Refactored links to ProtonDB pages - now ratings link to ProtonDB and the "Add links to ProtonDB pages" option was removed since it's no longer needed</li>
+    <li>Fixed some BLAEO+ styles unintentionally leaking into user posts</li>
+    <li>Fixed errors sometimes caused by games missing ProtonDB and Steam Deck info if those features are enabled</li>
+    <li>Fixed some missing Deck Verified status messages</li>
+    <li>Fixed Deck Verified icons being clipped in grid view when ProtonDB integration is disabled</li>
+    <li>Fixed wrong order of ProtonDB and Deck Verified columns in "Won on SteamGifts" and "Recently played" lists</li>
+  </ul>
   <h3>v1.1.1 - September 21st, 2023</h3>
   <ul>
     <li>Fixed update notice appearing again after navigating to other pages without refreshing</li>

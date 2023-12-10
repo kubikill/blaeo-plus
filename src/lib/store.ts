@@ -51,6 +51,7 @@ let options = mergeDeep(
         },
         lists: {
           quickRearrange: true,
+          automaticHltb: true,
         },
       },
       posts: {
@@ -89,4 +90,12 @@ export const lastVersionStore = writable(getLastVersion());
 
 lastVersionStore.subscribe((value) => {
   GM_setValue("bp-last-version", value);
+});
+
+let listBackups = JSON.parse(GM_getValue("bp-list-backups", "[]")) as ListBackup[];
+
+export const listBackupStore = writable(listBackups);
+
+listBackupStore.subscribe((value) => {
+  GM_setValue("bp-list-backups", JSON.stringify(value));
 });

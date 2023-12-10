@@ -13,7 +13,7 @@ export default function initListQuickRearrange() {
   // read list id from current url, then save it to listId variable
   const listId = window.location.pathname.match(/\/lists\/(\w+)/)?.[1];
 
-  const automaticRearrangeModal = new QuickRearrangeModal({
+  const quickRearrangeModal = new QuickRearrangeModal({
     target: heading,
     props: {
       listName: listName,
@@ -22,5 +22,5 @@ export default function initListQuickRearrange() {
     },
   });
 
-  addedComponents.push(automaticRearrangeModal);
+  addedComponents.push(quickRearrangeModal);
 }

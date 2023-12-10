@@ -20,6 +20,7 @@ import { get } from "svelte/store";
 import initListQuickRearrange from "./modules/list/quickRearrange";
 import initUpdateNotifier from "./modules/changelog/updateNotifier";
 import { GM_setValue } from "vite-plugin-monkey/dist/client";
+import initAutomaticList from "./modules/list/automaticHltbList";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
@@ -118,6 +119,10 @@ function initEachPage(): void {
 
   if (options.modules.games.lists.quickRearrange) {
     initListQuickRearrange();
+  }
+
+  if (options.modules.games.lists.automaticHltb) {
+    initAutomaticList();
   }
 
   if (options.modules.misc.updateNotifier) {

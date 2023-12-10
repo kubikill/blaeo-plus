@@ -59,3 +59,23 @@ export function getAuthenticityToken(): string {
 
   return "";
 }
+
+export function reformatBlaeoGameListToSteamIdColumn(blaeoGameList: BlaeoGamesJson): BlaeoGamesSteamIdJson {
+  const gameList: any = {};
+
+  for (let game of blaeoGameList) {
+    gameList[game.steam_id.toString()] = game;
+  }
+
+  return gameList;
+}
+
+export function reformatBlaeoGameListToBlaeoIdColumn(blaeoGameList: BlaeoGamesJson): BlaeoGamesSteamIdJson {
+  const gameList: any = {};
+
+  for (let game of blaeoGameList) {
+    gameList[game.id] = game;
+  }
+
+  return gameList;
+}

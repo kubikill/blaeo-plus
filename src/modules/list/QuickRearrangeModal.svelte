@@ -1,6 +1,6 @@
 <script lang="ts">
   import { hltbData } from "@/lib/hltbService";
-  import { getGamesFromList, setList } from "@/lib/listService";
+  import { getList, setList } from "@/lib/listService";
   import { optionsStore } from "@/lib/store";
 
   export let listId: string;
@@ -30,7 +30,7 @@
     let games = [] as any;
 
     if (sortBy === "name" || sortBy === "playtime") {
-      games = (await getGamesFromList(listId)) as any;
+      games = (await getList(listId)) as any;
     }
 
     switch (sortBy) {
@@ -86,7 +86,10 @@
         }
     }
 
-    await setList(listId, gameArray.map((game) => game.id));
+    await setList(
+      listId,
+      gameArray.map((game) => game.id),
+    );
 
     window.location.reload();
   }
@@ -108,7 +111,7 @@
       {:else}
         <div>
           <label for="bp-quick-rearrange-sortby">Sort by:</label>
-          <select id="bp-quick-rearrange-sortby" bind:value={sortBy}>
+          <select id="bp-quick-rearrange-sortby" class="form-control" bind:value={sortBy}>
             <option value="name">Game name</option>
             <option value="playtime">Playtime</option>
             {#if $optionsStore.modules.games.hltbIntegration.enabled}
@@ -120,7 +123,7 @@
         </div>
         <div>
           <label for="bp-quick-rearrange-order">Order:</label>
-          <select id="bp-quick-rearrange-order" bind:value={order}>
+          <select id="bp-quick-rearrange-order" class="form-control" bind:value={order}>
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </select>
