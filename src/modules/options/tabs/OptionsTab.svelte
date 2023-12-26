@@ -109,7 +109,7 @@
           Also allows MP-only and endless games to be ignored/added to separate lists.<br />
           Requires HLTB integration to be enabled.
         </p>
-        <p>To use this feature, go to BLAEO settings -&gt; "Manage lists" then click the "Add games by HLTB times" button.</p>
+        <p>To use this feature, go to BLAEO settings -&gt; "Manage lists" then click the "HLTB list maker" button.</p>
       </div>
     </OptionsToggle>
 

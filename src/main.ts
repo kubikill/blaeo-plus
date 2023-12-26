@@ -21,6 +21,7 @@ import initListQuickRearrange from "./modules/list/quickRearrange";
 import initUpdateNotifier from "./modules/changelog/updateNotifier";
 import { GM_setValue } from "vite-plugin-monkey/dist/client";
 import initAutomaticList from "./modules/list/automaticHltbList";
+import { cleanupOldListBackups } from "./lib/cleanupOldListBackups";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
@@ -60,6 +61,8 @@ function init(): void {
       syncLinux();
     }
   }
+
+  cleanupOldListBackups();
 }
 function initEachPage(): void {
   if (document.body.dataset.blaeoPlusInitialized === "true") {

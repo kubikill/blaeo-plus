@@ -3,6 +3,7 @@ import { getAuthenticityToken } from "@/lib/utilities";
 import type { SvelteComponent } from "svelte";
 
 export const BP_VERSION = "1.2.0";
+export const SUPPORT_URL = "https://steamcommunity.com/groups/attackyourbacklog/discussions/1/7155698768546603592/";
 
 export const addedComponents = [] as SvelteComponent[];
 

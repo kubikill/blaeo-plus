@@ -1,11 +1,11 @@
 <div class="main">
-  <h3>v1.2.0 - December, 2023</h3>
+  <h3>v1.2.0 - December 12th, 2023</h3>
   <ul>
     <li>
       Added option to automatically add games to lists by their HLTB times in the "Manage list" section in BLAEO settings
       <ul>
         <li>Games can be excluded by progress</li>
-        <li>MP-only and endless game can be ignored or added to separate lists</li>
+        <li>Games that are MP-only, endless or have no HLTB data can be ignored or added to separate lists</li>
         <li>Backups are created before submitting lists to BLAEO (can be accessed through BLAEO+ settings)</li>
       </ul>
     </li>

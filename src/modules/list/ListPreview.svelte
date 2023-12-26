@@ -127,7 +127,7 @@
         </tr>
       {/each}
       {#each removedGames as game}
-        <tr class={`game game-${game.progress} game-${statusClass[game.status]}`}>
+        <tr class={`game game-${game.progress.replaceAll(" ", "-")} game-${statusClass[game.status]}`}>
           <td><span class="game-status">{@html statusContent[game.status]}</span></td>
           <td>
             {game.name}

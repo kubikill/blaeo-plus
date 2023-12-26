@@ -81,21 +81,23 @@ let options = mergeDeep(
 ) as Options;
 
 export const optionsStore = writable(options);
-
 optionsStore.subscribe((value) => {
   GM_setValue("bp-options", JSON.stringify(value));
 });
 
 export const lastVersionStore = writable(getLastVersion());
-
 lastVersionStore.subscribe((value) => {
   GM_setValue("bp-last-version", value);
 });
 
 let listBackups = JSON.parse(GM_getValue("bp-list-backups", "[]")) as ListBackup[];
-
 export const listBackupStore = writable(listBackups);
-
 listBackupStore.subscribe((value) => {
   GM_setValue("bp-list-backups", JSON.stringify(value));
+});
+
+let automaticHltbPresets = JSON.parse(GM_getValue("bp-automatic-hltb-presets", "[]")) as AutomaticHltbPreset[];
+export const automaticHltbPresetsStore = writable(automaticHltbPresets);
+automaticHltbPresetsStore.subscribe((value) => {
+  GM_setValue("bp-automatic-hltb-presets", JSON.stringify(value));
 });

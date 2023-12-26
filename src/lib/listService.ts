@@ -1,5 +1,5 @@
 import { authenticityToken } from "@/globals";
-import { GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
+import { GM_xmlhttpRequest, type GmXhrRequest } from "vite-plugin-monkey/dist/client";
 
 export function getLists() {
   return new Promise((resolve, reject) => {
@@ -79,12 +79,12 @@ export function setList(listId: string, games: string[]) {
         if (response.status === 200) {
           resolve(response.response);
         } else {
-          console.error(`Failed (probably) to rearrange list ${listId}. Details: ${response.responseText}`);
-          reject(response.responseText);
+          console.error(`Failed (probably) to rearrange list ${listId}. Status: ${response.statusText}. Details: ${response.responseText}`);
+          reject(response);
         }
       },
       onerror: (error) => {
-        console.error(`Failed to rearrange list ${listId}. Details: ${error}`);
+        console.error(`Failed to rearrange list ${listId}. Status: ${error.statusText}. Response: ${error.responseText}`);
         reject(error);
       },
     });

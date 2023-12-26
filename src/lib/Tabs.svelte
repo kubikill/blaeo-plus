@@ -3,6 +3,15 @@
 
   export let tabs = [] as any[];
   export let activeTab = 0;
+
+  $: {
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i]) {
+        activeTab = i;
+        break;
+      }
+    }
+  }
 </script>
 
 <ul class="nav nav-tabs" role="tablist">

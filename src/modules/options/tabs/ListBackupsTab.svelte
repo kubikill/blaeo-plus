@@ -30,6 +30,7 @@
       target.classList.remove("confirm");
 
       const list = $listBackupStore[+target.dataset.index!];
+
       await setList(
         list.id,
         list.games.map((game) => game.id),
@@ -52,6 +53,8 @@
       $listBackupStore.splice(+target.dataset.index!, 1);
 
       $listBackupStore = $listBackupStore;
+
+      target.classList.remove("confirm");
     } else {
       target.classList.add("confirm");
       setTimeout(() => {
@@ -70,6 +73,7 @@
 </script>
 
 <div>
+  <p>Backups are deleted automatically after 30 days.</p>
   {#each sortedList as list}
     <div>
       <h3><a href="https://www.backlog-assassins.net/lists/{list.id}/">{list.name}</a> - {list.games.length} games</h3>

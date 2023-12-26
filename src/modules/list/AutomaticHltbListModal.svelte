@@ -2,14 +2,16 @@
   import { MultiSelect } from "svelte-multiselect";
   import Toggle from "svelte-switcher";
   import Tabs from "@/lib/Tabs.svelte";
-  import { listBackupStore, optionsStore } from "@/lib/store";
+  import { automaticHltbPresetsStore, listBackupStore, optionsStore } from "@/lib/store";
   import { getList, setList } from "@/lib/listService";
-  import { getUserGames, getUserName, userData } from "@/globals";
+  import { SUPPORT_URL, getUserGames, getUserName, userData } from "@/globals";
   import { hltbData } from "@/lib/hltbService";
   import { reformatBlaeoGameListToBlaeoIdColumn, reformatBlaeoGameListToSteamIdColumn } from "@/lib/utilities";
   import ListPreview from "./ListPreview.svelte";
+  import { tick } from "svelte";
+  import AboutTab from "../options/tabs/AboutTab.svelte";
 
-  const progresses = {
+  let progresses = {
     "wont play": true,
     "never played": true,
     unfinished: true,
@@ -18,7 +20,12 @@
     uncategorized: true,
   };
 
-  let error: null = null;
+  let error = {
+    status: "",
+    statusText: "",
+    responseText: "",
+    error: "",
+  };
   let status = "setup";
   let showModal = false;
   let mode = "update";
@@ -28,12 +35,19 @@
   let sortByOrder = "asc";
   let mpOnlyBehavior = "exclude";
   let endlessBehavior = "exclude";
+  let gamesWithoutHltbBehavior = "exclude";
+  let gamesWithoutHltbReportThreshold = "1";
   let mpOnlyList: { label: any; value: any; color: any }[] = [];
   let endlessList: { label: any; value: any; color: any }[] = [];
+  let gamesWithoutHltbList: { label: any; value: any; color: any }[] = [];
   let lists = [] as { id: string; name: string; color: string }[];
   let activeTab = 0;
   let progress = 0;
   let progressTotal = 0;
+
+  let savingPreset = "idle";
+  let newPresetName = "";
+  let presetInput: HTMLInputElement;
 
   const listEntries = document.querySelectorAll("table.lists-table[data-rearrange] tr[data-item]") as NodeListOf<HTMLTableRowElement>;
   for (let listEntry of listEntries) {
@@ -59,7 +73,9 @@
   function hideModal() {
     showModal = false;
     listLoaded = false;
-    status = "setup";
+    setTimeout(() => {
+      status = "setup";
+    }, 400);
   }
 
   function cancelPreview() {
@@ -67,7 +83,7 @@
   }
 
   function addList() {
-    listArray.push({ playtime: "", tagId: [] as any, games: [], newGames: [], oldList: null });
+    listArray.push({ playtime: "", maxPlaytime: "", tagId: [] as any, games: [], newGames: [], oldList: null });
     listArray = listArray;
   }
 
@@ -82,29 +98,74 @@
 
   let allGames = [] as BlaeoGamesJson;
   let filteredGames = [];
-  let gamesWithNoHltbData = [] as BlaeoGamesJson;
   let mpOnlyGames = [] as BlaeoGamesJson;
   let endlessGames = [] as BlaeoGamesJson;
+  let gamesWithoutHltb = [] as BlaeoGamesJson;
   let oldMpOnlyList = {} as BlaeoListJson;
   let oldEndlessList = {} as BlaeoListJson;
+  let oldGamesWithoutHltbList = {} as BlaeoListJson;
 
   async function filterGames(games: BlaeoGamesJson): Promise<[BlaeoGamesJson, BlaeoGamesJson, BlaeoGamesJson, BlaeoGamesJson]> {
     let mpOnlyGames = [] as BlaeoGamesJson;
     let endlessGames = [] as BlaeoGamesJson;
-    let gamesWithNoHltbData = [] as BlaeoGamesJson;
+    let gamesWithoutHltb = [] as BlaeoGamesJson;
 
     for (let list of listArray) {
       if (list.tagId.length > 0) {
-        list.oldList = await getList(list.tagId[0].value);
+        try {
+          list.oldList = await getList(list.tagId[0].value);
+        } catch (requestError: any) {
+          console.error(requestError);
+          error.status = requestError.status ?? "";
+          error.statusText = requestError.statusText ?? "";
+          error.responseText = requestError.responseText ?? "";
+          error.error = requestError;
+          status = "error";
+          throw new Error();
+        }
       }
     }
 
     if (mpOnlyBehavior === "separate" && mpOnlyList?.[0]) {
-      mpOnlyListArray.oldList = await getList(mpOnlyList[0].value);
+      try {
+        mpOnlyListArray.oldList = await getList(mpOnlyList[0].value);
+      } catch (requestError: any) {
+        console.error(requestError);
+        error.status = requestError.status ?? "";
+        error.statusText = requestError.statusText ?? "";
+        error.responseText = requestError.responseText ?? "";
+        error.error = requestError;
+        status = "error";
+        throw new Error();
+      }
     }
 
     if (endlessBehavior === "separate" && endlessList?.[0] && (!mpOnlyList[0] || mpOnlyList[0].value !== endlessList[0].value)) {
-      endlessListArray.oldList = await getList(endlessList[0].value);
+      try {
+        endlessListArray.oldList = await getList(endlessList[0].value);
+      } catch (requestError: any) {
+        console.error(requestError);
+        error.status = requestError.status ?? "";
+        error.statusText = requestError.statusText ?? "";
+        error.responseText = requestError.responseText ?? "";
+        error.error = requestError;
+        status = "error";
+        throw new Error();
+      }
+    }
+
+    if (gamesWithoutHltbBehavior === "separate" && gamesWithoutHltbList?.[0]) {
+      try {
+        gamesWithoutHltbListArray.oldList = await getList(gamesWithoutHltbList[0].value);
+      } catch (requestError: any) {
+        console.error(requestError);
+        error.status = requestError.status ?? "";
+        error.statusText = requestError.statusText ?? "";
+        error.responseText = requestError.responseText ?? "";
+        error.error = requestError;
+        status = "error";
+        throw new Error();
+      }
     }
 
     if (mode === "update") {
@@ -139,15 +200,15 @@
         return false;
       }
 
-      if (!hltbData[game.steam_id]?.avgComp) {
-        gamesWithNoHltbData.push(game);
-        return false;
-      }
-
       if (hltbData[game.steam_id]?.endless) {
         if (endlessBehavior === "separate") {
           endlessGames.push(game);
         }
+        return false;
+      }
+
+      if (gamesWithoutHltbBehavior != "allplaystyles" && hltbData[game.steam_id][`${listBy}Count`] < +gamesWithoutHltbReportThreshold) {
+        gamesWithoutHltb.push(game);
         return false;
       }
 
@@ -156,10 +217,10 @@
 
     console.log("Filtered games", filteredGames);
 
-    return [filteredGames, gamesWithNoHltbData, mpOnlyGames, endlessGames];
+    return [filteredGames, mpOnlyGames, endlessGames, gamesWithoutHltb];
   }
 
-  function generateLists(params: { allGames: BlaeoGamesJson; games: BlaeoGamesJson; mpOnlyGames: BlaeoGamesJson; endlessGames: BlaeoGamesJson }) {
+  function generateLists(params: { allGames: BlaeoGamesJson; games: BlaeoGamesJson; mpOnlyGames: BlaeoGamesJson; endlessGames: BlaeoGamesJson; gamesWithoutHltb: BlaeoGamesJson }) {
     let steamIdGames = reformatBlaeoGameListToSteamIdColumn(params.allGames);
 
     if (mode === "update") {
@@ -182,6 +243,12 @@
           return steamIdGames[game.steam_id].id;
         });
       }
+
+      if (gamesWithoutHltbBehavior === "separate" && gamesWithoutHltbListArray.oldList) {
+        gamesWithoutHltbListArray.games = gamesWithoutHltbListArray.oldList.games.map((game: BlaeoListGameEntry) => {
+          return steamIdGames[game.steam_id].id;
+        });
+      }
     }
 
     if (params.mpOnlyGames) {
@@ -200,6 +267,16 @@
 
         if (mode === "update" || (mode === "overwrite" && !endlessListArray.oldList?.games.find((listGame) => listGame.steam_id === game.steam_id))) {
           endlessListArray.newGames.push(game);
+        }
+      }
+    }
+
+    if (params.gamesWithoutHltb) {
+      for (let game of params.gamesWithoutHltb) {
+        gamesWithoutHltbListArray.games.push(game.id);
+
+        if (mode === "update" || (mode === "overwrite" && !gamesWithoutHltbListArray.oldList?.games.find((listGame) => listGame.steam_id === game.steam_id))) {
+          gamesWithoutHltbListArray.newGames.push(game);
         }
       }
     }
@@ -231,34 +308,41 @@
       let selectedList;
 
       for (let list of listArray) {
+        if (!list.playtime) {
+          list.playtime = 0;
+        }
+        if (!list.maxPlaytime) {
+          list.maxPlaytime = Infinity;
+        }
+
+        // Handle games
+        if (hltbData[game.steam_id][listBy]) {
+          if ((hltbData[game.steam_id][listBy] ?? 0) >= +list.playtime * 3600 && (hltbData[game.steam_id][listBy] ?? 0) <= +list.maxPlaytime * 3600) {
+            selectedList = list;
+          }
+        }
+
         // Handle MP-only games if mpOnlyBehavior is set to "normal"
         if (mpOnlyBehavior === "normal" && !hltbData[game.steam_id]?.type.includes("sp") && (hltbData[game.steam_id]?.type.includes("mp") || hltbData[game.steam_id]?.type.includes("coop"))) {
           if (hltbData[game.steam_id]?.coop) {
-            if ((hltbData[game.steam_id]?.coop ?? 0) >= +list.playtime * 3600) {
+            if ((hltbData[game.steam_id]?.coop ?? 0) >= +list.playtime * 3600 && (hltbData[game.steam_id]?.coop ?? 0) <= +list.maxPlaytime * 3600) {
               selectedList = list;
-            } else {
-              break;
             }
           } else if (hltbData[game.steam_id]?.mp) {
-            if ((hltbData[game.steam_id]?.mp ?? 0) >= +list.playtime * 3600) {
+            if ((hltbData[game.steam_id]?.mp ?? 0) >= +list.playtime * 3600 && (hltbData[game.steam_id]?.mp ?? 0) <= +list.maxPlaytime * 3600) {
               selectedList = list;
-            } else {
-              break;
             }
           }
         }
 
-        // Handle remaining games
-        if (hltbData[game.steam_id][listBy]) {
-          if ((hltbData[game.steam_id][listBy] ?? 0) >= +list.playtime * 3600) {
-            selectedList = list;
-          } else {
-            break;
+        // Handle games without enough HLTB reports
+
+        if (gamesWithoutHltbBehavior === "allplaystyles") {
+          if (hltbData[game.steam_id][`${listBy}Count`] < +gamesWithoutHltbReportThreshold) {
+            if (hltbData[game.steam_id].avgComp && hltbData[game.steam_id].avgComp >= +list.playtime * 3600 && (hltbData[game.steam_id].avgComp ?? 0) <= +list.maxPlaytime * 3600) {
+              selectedList = list;
+            }
           }
-        } else if (hltbData[game.steam_id]?.avgComp >= +list.playtime * 3600) {
-          selectedList = list;
-        } else {
-          break;
         }
       }
 
@@ -281,12 +365,15 @@
 
     mpOnlyListArray.games = mpOnlyListArray.games.map((game: string | number) => blaeoIdGames[game as number]);
     endlessListArray.games = endlessListArray.games.map((game: string | number) => blaeoIdGames[game as number]);
+    gamesWithoutHltbListArray.games = gamesWithoutHltbListArray.games.map((game: string | number) => blaeoIdGames[game as number]);
 
     console.log("Generated list array", listArray);
     console.log("Generated MP-only list", mpOnlyList);
     console.log("Generated endless list", endlessList);
+    console.log("Generated games without HLTB list", gamesWithoutHltbList);
     console.log("New MP-only games", mpOnlyListArray.newGames);
     console.log("New endless games", endlessListArray.newGames);
+    console.log("New games without HLTB", gamesWithoutHltbListArray.newGames);
 
     return;
   }
@@ -344,11 +431,21 @@
   async function createPreview() {
     status = "generating";
     getUserName();
-    allGames = await getUserGames(userData.name);
+    try {
+      allGames = await getUserGames(userData.name);
+    } catch (requestError: any) {
+      console.error(requestError);
+      error.status = requestError.status ?? "";
+      error.statusText = requestError.statusText ?? "";
+      error.responseText = requestError.responseText ?? "";
+      error.error = requestError;
+      status = "error";
+      return;
+    }
     filteredGames = [];
-    gamesWithNoHltbData = [];
     oldMpOnlyList = {} as BlaeoListJson;
     oldEndlessList = {} as BlaeoListJson;
+    oldGamesWithoutHltbList = {} as BlaeoListJson;
 
     for (let list of listArray) {
       list.games = [];
@@ -364,9 +461,13 @@
     endlessListArray.newGames = [];
     endlessListArray.oldList = null;
 
-    [filteredGames, gamesWithNoHltbData, mpOnlyGames, endlessGames] = await filterGames(allGames);
+    gamesWithoutHltbListArray.games = [];
+    gamesWithoutHltbListArray.newGames = [];
+    gamesWithoutHltbListArray.oldList = null;
 
-    generateLists({ allGames, games: filteredGames, mpOnlyGames, endlessGames });
+    [filteredGames, mpOnlyGames, endlessGames, gamesWithoutHltb] = await filterGames(allGames);
+
+    generateLists({ allGames, games: filteredGames, mpOnlyGames, endlessGames, gamesWithoutHltb });
 
     if (sortWholeList) {
       for (let list of listArray) {
@@ -375,11 +476,13 @@
 
       mpOnlyListArray.games = sortGames(mpOnlyListArray.games);
       endlessListArray.games = sortGames(endlessListArray.games);
+      gamesWithoutHltbListArray.games = sortGames(gamesWithoutHltbListArray.games);
     }
 
     console.log("End list array", listArray);
     console.log("End MP-only list", mpOnlyListArray);
     console.log("End endless list", endlessListArray);
+    console.log("End games without HLTB list", gamesWithoutHltbListArray);
 
     status = "preview";
   }
@@ -409,13 +512,27 @@
           games: list.oldList?.games ?? [],
         });
 
-        await setList(
+        currentSubimittingList = list;
+
+        submittingTakesTooLongTimeout = setTimeout(() => {
+          submittingTakesTooLong = true;
+        }, 8000);
+
+        await trySetList(
           list.tagId[0].value,
           list.games.map((game) => game.id),
         );
+
+        clearTimeout(submittingTakesTooLongTimeout);
+        submittingTakesTooLong = false;
       }
 
       progress++;
+
+      if (status === "error") {
+        $listBackupStore = $listBackupStore;
+        return;
+      }
     }
 
     if (mpOnlyBehavior === "separate" && mpOnlyList?.[0]) {
@@ -428,12 +545,26 @@
         games: oldMpOnlyList?.games ?? [],
       });
 
-      await setList(
+      currentSubimittingList = mpOnlyListArray;
+
+      submittingTakesTooLongTimeout = setTimeout(() => {
+        submittingTakesTooLong = true;
+      }, 8000);
+
+      await trySetList(
         mpOnlyList[0].value,
         mpOnlyListArray.games.map((game) => game.id),
       );
 
+      clearTimeout(submittingTakesTooLongTimeout);
+      submittingTakesTooLong = false;
+
       progress++;
+
+      if (status === "error") {
+        $listBackupStore = $listBackupStore;
+        return;
+      }
     }
 
     if (endlessBehavior === "separate" && endlessList?.[0] && (!mpOnlyList[0] || mpOnlyList[0].value !== endlessList[0].value)) {
@@ -446,12 +577,58 @@
         games: oldEndlessList?.games ?? [],
       });
 
-      await setList(
+      currentSubimittingList = endlessListArray;
+
+      submittingTakesTooLongTimeout = setTimeout(() => {
+        submittingTakesTooLong = true;
+      }, 8000);
+
+      await trySetList(
         endlessList[0].value,
         endlessListArray.games.map((game) => game.id),
       );
 
+      clearTimeout(submittingTakesTooLongTimeout);
+      submittingTakesTooLong = false;
+
       progress++;
+
+      if (status === "error") {
+        $listBackupStore = $listBackupStore;
+        return;
+      }
+    }
+
+    if (gamesWithoutHltbBehavior === "separate" && gamesWithoutHltbList?.[0]) {
+      $listBackupStore.push({
+        id: gamesWithoutHltbList[0].value,
+        name: gamesWithoutHltbList[0].label,
+        color: gamesWithoutHltbListArray.oldList?.color ?? "",
+        date: new Date().toLocaleString(),
+        dateIso: new Date().toISOString(),
+        games: gamesWithoutHltbListArray.oldList?.games ?? [],
+      });
+
+      currentSubimittingList = gamesWithoutHltbListArray;
+
+      submittingTakesTooLongTimeout = setTimeout(() => {
+        submittingTakesTooLong = true;
+      }, 8000);
+
+      await trySetList(
+        gamesWithoutHltbList[0].value,
+        gamesWithoutHltbListArray.games.map((game) => game.id),
+      );
+
+      clearTimeout(submittingTakesTooLongTimeout);
+      submittingTakesTooLong = false;
+
+      progress++;
+
+      if (status === "error") {
+        $listBackupStore = $listBackupStore;
+        return;
+      }
     }
 
     $listBackupStore = $listBackupStore;
@@ -459,47 +636,197 @@
     status = "done";
   }
 
+  async function trySetList(listId: string, games: string[]) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await setList(listId, games);
+        resolve(true);
+      } catch (requestError: any) {
+        console.error(requestError);
+        status = "error";
+        error.status = requestError.status ?? "";
+        error.statusText = requestError.statusText ?? "";
+        error.responseText = requestError.responseText ?? "";
+        error.error = requestError;
+        reject(false);
+      }
+    });
+  }
+
+  function savePreset(presetIndex: number | null = null) {
+    if (presetIndex != null) {
+      $automaticHltbPresetsStore[presetIndex] = {
+        name: $automaticHltbPresetsStore[presetIndex].name,
+        mode,
+        progresses,
+        sortWholeList,
+        listBy,
+        sortBy,
+        sortByOrder,
+        mpOnlyBehavior,
+        endlessBehavior,
+        gamesWithoutHltbBehavior,
+        gamesWithoutHltbReportThreshold,
+        mpOnlyList,
+        endlessList,
+        gamesWithoutHltbList,
+        listArray,
+        mpOnlyListArray,
+        endlessListArray,
+        gamesWithoutHltbListArray,
+      };
+    } else {
+      $automaticHltbPresetsStore.push({
+        name: newPresetName,
+        mode,
+        progresses,
+        sortWholeList,
+        listBy,
+        sortBy,
+        sortByOrder,
+        mpOnlyBehavior,
+        endlessBehavior,
+        gamesWithoutHltbBehavior,
+        gamesWithoutHltbReportThreshold,
+        mpOnlyList,
+        endlessList,
+        gamesWithoutHltbList,
+        listArray,
+        mpOnlyListArray,
+        endlessListArray,
+        gamesWithoutHltbListArray,
+      });
+    }
+
+    $automaticHltbPresetsStore = $automaticHltbPresetsStore;
+
+    newPresetName = "";
+    savingPreset = "idle";
+  }
+
+  function loadPreset(presetIndex: number) {
+    const preset = $automaticHltbPresetsStore[presetIndex];
+
+    mode = preset.mode;
+    progresses = preset.progresses as any;
+    sortWholeList = preset.sortWholeList;
+    listBy = preset.listBy;
+    sortBy = preset.sortBy;
+    sortByOrder = preset.sortByOrder;
+    mpOnlyBehavior = preset.mpOnlyBehavior;
+    endlessBehavior = preset.endlessBehavior;
+    gamesWithoutHltbBehavior = preset.gamesWithoutHltbBehavior;
+    gamesWithoutHltbReportThreshold = preset.gamesWithoutHltbReportThreshold;
+    mpOnlyList = preset.mpOnlyList;
+    endlessList = preset.endlessList;
+    gamesWithoutHltbList = preset.gamesWithoutHltbList;
+    listArray = preset.listArray;
+    mpOnlyListArray = preset.mpOnlyListArray;
+    endlessListArray = preset.endlessListArray;
+    gamesWithoutHltbListArray = preset.gamesWithoutHltbListArray;
+
+    for (let list of listArray) {
+      const foundList = formattedLists.find((formattedList) => formattedList.value === list.tagId[0]?.value);
+      if (list.tagId.length <= 0 || !foundList) {
+        list.tagId = [];
+        continue;
+      }
+
+      if (list.tagId.length > 0 && list.tagId[0].label !== foundList.label) {
+        list.tagId[0].label = foundList.label;
+      }
+    }
+
+    if (mpOnlyList.length <= 0 || !formattedLists.find((formattedList) => formattedList.value === mpOnlyList[0].value)) {
+      mpOnlyList = [];
+    }
+
+    if (endlessList.length <= 0 || !formattedLists.find((formattedList) => formattedList.value === endlessList[0].value)) {
+      endlessList = [];
+    }
+
+    if (gamesWithoutHltbList.length <= 0 || !formattedLists.find((formattedList) => formattedList.value === gamesWithoutHltbList[0].value)) {
+      gamesWithoutHltbList = [];
+    }
+  }
+
+  function deletePreset(presetIndex: number) {
+    $automaticHltbPresetsStore.splice(presetIndex, 1);
+    $automaticHltbPresetsStore = $automaticHltbPresetsStore;
+  }
+
+  let currentSubimittingList = {} as AutomaticHltbTagInfo;
+  let submittingTakesTooLongTimeout;
+  let submittingTakesTooLong = false;
+
   let listArray = [] as AutomaticHltbTagInfo[];
-  let mpOnlyListArray = { playtime: "", tagId: [] as any, games: [], newGames: [], oldList: null } as AutomaticHltbTagInfo;
-  let endlessListArray = { playtime: "", tagId: [] as any, games: [], newGames: [], oldList: null } as AutomaticHltbTagInfo;
+  let mpOnlyListArray = { playtime: "", maxPlaytime: "", tagId: [] as any, games: [], newGames: [], oldList: null } as AutomaticHltbTagInfo;
+  let endlessListArray = { playtime: "", maxPlaytime: "", tagId: [] as any, games: [], newGames: [], oldList: null } as AutomaticHltbTagInfo;
+  let gamesWithoutHltbListArray = { playtime: "", maxPlaytime: "", tagId: [] as any, games: [], newGames: [], oldList: null } as AutomaticHltbTagInfo;
 </script>
 
-<button class="bp-automatic-list btn btn-default" on:click={() => (showModal = true)}>Add games by HLTB times</button>
+<button class="bp-automatic-list btn btn-default" on:click={() => (showModal = true)}>HLTB list maker</button>
 
 <div class="bp-automatic-list-modal" role="presentation" class:visible={showModal === true}>
   <div class="modal-content">
     <div class="modal-header">
-      <h2 class="modal-header-heading">Adding games to lists by HLTB times</h2>
+      <h2 class="modal-header-heading">HLTB list maker</h2>
     </div>
     <div class="modal-body">
       {#if status === "setup"}
+        <p>This will allow you to automatically add games to selected lists according to HLTB time to beat.</p>
         <h3>Lists</h3>
-        {#each listArray as list, index}
-          <h4>List {index + 1}</h4>
-          <div class="tag-wrapper">
-            <input class="tag-playtime form-control" type="number" bind:value={list.playtime} name="" id="" placeholder="Min. hours to beat" />
-            <MultiSelect bind:selected={list.tagId} options={formattedLists} outerDivClass="form-control" placeholder={"Don't add game to list"} selectedOptionsDraggable={false} maxSelect={1}>
-              <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-                {option.label}
-              </div>
-            </MultiSelect>
-            <button class="btn btn-danger btn-sm" on:click={() => removeList(index)}>Remove list</button>
-          </div>
-        {/each}
+        <p>
+          Select lists to which games should be added, as well as time to beat thresholds.<br />
+          If the game matches multiple lists, it will be added only to the last one that matches.
+        </p>
+        <div class="markdown">
+          <table>
+            <tbody>
+              {#each listArray as list, index}
+                <tr>
+                  <td>{index + 1}</td>
+                  <td>
+                    <div class="tag-wrapper">
+                      <input class="tag-playtime form-control" type="number" min="0" bind:value={list.playtime} name="" id="" placeholder="Min hours to beat (default 0)" />
+                      <input class="tag-playtime form-control" type="number" min="0" bind:value={list.maxPlaytime} name="" id="" placeholder="Max hours to beat (default no limit)" />
+                      <MultiSelect
+                        bind:selected={list.tagId}
+                        options={formattedLists}
+                        outerDivClass="form-control"
+                        placeholder={"Select a list (or keep empty to exclude this range from being added to any list)"}
+                        selectedOptionsDraggable={false}
+                        maxSelect={1}
+                      >
+                        <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
+                          {option.label}
+                        </div>
+                      </MultiSelect>
+                      <button class="btn btn-danger btn-sm" on:click={() => removeList(index)}>Remove list</button>
+                    </div>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
 
         <button class="btn btn-success btn-sm" on:click={addList}>Add list</button>
+
+        <hr />
 
         <div class="row">
           <div class="col-sm-6">
             <h3>MP-only games</h3>
-            <select id="bp-automatic-hltb-list-sortby" class="form-control" bind:value={mpOnlyBehavior}>
+            <label for="bp-automatic-hltb-list-mp-only-games">What to do with MP-only games?</label>
+            <select id="bp-automatic-hltb-list-mp-only-games" class="form-control" bind:value={mpOnlyBehavior}>
               <option value="exclude">Exclude from being added to any list</option>
               <option value="separate">Add to a specific list</option>
-              <option value="normal">Add to lists by HLTB time to beat</option>
+              <option value="normal">Use the MP/Co-op time to beat instead</option>
             </select>
             {#if mpOnlyBehavior === "separate"}
               <div class="tag-wrapper">
-                <MultiSelect bind:selected={mpOnlyList} options={formattedLists} outerDivClass="form-control" placeholder={"MP-only game list"} selectedOptionsDraggable={false} maxSelect={1}>
+                <MultiSelect bind:selected={mpOnlyList} options={formattedLists} outerDivClass="form-control" placeholder={"Select a list"} selectedOptionsDraggable={false} maxSelect={1}>
                   <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
                     {option.label}
                   </div>
@@ -509,13 +836,14 @@
           </div>
           <div class="col-sm-6">
             <h3>Endless games</h3>
-            <select id="bp-automatic-hltb-list-sortby" class="form-control" bind:value={endlessBehavior}>
+            <label for="bp-automatic-hltb-list-endless-games-behavior">What to do with endless games?</label>
+            <select id="bp-automatic-hltb-list-endless-games-behavior" class="form-control" bind:value={endlessBehavior}>
               <option value="exclude">Exclude from being added to any list</option>
               <option value="separate">Add to a specific list</option>
             </select>
             {#if endlessBehavior === "separate"}
               <div class="tag-wrapper">
-                <MultiSelect bind:selected={endlessList} options={formattedLists} outerDivClass="form-control" placeholder={"Endless game list"} selectedOptionsDraggable={false} maxSelect={1}>
+                <MultiSelect bind:selected={endlessList} options={formattedLists} outerDivClass="form-control" placeholder={"Select a list"} selectedOptionsDraggable={false} maxSelect={1}>
                   <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
                     {option.label}
                   </div>
@@ -524,9 +852,35 @@
             {/if}
           </div>
         </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <h3>Games without enough HLTB reports</h3>
+            <label for="bp-automatic-hltb-list-games-without-hltb-data-behavior">What to do with games without enough HLTB reports?</label>
+            <select id="bp-automatic-hltb-list-games-without-hltb-data-behavior" class="form-control" bind:value={gamesWithoutHltbBehavior}>
+              <option value="exclude">Exclude from being added to any list</option>
+              <option value="separate">Add to a specific list</option>
+              <option value="allplaystyles">Use the all playstyles time to beat instead</option>
+            </select>
+            {#if gamesWithoutHltbBehavior === "separate"}
+              <div class="tag-wrapper">
+                <MultiSelect bind:selected={gamesWithoutHltbList} options={formattedLists} outerDivClass="form-control" placeholder={"Select a list"} selectedOptionsDraggable={false} maxSelect={1}>
+                  <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
+                    {option.label}
+                  </div>
+                </MultiSelect>
+              </div>
+            {/if}
+            <div class="tag-wrapper">
+              <label for="bp-automatic-hltb-list-games-without-hltb-data-behavior">Amount of reports needed to be considered enough</label>
+              <input class="tag-playtime form-control" type="number" min="0" bind:value={gamesWithoutHltbReportThreshold} name="" id="" placeholder="Amount of reports" />
+            </div>
+          </div>
+        </div>
+
+        <hr />
 
         <h3 class="list-progress-heading">Filter games by progress</h3>
-
+        <p>Games with excluded progresses will not be added to any list.</p>
         <div class="list-progress">
           <button class="progress-bar game-wont-play" class:disabled={!progresses["wont play"]} title="won't play" on:click={() => toggleProgress("wont play")}> won't play </button>
           <button class="progress-bar game-never-played" class:disabled={!progresses["never played"]} title="never played" on:click={() => toggleProgress("never played")}> never played </button>
@@ -536,17 +890,25 @@
           <button class="progress-bar game-uncategorized" class:disabled={!progresses["uncategorized"]} title="uncategorized" on:click={() => toggleProgress("uncategorized")}> uncategorized </button>
         </div>
 
+        <hr />
+
         <h3 class="no-margin-top">Mode</h3>
         <div class="btn-group">
           <button class="btn" class:btn-primary={mode === "update"} class:btn-default={mode !== "update"} on:click={() => (mode = "update")} type="button">Update</button>
           <button class="btn" class:btn-primary={mode === "overwrite"} class:btn-default={mode !== "overwrite"} on:click={() => (mode = "overwrite")} type="button">Overwrite</button>
         </div>
-        <div class="mode-desc" hidden={mode != "update"}>Games that aren't in any of the selected lists will be added to one accordingly to the settings. Any other games will remain where they are.</div>
-        <div class="mode-desc" hidden={mode != "overwrite"}>All selected lists will be recreated from scratch accordingly to the settings.</div>
+        <div class="mode-desc" hidden={mode != "update"}>
+          Games that aren't in any of the selected lists will be added to one accordingly to the settings. <br />
+          Games that already are in at least one selected list will remain where they are and will not be added to any other lists.
+        </div>
+        <div class="mode-desc" hidden={mode != "overwrite"}>All selected lists will be recreated from scratch accordingly to the settings and overwritten.</div>
+
+        <hr />
 
         <div class="row">
           <div class="col-sm-6">
             <h3>List by:</h3>
+            <p>Which time to beat category should be used for adding games to lists?</p>
             <select id="bp-automatic-hltb-list-by" class="form-control" bind:value={listBy}>
               <option value="main">Main time to beat</option>
               <option value="extra">+Extra time to beat</option>
@@ -583,7 +945,7 @@
       {/if}
 
       {#if status === "generating"}
-        <p>Generating lists for preview...</p>
+        <p><i class="fa fa-spinner"></i> Generating lists for preview...</p>
       {/if}
 
       {#if status === "preview"}
@@ -602,18 +964,29 @@
             endlessBehavior === "separate" && endlessListArray.oldList && (!mpOnlyList[0] || mpOnlyList?.[0].value !== endlessList?.[0].value)
               ? { name: endlessListArray.oldList.name, content: ListPreview, props: { list: endlessListArray } }
               : null,
+            gamesWithoutHltbBehavior === "separate" && gamesWithoutHltbListArray.oldList ? { name: gamesWithoutHltbListArray.oldList.name, content: ListPreview, props: { list: gamesWithoutHltbListArray } } : null,
           ]}
           bind:activeTab
         />
       {/if}
 
       {#if status === "sending"}
-        <p>Sending lists to BLAEO...</p>
+        <p><i class="fa fa-spinner"></i> Sending lists to BLAEO...</p>
+        {#if currentSubimittingList.oldList}
+          <p>Currently sending: {currentSubimittingList.oldList.name}</p>
+        {/if}
         <div class="progress">
           <div class="progress-bar" role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax={progressTotal} style="width: {(progress / progressTotal) * 100}%">
             {progress} / {progressTotal}
           </div>
         </div>
+        {#if submittingTakesTooLong}
+          <div class="alert alert-info">
+            <p><i class="fa fa-info-circle"></i> This is taking too long. BLAEO might be down/under heavy load, your browser might be silently blocking the request or your internet might be slow.</p>
+            <p>You can try using a different userscript extension (Violentmonkey or Tampermonkey) or a different browser.</p>
+            <p>If it still doesn't work, please report this issue on <a href={SUPPORT_URL}>BLAEO+'s group thread</a> and please share which browser are you using and which userscript extension.</p>
+          </div>
+        {/if}
       {/if}
 
       {#if status === "done"}
@@ -622,13 +995,79 @@
       {/if}
 
       {#if status === "error"}
-        <h3>Error</h3>
-        <p>An error occured. If this problem continues, please report this issue on BLAEO+'s group thread and share the error stack below.</p>
-        <p>Error stack:</p>
-        <pre><code>${error}</code></pre>
+        <h3>An error has occured. View details below.</h3>
+        <p>Status: {error.status} {error.statusText}</p>
+        <pre><code>{error.responseText}</code></pre>
+        <p>If this problem continues, please report this issue on <a href={SUPPORT_URL}>BLAEO+'s group thread</a> and share the error details.</p>
       {/if}
     </div>
     <div class="modal-footer">
+      {#if status === "setup"}
+        <div class="btn-group dropup">
+          <div class="dropdown">
+            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-success">Save preset <span class="caret"></span></button>
+            <ul class="dropdown-menu">
+              {#if $automaticHltbPresetsStore?.length > 0}
+                {#each $automaticHltbPresetsStore as preset, index}
+                  <li>
+                    <button type="button" on:click={() => savePreset(index)}>{preset.name}</button>
+                  </li>
+                {/each}
+              {:else}
+                <li><div>No presets available.</div></li>
+              {/if}
+              <li class="divider" role="separator"></li>
+              {#if savingPreset === "creating"}
+                <li>
+                  <form on:submit|preventDefault={() => savePreset()}>
+                    <input class="form-control" type="text" bind:this={presetInput} bind:value={newPresetName} placeholder="New preset name" />
+                    <button type="submit" class="btn btn-success">Save</button>
+                  </form>
+                </li>
+              {:else if savingPreset === "idle"}
+                <li>
+                  <button
+                    type="button"
+                    on:click|stopPropagation={async () => {
+                      savingPreset = "creating";
+                      await tick();
+                      presetInput.focus();
+                    }}><i class="fa fa-plus"></i> New preset</button
+                  >
+                </li>
+              {/if}
+            </ul>
+          </div>
+          <div class="dropdown">
+            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-primary">Load preset <span class="caret"></span></button>
+            <ul class="dropdown-menu">
+              {#if $automaticHltbPresetsStore?.length > 0}
+                {#each $automaticHltbPresetsStore as preset, index}
+                  <li>
+                    <button type="button" on:click={() => loadPreset(index)}>{preset.name}</button>
+                  </li>
+                {/each}
+              {:else}
+                <li><div>No presets available.</div></li>
+              {/if}
+            </ul>
+          </div>
+          <div class="dropdown">
+            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-danger">Delete preset <span class="caret"></span></button>
+            <ul class="dropdown-menu">
+              {#if $automaticHltbPresetsStore?.length > 0}
+                {#each $automaticHltbPresetsStore as preset, index}
+                  <li>
+                    <button type="button" on:click={() => deletePreset(index)}>{preset.name}</button>
+                  </li>
+                {/each}
+              {:else}
+                <li><div>No presets available.</div></li>
+              {/if}
+            </ul>
+          </div>
+        </div>
+      {/if}
       {#if ["setup", "error", "done"].includes(status)}
         <button type="button" class="btn btn-default" on:click={hideModal}>Close</button>
       {/if}
@@ -644,6 +1083,20 @@
 </div>
 
 <style lang="scss">
+  .fa-spinner {
+    animation: fa-spin 1s infinite linear;
+  }
+
+  @keyframes fa-spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(359deg);
+    }
+  }
+
   .bp-automatic-list {
     margin-bottom: 20px;
   }
@@ -784,6 +1237,11 @@
         }
       }
     }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+    }
   }
 
   .toggle-item {
@@ -849,5 +1307,59 @@
         }
       }
     }
+  }
+
+  .markdown {
+    padding-bottom: 10px;
+
+    table {
+      margin-bottom: 0;
+    }
+  }
+
+  label {
+    font-weight: 400;
+  }
+
+  .modal-footer .btn-group {
+    display: flex;
+    margin-bottom: 0;
+    margin-right: auto;
+    gap: 8px;
+  }
+
+  .dropdown-menu button,
+  .dropdown-menu input {
+    display: block;
+    clear: both;
+    appearance: none;
+    border: none;
+    background-color: transparent;
+    padding: 3px 20px;
+    width: 100%;
+    color: #333333;
+    font-weight: normal;
+    line-height: 1.42857;
+    text-align: left;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus {
+      background-color: #f5f5f5;
+      color: #262626;
+      text-decoration: none;
+    }
+  }
+
+  .dropdown-menu li > div {
+    display: block;
+    padding: 3px 20px;
+    width: 100%;
+    color: #333333;
+    font-weight: normal;
+    line-height: 1.42857;
+    text-align: left;
+    white-space: nowrap;
+    background-color: transparent;
   }
 </style>

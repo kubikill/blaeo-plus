@@ -122,10 +122,32 @@ type LinuxDataList = {
 
 type AutomaticHltbTagInfo = {
   playtime: number | string;
+  maxPlaytime: number | string;
   tagId: array;
   games: any[];
   newGames: any[];
   oldList: BlaeoListJson | null;
+};
+
+type AutomaticHltbPreset = {
+  name: string;
+  mode: string;
+  progresses: object;
+  sortWholeList: boolean;
+  listBy: "main" | "extra" | "everything";
+  sortBy: string;
+  sortByOrder: string;
+  mpOnlyBehavior: string;
+  endlessBehavior: string;
+  gamesWithoutHltbBehavior: string;
+  gamesWithoutHltbReportThreshold: string;
+  mpOnlyList: array;
+  endlessList: array;
+  gamesWithoutHltbList: array;
+  listArray: AutomaticHltbTagInfo[];
+  mpOnlyListArray: AutomaticHltbTagInfo;
+  endlessListArray: AutomaticHltbTagInfo;
+  gamesWithoutHltbListArray: AutomaticHltbTagInfo;
 };
 
 type BlaeoGameEntry = {
