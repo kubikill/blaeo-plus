@@ -27,6 +27,10 @@ A userscript for Backlog Assassins Extraordinaire that adds new features and QoL
 - Firefox (Android) with Tampermonkey
 - Chrome with Tampermonkey
 
+## Unsupported browsers/userscript extensions
+
+- Opera version of Tampermonkey (breaks comment preview and HLTB list maker features) - Opera users are advised to install Tampermonkey from the Chrome Web Store instead
+
 ## To do
 
 - Automate adding games to lists by HLTB time to beat
