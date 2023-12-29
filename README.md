@@ -12,6 +12,7 @@ A userscript for Backlog Assassins Extraordinaire that adds new features and QoL
 - Steam Deck Verified integration - view Steam Deck Verified status within your BLAEO library pages
 - Blacklist - hide or collapse posts and/or comments from blacklisted users
 - Quick rearrange lists by game name, playtime or HLTB time to beat
+- HLTB list maker - automatically add games to lists by HLTB time to beat, with options to handle MP-only, endless games and games without enough time to beat reports differently
 - Preview comments on posts before adding them
 - Save and load post drafts, with autosaving posts on preview/leaving page
 - QoL improvements - new post shortcut in header, unread messages link is now visible on mobile without having to expand the header menu, alternative post/comment layouts on mobile
@@ -29,9 +30,10 @@ A userscript for Backlog Assassins Extraordinaire that adds new features and QoL
 
 ## Unsupported browsers/userscript extensions
 
-- Opera version of Tampermonkey (breaks comment preview and HLTB list maker features) - Opera users are advised to install Tampermonkey from the Chrome Web Store instead
+- Opera version of Tampermonkey (breaks comment preview, quick rearrange and HLTB list maker features) - Opera users are advised to install Tampermonkey from the Chrome Web Store instead
 
 ## To do
 
-- Automate adding games to lists by HLTB time to beat
+- Add a way to bulk delete removed games
+- Add Steam tag list maker
 - ...and more!

@@ -1,5 +1,5 @@
 <div class="main">
-  <h3>v1.2.0 - December, 2023</h3>
+  <h3>v1.2.0 - December 29th, 2023</h3>
   <ul>
     <li>
       Added option to automatically add games to lists by their HLTB times in the "Manage list" section in BLAEO settings

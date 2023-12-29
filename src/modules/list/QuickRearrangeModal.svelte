@@ -35,13 +35,13 @@
 
     switch (sortBy) {
       case "name":
-        games.list.games.forEach((game: { name: any }, index: number) => {
+        games.games.forEach((game: { name: any }, index: number) => {
           gameArray[index].value = game.name;
         });
 
         break;
       case "playtime":
-        games.list.games.forEach((game: { playtime: any }, index: number) => {
+        games.games.forEach((game: { playtime: any }, index: number) => {
           gameArray[index].value = game.playtime;
         });
 
