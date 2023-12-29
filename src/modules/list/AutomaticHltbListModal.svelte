@@ -9,7 +9,6 @@
   import { reformatBlaeoGameListToBlaeoIdColumn, reformatBlaeoGameListToSteamIdColumn } from "@/lib/utilities";
   import ListPreview from "./ListPreview.svelte";
   import { tick } from "svelte";
-  import AboutTab from "../options/tabs/AboutTab.svelte";
 
   let progresses = {
     "wont play": true,
@@ -654,58 +653,55 @@
   }
 
   function savePreset(presetIndex: number | null = null) {
+    if (!newPresetName) {
+      newPresetName = `Preset ${$automaticHltbPresetsStore.length + 1}`;
+    }
+
+    const newPreset = {
+      name: "",
+      mode,
+      progresses,
+      sortWholeList,
+      listBy,
+      sortBy,
+      sortByOrder,
+      mpOnlyBehavior,
+      endlessBehavior,
+      gamesWithoutHltbBehavior,
+      gamesWithoutHltbReportThreshold,
+      mpOnlyList,
+      endlessList,
+      gamesWithoutHltbList,
+      listArray,
+      mpOnlyListArray,
+      endlessListArray,
+      gamesWithoutHltbListArray,
+    };
+
     if (presetIndex != null) {
-      $automaticHltbPresetsStore[presetIndex] = {
-        name: $automaticHltbPresetsStore[presetIndex].name,
-        mode,
-        progresses,
-        sortWholeList,
-        listBy,
-        sortBy,
-        sortByOrder,
-        mpOnlyBehavior,
-        endlessBehavior,
-        gamesWithoutHltbBehavior,
-        gamesWithoutHltbReportThreshold,
-        mpOnlyList,
-        endlessList,
-        gamesWithoutHltbList,
-        listArray,
-        mpOnlyListArray,
-        endlessListArray,
-        gamesWithoutHltbListArray,
-      };
+      newPreset.name = $automaticHltbPresetsStore[presetIndex].name;
+      $automaticHltbPresetsStore[presetIndex] = structuredClone(newPreset);
     } else {
-      $automaticHltbPresetsStore.push({
-        name: newPresetName,
-        mode,
-        progresses,
-        sortWholeList,
-        listBy,
-        sortBy,
-        sortByOrder,
-        mpOnlyBehavior,
-        endlessBehavior,
-        gamesWithoutHltbBehavior,
-        gamesWithoutHltbReportThreshold,
-        mpOnlyList,
-        endlessList,
-        gamesWithoutHltbList,
-        listArray,
-        mpOnlyListArray,
-        endlessListArray,
-        gamesWithoutHltbListArray,
-      });
+      newPreset.name = newPresetName;
+      $automaticHltbPresetsStore.push(structuredClone(newPreset));
     }
 
     $automaticHltbPresetsStore = $automaticHltbPresetsStore;
 
     newPresetName = "";
     savingPreset = "idle";
+
+    cancelPresetOverwrite();
+
+    savePresetSuccess = true;
+
+    setTimeout(() => {
+      savePresetSuccess = false;
+    }, 3000);
   }
 
   function loadPreset(presetIndex: number) {
-    const preset = $automaticHltbPresetsStore[presetIndex];
+    const preset = structuredClone($automaticHltbPresetsStore[presetIndex]);
 
     mode = preset.mode;
     progresses = preset.progresses as any;
@@ -748,11 +744,37 @@
     if (gamesWithoutHltbList.length <= 0 || !formattedLists.find((formattedList) => formattedList.value === gamesWithoutHltbList[0].value)) {
       gamesWithoutHltbList = [];
     }
+
+    loadPresetSuccess = true;
+
+    setTimeout(() => {
+      loadPresetSuccess = false;
+    }, 3000);
   }
 
   function deletePreset(presetIndex: number) {
     $automaticHltbPresetsStore.splice(presetIndex, 1);
     $automaticHltbPresetsStore = $automaticHltbPresetsStore;
+
+    deletePresetSuccess = true;
+
+    setTimeout(() => {
+      deletePresetSuccess = false;
+    }, 3000);
+  }
+
+  function confirmPresetOverwrite(index: number) {
+    presetBeingOverwritten = index;
+    presetBeingOverwrittenName = $automaticHltbPresetsStore[index].name;
+
+    overwritePresetConfirm = true;
+  }
+
+  function cancelPresetOverwrite() {
+    presetBeingOverwritten = -1;
+    presetBeingOverwrittenName = "";
+
+    overwritePresetConfirm = false;
   }
 
   let currentSubimittingList = {} as AutomaticHltbTagInfo;
@@ -763,6 +785,14 @@
   let mpOnlyListArray = { playtime: "", maxPlaytime: "", tagId: [] as any, games: [], newGames: [], oldList: null } as AutomaticHltbTagInfo;
   let endlessListArray = { playtime: "", maxPlaytime: "", tagId: [] as any, games: [], newGames: [], oldList: null } as AutomaticHltbTagInfo;
   let gamesWithoutHltbListArray = { playtime: "", maxPlaytime: "", tagId: [] as any, games: [], newGames: [], oldList: null } as AutomaticHltbTagInfo;
+
+  let savePresetSuccess = false;
+  let loadPresetSuccess = false;
+  let overwritePresetConfirm = false;
+  let deletePresetSuccess = false;
+
+  let presetBeingOverwritten = -1;
+  let presetBeingOverwrittenName = "";
 </script>
 
 <button class="bp-automatic-list btn btn-default" on:click={() => (showModal = true)}>HLTB list maker</button>
@@ -1005,12 +1035,27 @@
       {#if status === "setup"}
         <div class="btn-group dropup">
           <div class="dropdown">
-            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-success">Save preset <span class="caret"></span></button>
+            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-success">
+              {#if savePresetSuccess}
+                <i class="fa fa-check-circle"></i> Saved!
+              {:else}
+                Save preset <span class="caret"></span>
+              {/if}
+            </button>
             <ul class="dropdown-menu">
-              {#if $automaticHltbPresetsStore?.length > 0}
+              {#if overwritePresetConfirm}
+                <li class="dropdown-header">Overwriting {presetBeingOverwrittenName}</li>
+                <li>
+                  <button class="btn-overwrite" type="button" on:click={() => savePreset(presetBeingOverwritten)}>Overwrite</button>
+                </li>
+                <li>
+                  <button type="button" on:click|stopPropagation={cancelPresetOverwrite}>Cancel</button>
+                </li>
+              {:else if $automaticHltbPresetsStore?.length > 0}
+                <li class="dropdown-header">Save over existing preset</li>
                 {#each $automaticHltbPresetsStore as preset, index}
                   <li>
-                    <button type="button" on:click={() => savePreset(index)}>{preset.name}</button>
+                    <button class="current-preset" type="button" on:click|stopPropagation={() => confirmPresetOverwrite(index)}>{preset.name}</button>
                   </li>
                 {/each}
               {:else}
@@ -1039,7 +1084,13 @@
             </ul>
           </div>
           <div class="dropdown">
-            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-primary">Load preset <span class="caret"></span></button>
+            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-primary">
+              {#if loadPresetSuccess}
+                <i class="fa fa-check-circle"></i> Loaded!
+              {:else}
+                Load preset <span class="caret"></span>
+              {/if}
+            </button>
             <ul class="dropdown-menu">
               {#if $automaticHltbPresetsStore?.length > 0}
                 {#each $automaticHltbPresetsStore as preset, index}
@@ -1053,7 +1104,13 @@
             </ul>
           </div>
           <div class="dropdown">
-            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-danger">Delete preset <span class="caret"></span></button>
+            <button data-toggle="dropdown" data-target="#" aria-expanded="false" type="button" class="btn btn-danger">
+              {#if deletePresetSuccess}
+                <i class="fa fa-check-circle"></i> Deleted!
+              {:else}
+                Delete preset <span class="caret"></span>
+              {/if}
+            </button>
             <ul class="dropdown-menu">
               {#if $automaticHltbPresetsStore?.length > 0}
                 {#each $automaticHltbPresetsStore as preset, index}
@@ -1328,38 +1385,54 @@
     gap: 8px;
   }
 
-  .dropdown-menu button,
-  .dropdown-menu input {
-    display: block;
-    clear: both;
-    appearance: none;
-    border: none;
-    background-color: transparent;
-    padding: 3px 20px;
-    width: 100%;
-    color: #333333;
-    font-weight: normal;
-    line-height: 1.42857;
-    text-align: left;
-    white-space: nowrap;
+  .dropdown-menu {
+    button,
+    input {
+      display: block;
+      clear: both;
+      appearance: none;
+      border: none;
+      background-color: transparent;
+      padding: 3px 20px;
+      width: 100%;
+      color: #333333;
+      font-weight: normal;
+      line-height: 1.42857;
+      text-align: left;
+      white-space: nowrap;
 
-    &:hover,
-    &:focus {
-      background-color: #f5f5f5;
-      color: #262626;
-      text-decoration: none;
+      &:hover,
+      &:focus {
+        background-color: #f5f5f5;
+        color: #262626;
+        text-decoration: none;
+      }
     }
-  }
 
-  .dropdown-menu li > div {
-    display: block;
-    padding: 3px 20px;
-    width: 100%;
-    color: #333333;
-    font-weight: normal;
-    line-height: 1.42857;
-    text-align: left;
-    white-space: nowrap;
-    background-color: transparent;
+    .btn-overwrite {
+      background-color: #c9302c;
+      border-color: #ac2925;
+      color: #fff;
+
+      &:hover,
+      &:focus {
+        background-color: #c9302c;
+        border-color: #ac2925;
+        color: #fff;
+      }
+    }
+
+    li > div {
+      display: block;
+      padding: 3px 20px;
+      width: 100%;
+      color: #333333;
+      font-weight: normal;
+      line-height: 1.42857;
+      text-align: left;
+      white-space: nowrap;
+      background-color: transparent;
+      font-size: 12px;
+    }
   }
 </style>

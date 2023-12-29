@@ -1,4 +1,16 @@
 <div class="main">
+  <h3>v1.2.1 - December 29th, 2023</h3>
+  <ul>
+    <li>
+      Changes and fixes to HLTB list maker presets:
+      <ul>
+        <li>Added success messages when saving, loading or deleting presets</li>
+        <li>Added confirmation prompt when overwriting existing presets</li>
+        <li>Saving a preset without a name now autogenerates a name for it</li>
+        <li>Fixed presets being overwritten while changing list maker options</li>
+      </ul>
+    </li>
+  </ul>
   <h3>v1.2.0 - December 29th, 2023</h3>
   <ul>
     <li>
