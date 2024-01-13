@@ -1,6 +1,6 @@
 import "@/app.scss";
 import { optionsStore } from "./lib/store";
-import { BP_VERSION, addedComponents } from "@/globals";
+import { BP_VERSION, addedComponents, getUserName } from "@/globals";
 import { addHeaderShortcuts, cleanupHeaderShortcuts } from "@/modules/header/shortcuts";
 import { initMobileMessageIcon, cleanupMobileMessageIcon } from "@/modules/header/mobileMessageIcon";
 import { cleanupOptionsMenu, initOptionsMenu } from "@/modules/options/menu";
@@ -21,6 +21,8 @@ import initListQuickRearrange from "./modules/list/quickRearrange";
 import initUpdateNotifier from "./modules/changelog/updateNotifier";
 import { GM_setValue } from "vite-plugin-monkey/dist/client";
 import initAutomaticList from "./modules/list/automaticHltbList";
+import { addMissingGamesShortcut, cleanupMissingShortcuts } from "./modules/header/missingGamesShortcut";
+import { addUncategorizedGamesShortcut, cleanupUncategorizedGamesShortcut } from "./modules/header/uncategorizedGamesShortcut";
 import { cleanupOldListBackups } from "./lib/cleanupOldListBackups";
 
 let options = get(optionsStore) as Options;
@@ -39,6 +41,8 @@ function cleanup(): void {
 
   cleanupMobileMessageIcon();
   cleanupHeaderShortcuts();
+  cleanupMissingShortcuts();
+  cleanupUncategorizedGamesShortcut();
   cleanupOptionsMenu();
   cleanupCommentPreview();
   cleanupHltbTimes();
@@ -62,6 +66,8 @@ function init(): void {
     }
   }
 
+  getUserName();
+
   cleanupOldListBackups();
 }
 function initEachPage(): void {
@@ -82,6 +88,14 @@ function initEachPage(): void {
 
   if (options.modules.header.shortcuts) {
     addHeaderShortcuts();
+  }
+
+  if (options.modules.header.uncategorizedGamesShortcut) {
+    addUncategorizedGamesShortcut();
+  }
+
+  if (options.modules.header.missingGamesShortcut) {
+    addMissingGamesShortcut();
   }
 
   if (options.modules.header.mobileMessageBadge) {

@@ -22,6 +22,8 @@ let options = mergeDeep(
     modules: {
       header: {
         shortcuts: true,
+        uncategorizedGamesShortcut: true,
+        missingGamesShortcut: true,
         mobileMessageBadge: true,
       },
       games: {
@@ -52,6 +54,9 @@ let options = mergeDeep(
         lists: {
           quickRearrange: true,
           automaticHltb: true,
+        },
+        other: {
+          bulkRemoveMissingGames: true,
         },
       },
       posts: {

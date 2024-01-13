@@ -1,6 +1,6 @@
 import { GM_getValue, GM_setValue, GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
 import { splitArrayIntoChunks } from "./utilities";
-import { getUserGames, getUserName, userData } from "@/globals";
+import { getUserGames, userData } from "@/globals";
 
 export let hltbExcludedGames = JSON.parse(GM_getValue("hltb-excluded-games", "[]") || "[]");
 export let hltbData = JSON.parse(GM_getValue("hltb-data", "{}") || "{}") as GameInfo;
@@ -96,7 +96,6 @@ export function enqueueHltbData(games: Array<any>) {
 }
 
 export function enqueueEntireLibrary() {
-  getUserName();
   if (userData.name) {
     getUserGames(userData.name);
   } else {

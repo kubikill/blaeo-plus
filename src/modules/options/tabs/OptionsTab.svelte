@@ -10,6 +10,8 @@
 
   <OptionsItem title="Header" titleClass="h3">
     <OptionsToggle id="bp-options-modules-header-shortcuts" bind:boundValue={$optionsStore.modules.header.shortcuts}>Add "New Post" shortcut to avatar dropdown</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-header-uncategorized-games-shortcut" bind:boundValue={$optionsStore.modules.header.uncategorizedGamesShortcut}>Add a uncategorized games link to the "My games" dropdown</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-header-missing-games-shortcut" bind:boundValue={$optionsStore.modules.header.missingGamesShortcut}>Add a missing games link to the "My games" dropdown</OptionsToggle>
     <OptionsToggle id="bp-options-modules-header-mobile-message-badge" bind:boundValue={$optionsStore.modules.header.mobileMessageBadge}>Show unread messages link on mobile header without having to expand it</OptionsToggle>
   </OptionsItem>
 
@@ -110,6 +112,18 @@
           Requires HLTB integration to be enabled.
         </p>
         <p>To use this feature, go to BLAEO settings -&gt; "Manage lists" then click the "HLTB list maker" button.</p>
+      </div>
+    </OptionsToggle>
+
+    <h4>Other</h4>
+
+    <OptionsToggle id="bp-options-modules-games-lists-automatic-hltb" bind:boundValue={$optionsStore.modules.games.lists.automaticHltb} bind:disabled={$optionsStore.modules.games.hltbIntegration.enabled}>
+      Add "bulk remove missing games" button
+      <div slot="description">
+        <p>
+          Adds a button to remove games classified on BLAEO as missing in bulk.<br />
+        </p>
+        <p>To use this feature, go to BLAEO settings -&gt; "Manage lists" then click the "Add games by HLTB times" button.</p>
       </div>
     </OptionsToggle>
 

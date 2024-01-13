@@ -22,6 +22,8 @@ type Options = {
   modules: {
     header: {
       shortcuts: boolean;
+      uncategorizedGamesShortcut: boolean;
+      missingGamesShortcut: boolean;
       mobileMessageBadge: boolean;
     };
     games: {
@@ -51,6 +53,9 @@ type Options = {
       lists: {
         quickRearrange: boolean;
         automaticHltb: boolean;
+      };
+      other: {
+        bulkRemoveMissingGames: boolean;
       };
     };
     posts: {
