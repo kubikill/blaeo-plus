@@ -109,6 +109,13 @@ body.bp-mobile-comment-layout {
   }
 }
 
+.bp-hltb-cell {
+  svg {
+    vertical-align: text-bottom;
+    margin-right: 2px;
+  }
+}
+
 .game-media .bp-hltb-logo {
   margin-left: 4px;
   height: 16px;
@@ -254,4 +261,10 @@ body.bp-mobile-comment-layout {
 
 .navbar-nav li a.uncategorized {
   border-right: 7px solid #ddd;
+}
+
+.bp-force-container-fluid {
+  .container {
+    width: 100%;
+  }
 }

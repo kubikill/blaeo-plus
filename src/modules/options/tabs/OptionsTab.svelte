@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { userData } from "@/globals";
   import OptionsItem from "../OptionsItem.svelte";
   import OptionsToggle from "../OptionsToggle.svelte";
 
@@ -111,19 +112,28 @@
           Also allows MP-only and endless games to be ignored/added to separate lists.<br />
           Requires HLTB integration to be enabled.
         </p>
-        <p>To use this feature, go to BLAEO settings -&gt; "Manage lists" then click the "HLTB list maker" button.</p>
+        <p>To use this feature, go to your <a href="/settings/lists">"Manage lists"</a> settings page.</p>
       </div>
     </OptionsToggle>
 
     <h4>Other</h4>
 
-    <OptionsToggle id="bp-options-modules-games-lists-automatic-hltb" bind:boundValue={$optionsStore.modules.games.lists.automaticHltb} bind:disabled={$optionsStore.modules.games.hltbIntegration.enabled}>
+    <OptionsToggle id="bp-options-modules-games-other-bulk-remove-missing-games" bind:boundValue={$optionsStore.modules.games.other.bulkRemoveMissingGames}>
       Add "bulk remove missing games" button
       <div slot="description">
         <p>
           Adds a button to remove games classified on BLAEO as missing in bulk.<br />
         </p>
-        <p>To use this feature, go to BLAEO settings -&gt; "Manage lists" then click the "Add games by HLTB times" button.</p>
+        <p>To use this feature, go to your <a href="/users/{userData.name}/games/missing">missing games</a> on BLAEO.</p>
+      </div>
+    </OptionsToggle>
+
+    <OptionsToggle id="bp-options-modules-games-other-full-width-table" bind:boundValue={$optionsStore.modules.games.other.fullWidthTable}>
+      Add full width game table view
+      <div slot="description">
+        <p>
+          Changes the games list table views to use full screen width.<br />
+        </p>
       </div>
     </OptionsToggle>
 

@@ -24,6 +24,8 @@ import initAutomaticList from "./modules/list/automaticHltbList";
 import { addMissingGamesShortcut, cleanupMissingShortcuts } from "./modules/header/missingGamesShortcut";
 import { addUncategorizedGamesShortcut, cleanupUncategorizedGamesShortcut } from "./modules/header/uncategorizedGamesShortcut";
 import { cleanupOldListBackups } from "./lib/cleanupOldListBackups";
+import { initBulkRemoveGames } from "./modules/games/bulkRemoveGames/bulkRemoveGames";
+import { initFullWidthTable } from "./modules/games/fullWidthTable";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
@@ -140,6 +142,14 @@ function initEachPage(): void {
 
   if (options.modules.games.lists.automaticHltb) {
     initAutomaticList();
+  }
+
+  if (options.modules.games.other.bulkRemoveMissingGames) {
+    initBulkRemoveGames();
+  }
+
+  if (options.modules.games.other.fullWidthTable) {
+    initFullWidthTable();
   }
 
   if (options.modules.misc.updateNotifier) {

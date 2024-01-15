@@ -8,9 +8,17 @@
     for (let i = 0; i < tabs.length; i++) {
       if (tabs[i]) {
         activeTab = i;
+        tabs[i].rendered = true;
         break;
       }
     }
+  }
+
+  function switchTab(id: number) {
+    tabs[id].rendered = true;
+    requestAnimationFrame(() => {
+      activeTab = id;
+    });
   }
 </script>
 
@@ -18,7 +26,7 @@
   {#each tabs as tab, idx}
     {#if tab}
       <li role="presentation" class:active={idx === activeTab}>
-        <button class="tab" on:click={() => (activeTab = idx)} role="tab" aria-controls={slugify(`options-${tab.name}`)}>
+        <button class="tab" on:click={() => switchTab(idx)} role="tab" aria-controls={slugify(`options-${tab.name}`)}>
           {tab.name}
         </button>
       </li>
@@ -30,10 +38,12 @@
   {#each tabs as tab, idx}
     {#if tab}
       <div role="tabpanel" hidden={idx != activeTab} id={slugify(`options-${tab.name}`)}>
-        {#if typeof tab.content === "function"}
-          <svelte:component this={tab.content} {...tab.props} />
-        {:else}
-          {tab.content}
+        {#if tab.rendered}
+          {#if typeof tab.content === "function"}
+            <svelte:component this={tab.content} {...tab.props} />
+          {:else}
+            {tab.content}
+          {/if}
         {/if}
       </div>
     {/if}

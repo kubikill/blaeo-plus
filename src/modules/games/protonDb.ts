@@ -110,24 +110,26 @@ function getProtonDbListHtml(steamId: number) {
   if (linuxData[steamId].protonDbRating != "unknown" && linuxData[steamId].protonDbRating != "pending") {
     html += `
       <div class="bp-linux-media">
-        <div class="bp-protondb-element bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbRating === "no data" ? "no-data" : linuxData[steamId].protonDbRating}" 
+        <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-element bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbRating === "no data" ? "no-data" : linuxData[steamId].protonDbRating}" 
         title="based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
           ${linuxData[steamId].protonDbRating}
-        </div>
+        </a>
       </div>
     `;
   } else if (linuxData[steamId].protonDbProvRating != "unknown") {
     html += `
       <div class="bp-linux-media">
-        <div class="bp-protondb-element bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${linuxData[steamId].protonDbReports ?? 0} report(s)">
+        <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-element bp-protondb-rating bp-protondb-rating-${linuxData[steamId].protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${
+          linuxData[steamId].protonDbReports ?? 0
+        } report(s)">
           ${provisionalIcon} ${linuxData[steamId].protonDbProvRating}
-        </div>
+        </a>
       </div>
   `;
   } else {
     html += `
     <div class="bp-linux-media">
-      <div class="bp-protondb-element bp-protondb-rating bp-protondb-rating-unknown">unknown</div>
+      <a href="https://www.protondb.com/app/${steamId}" class="bp-protondb-element bp-protondb-rating bp-protondb-rating-unknown">unknown</a>
     </div>
     `;
   }

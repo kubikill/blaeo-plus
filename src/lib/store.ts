@@ -57,6 +57,7 @@ let options = mergeDeep(
         },
         other: {
           bulkRemoveMissingGames: true,
+          fullWidthTable: false,
         },
       },
       posts: {

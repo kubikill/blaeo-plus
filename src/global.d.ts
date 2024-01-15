@@ -55,6 +55,7 @@ type Options = {
         automaticHltb: boolean;
       };
       other: {
+        fullWidthTable: boolean;
         bulkRemoveMissingGames: boolean;
       };
     };

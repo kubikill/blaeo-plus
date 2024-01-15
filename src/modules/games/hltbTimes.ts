@@ -137,9 +137,9 @@ function getHltbTableHtml(steamId: number, gameData: any): string {
     if (gameData.gameObj.type.includes("sp")) {
       if (options.modules.games.hltbIntegration.displayColumns.main) {
         html += `
-          <td class="text-right bp-hltb-element" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.main ?? -1}">
+          <td class="text-right bp-hltb-element bp-hltb-cell" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.main ?? -1}">
             ${gameData.gameObj?.endless ? infinityIcon : ""}
-            <div title="based on ${gameData.gameObj?.mainCount ?? 0} report(s)">${gameData.mainCompString}</div>
+            <span title="based on ${gameData.gameObj?.mainCount ?? 0} report(s)">${gameData.mainCompString}</span>
           </td>
         `;
       }
@@ -147,7 +147,7 @@ function getHltbTableHtml(steamId: number, gameData: any): string {
       if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
         html += `
         <td class="text-right bp-hltb-element" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.extra ?? -1}">
-          <div title="based on ${gameData.gameObj?.extraCount ?? 0} report(s)">${gameData.extraCompString}</div>
+          <span title="based on ${gameData.gameObj?.extraCount ?? 0} report(s)">${gameData.extraCompString}</span>
         </td>
         `;
       }
@@ -155,7 +155,7 @@ function getHltbTableHtml(steamId: number, gameData: any): string {
       if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
         html += `
             <td class="text-right bp-hltb-element" data-value="${hltbExcludedGames.includes(+steamId) ? -2 : null ?? gameData.gameObj?.everything ?? -1}">
-              <div title="based on ${gameData.gameObj?.everythingCount ?? 0} report(s)">${gameData.everythingCompString}</div>
+              <span title="based on ${gameData.gameObj?.everythingCount ?? 0} report(s)">${gameData.everythingCompString}</span>
             </td>
             `;
       }
@@ -429,50 +429,42 @@ export async function initHltbTimes() {
         }
 
       if (gameTableGroups) {
-        if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won" || gameTableHeader.children[2].textContent!.trim() === "Playtime This Month") {
+        let columnWidth = options.modules.games.other.fullWidthTable ? 150 : 130;
+        if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won") {
           gameTableGroups.innerHTML = `
           <col class="bp-hltb-element" style="width: 1%;">
           <col class="bp-hltb-element">
-          <col class="bp-hltb-element" style="width: 130px">
-          <col class="bp-hltb-element" style="width: 130px">
+          <col class="bp-hltb-element" style="width: ${columnWidth}px">
+          <col class="bp-hltb-element" style="width: ${columnWidth}px">
         `;
-
-          if (oneColumnMode) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 160px;">`;
-          } else {
-            if (options.modules.games.hltbIntegration.displayColumns.main) {
-              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
-            }
-
-            if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
-            }
-
-            if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
-            }
-          }
+        } else if (gameTableHeader.children[2].textContent!.trim() === "Playtime This Month" || gameTableHeader.children[2].textContent!.trim().startsWith("Playtime In")) {
+          gameTableGroups.innerHTML = `
+          <col class="bp-hltb-element">
+          <col class="bp-hltb-element" style="width: ${columnWidth}px">
+          <col class="bp-hltb-element" style="width: ${columnWidth}px">
+          <col class="bp-hltb-element" style="width: ${columnWidth}px">
+        `;
         } else {
           gameTableGroups.innerHTML = `
-            <col>
-            <col style="width: 130px">
-            <col style="width: 130px">
+            <col class="bp-hltb-element">
+            <col class="bp-hltb-element" style="width: ${columnWidth}px">
+            <col class="bp-hltb-element" style="width: ${columnWidth}px">
           `;
+        }
 
-          if (oneColumnMode) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 160px;">`;
-          } else {
-            if (options.modules.games.hltbIntegration.displayColumns.main) {
-              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
-            }
+        if (oneColumnMode) {
+          gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 160px;">`;
+        } else {
+          if (options.modules.games.hltbIntegration.displayColumns.main) {
+            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
+          }
 
-            if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
-            }
+          if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
+            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
+          }
 
-            if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-              gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 110px;">`;
-            }
+          if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
+            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
           }
         }
       }

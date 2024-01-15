@@ -1,4 +1,14 @@
 <div class="main">
+  <h3>v1.2.2 - January 15th, 2024</h3>
+  <ul>
+    <li>Added a "bulk remove missing games" feature</li>
+    <li>Added "missing games" and "uncategorized games" shortcuts to the "My games" dropdown in the header</li>
+    <li>Added full width game table option (disabled by default, enable it in options)</li>
+    <li>Fixed achievements column being too wide on "Recently played" page when HLTB integration is enabled</li>
+    <li>Fixed ProtonDB badges in list view not linking to game page on ProtonDB</li>
+    <li>Endless games icon and HLTB time to beat will now fit on one line if there is enough space</li>
+    <li>Performance optimizations</li>
+  </ul>
   <h3>v1.2.1 - December 29th, 2023</h3>
   <ul>
     <li>

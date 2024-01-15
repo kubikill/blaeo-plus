@@ -16,6 +16,14 @@
       activeTab = 0;
     }, 1000);
   }
+
+  let rendered = false;
+
+  $: {
+    if (showOptions) {
+      rendered = true;
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -28,16 +36,18 @@
       </button>
     </div>
     <div class="modal-body">
-      <Tabs
-        tabs={[
-          { name: "Options", content: OptionsTab },
-          { name: "Blacklist", content: BlacklistTab },
-          { name: "List backups", content: ListBackupsTab },
-          { name: "Changelog", content: ChangelogTab },
-          { name: "About", content: AboutTab },
-        ]}
-        bind:activeTab
-      />
+      {#if rendered}
+        <Tabs
+          tabs={[
+            { name: "Options", content: OptionsTab },
+            { name: "Blacklist", content: BlacklistTab },
+            { name: "List backups", content: ListBackupsTab },
+            { name: "Changelog", content: ChangelogTab },
+            { name: "About", content: AboutTab },
+          ]}
+          bind:activeTab
+        />
+      {/if}
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-default" on:click={hideModal}>Close</button>
