@@ -6,7 +6,7 @@ export function initBulkRemoveGames() {
     return;
   }
 
-  const gameTable = document.querySelector("table#games");
+  const gameTable = document.querySelector("table#games") as HTMLTableElement;
 
   if (!gameTable) {
     return;
@@ -21,8 +21,6 @@ export function initBulkRemoveGames() {
 
   const modalSlot = document.querySelector(".bp-bulk-remove-games-slot");
 
-  const gameRows = gameTable.querySelectorAll("tbody > tr") as NodeListOf<HTMLTableRowElement>;
-
   const games: {
     id: string | undefined;
     name: string;
@@ -32,34 +30,43 @@ export function initBulkRemoveGames() {
     markedForDeletion: boolean;
   }[] = [];
 
-  gameRows.forEach((row) => {
-    const achievementsCell = row.querySelector(".achievements");
-    let status = [...row.classList]
-      .flatMap((className) => {
-        if (className === "game") {
-          return [];
-        }
+  let checkInterval: ReturnType<typeof setInterval>;
+  checkInterval = setInterval(() => {
+    if (!gameTable.dataset.delayedLast) {
+      clearInterval(checkInterval);
 
-        return [className.replace("game-", "")];
-      })
-      .join("");
+      const gameRows = gameTable.querySelectorAll("tbody > tr") as NodeListOf<HTMLTableRowElement>;
 
-    games.push({
-      id: row.dataset.item,
-      name: row.firstElementChild?.firstChild?.textContent || "",
-      status: status,
-      playtime: achievementsCell?.nextElementSibling?.innerHTML,
-      achievements: achievementsCell?.innerHTML,
-      markedForDeletion: false,
-    });
-  });
+      gameRows.forEach((row) => {
+        const achievementsCell = row.querySelector(".achievements");
+        let status = [...row.classList]
+          .flatMap((className) => {
+            if (className === "game") {
+              return [];
+            }
 
-  const bulkRemoveGamesModal = new BulkRemoveGamesModal({
-    target: modalSlot,
-    props: {
-      games: games,
-    },
-  });
+            return [className.replace("game-", "")];
+          })
+          .join("");
 
-  addedComponents.push(bulkRemoveGamesModal);
+        games.push({
+          id: row.dataset.item,
+          name: row.firstElementChild?.firstChild?.textContent || "",
+          status: status,
+          playtime: achievementsCell?.nextElementSibling?.innerHTML,
+          achievements: achievementsCell?.innerHTML,
+          markedForDeletion: false,
+        });
+      });
+
+      const bulkRemoveGamesModal = new BulkRemoveGamesModal({
+        target: modalSlot,
+        props: {
+          games: games,
+        },
+      });
+
+      addedComponents.push(bulkRemoveGamesModal);
+    }
+  }, 100);
 }
