@@ -3,6 +3,7 @@
 A userscript for Backlog Assassins Extraordinaire that adds new features and QoL improvements to the site.
 
 [Install](https://github.com/kubikill/blaeo-plus/releases/latest/download/blaeo-plus.user.js)
+[Support, feedback and bug reports](https://steamcommunity.com/groups/attackyourbacklog/discussions/1/7155698768546603592/)
 
 ## Features
 
@@ -34,6 +35,8 @@ A userscript for Backlog Assassins Extraordinaire that adds new features and QoL
 
 ## To do
 
-- Add a way to bulk delete removed games
+- Add Steam store integration (show more data about games from Steam store, such as tags, review scores, available platforms, categories like Steam Achievements, Steam Trading Cards etc.)
 - Add Steam tag list maker
+- Add a random game picker
+- Add SteamHunters integration (display median 100% completion times and allow those times to be used in the HLTB list maker)
 - ...and more!
