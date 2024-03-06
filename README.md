@@ -2,7 +2,7 @@
 
 A userscript for Backlog Assassins Extraordinaire that adds new features and QoL improvements to the site.
 
-[Install](https://github.com/kubikill/blaeo-plus/releases/latest/download/blaeo-plus.user.js)
+[Install](https://github.com/kubikill/blaeo-plus/releases/latest/download/blaeo-plus.user.js)  
 [Support, feedback and bug reports](https://steamcommunity.com/groups/attackyourbacklog/discussions/1/7155698768546603592/)
 
 ## Features
