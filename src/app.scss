@@ -263,6 +263,13 @@ body.bp-mobile-comment-layout {
   border-right: 7px solid #ddd;
 }
 
+.navbar-nav .dropdown-menu {
+  @media (min-width: 992px) {
+    max-height: calc(100vh - 64px);
+    overflow: auto;
+  }
+}
+
 .bp-force-container-fluid {
   .container {
     width: 100%;

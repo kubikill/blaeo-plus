@@ -192,21 +192,23 @@
         return false;
       }
 
-      if (mpOnlyBehavior != "normal" && !hltbData[game.steam_id]?.type.includes("sp") && (hltbData[game.steam_id]?.type.includes("mp") || hltbData[game.steam_id]?.type.includes("coop"))) {
+      let hltbGame = hltbData?.[game.steam_id];
+
+      if (mpOnlyBehavior != "normal" && !hltbGame?.type?.includes("sp") && (hltbGame?.type?.includes("mp") || hltbGame?.type?.includes("coop"))) {
         if (mpOnlyBehavior === "separate") {
           mpOnlyGames.push(game);
         }
         return false;
       }
 
-      if (hltbData[game.steam_id]?.endless) {
+      if (hltbGame?.endless) {
         if (endlessBehavior === "separate") {
           endlessGames.push(game);
         }
         return false;
       }
 
-      if (gamesWithoutHltbBehavior != "allplaystyles" && (hltbData[game.steam_id]?.[`${listBy}Count`] || 0) < +gamesWithoutHltbReportThreshold) {
+      if (gamesWithoutHltbBehavior != "allplaystyles" && (hltbGame?.[`${listBy}Count`] || 0) < +gamesWithoutHltbReportThreshold) {
         gamesWithoutHltb.push(game);
         return false;
       }
@@ -336,7 +338,7 @@
 
         // Handle games without enough HLTB reports
 
-        if (gamesWithoutHltbBehavior === "allplaystyles" && (hltbData?.[game.steam_id] || (hltbData[game.steam_id]?.[`${listBy}Count`] || 0) < +gamesWithoutHltbReportThreshold)) {
+        if (gamesWithoutHltbBehavior === "allplaystyles" && (hltbData?.[game.steam_id]?.[`${listBy}Count`] || 0) < +gamesWithoutHltbReportThreshold) {
           if (!hltbData[game.steam_id] || (hltbData[game.steam_id].avgComp >= +list.playtime * 3600 && (hltbData[game.steam_id].avgComp ?? 0) <= +list.maxPlaytime * 3600)) {
             selectedList = list;
           }

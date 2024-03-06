@@ -1,4 +1,11 @@
 <div class="main">
+  <h3>v1.2.3 - March 3rd, 2024</h3>
+  <ul>
+    <li>BLAEO fix: The "My games" dropdown no longer extends past the screen and is now scrollable if too large to fit on screen</li>
+    <li>Fixed displaying HLTB data for games that did not have their HLTB data fetched yet</li>
+    <li>Fixed HLTB list maker not working when encountering games that did not have their HLTB data fetched yet</li>
+    <li>Fixed list backups tab breaking when encountering games that did not have their HLTB data fetched yet</li>
+  </ul>
   <h3>v1.2.2 - January 15th, 2024</h3>
   <ul>
     <li>Added a "bulk remove missing games" feature</li>

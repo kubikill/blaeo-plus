@@ -104,25 +104,31 @@
                     <li>
                       <a href="https://store.steampowered.com/app/{game.steam_id}" class="steam"><i></i></a>
                     </li>
-                    <li class="bp-hltb-element" style="vertical-align: middle">
-                      <a href="https://howlongtobeat.com/game/{hltbData[game.steam_id].hltbId}" aria-label="HLTB game page" title="HLTB game page">{@html hltbLogo}</a>
-                    </li>
+                    {#if hltbData?.[game.steam_id]}
+                      <li class="bp-hltb-element" style="vertical-align: middle">
+                        <a href="https://howlongtobeat.com/game/{hltbData[game.steam_id].hltbId}" aria-label="HLTB game page" title="HLTB game page">{@html hltbLogo}</a>
+                      </li>
+                    {/if}
                   </ul>
                 </td>
 
-                {#if hltbData[game.steam_id].type.includes("sp")}
-                  <td class="hltb-column">{getHltbString(game, "main")}</td>
-                  <td class="hltb-column">{getHltbString(game, "extra")}</td>
-                  <td class="hltb-column">{getHltbString(game, "everything")}</td>
+                {#if hltbData?.[game.steam_id]}
+                  {#if hltbData[game.steam_id].type.includes("sp")}
+                    <td class="hltb-column">{getHltbString(game, "main")}</td>
+                    <td class="hltb-column">{getHltbString(game, "extra")}</td>
+                    <td class="hltb-column">{getHltbString(game, "everything")}</td>
+                  {:else}
+                    <td class="hltb-column" colspan="3">
+                      {#if hltbData[game.steam_id].type.includes("mp")}
+                        MP: {getHltbString(game, "mp")}
+                      {/if}
+                      {#if hltbData[game.steam_id].type.includes("coop")}
+                        Co-Op: {getHltbString(game, "coop")}
+                      {/if}
+                    </td>
+                  {/if}
                 {:else}
-                  <td class="hltb-column" colspan="3">
-                    {#if hltbData[game.steam_id].type.includes("mp")}
-                      MP: {getHltbString(game, "mp")}
-                    {/if}
-                    {#if hltbData[game.steam_id].type.includes("coop")}
-                      Co-Op: {getHltbString(game, "coop")}
-                    {/if}
-                  </td>
+                  <td class="hltb-column" colspan="3">Unknown</td>
                 {/if}
               </tr>
             {/each}
