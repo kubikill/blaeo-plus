@@ -206,7 +206,7 @@
         return false;
       }
 
-      if (gamesWithoutHltbBehavior != "allplaystyles" && hltbData[game.steam_id][`${listBy}Count`] < +gamesWithoutHltbReportThreshold) {
+      if (gamesWithoutHltbBehavior != "allplaystyles" && (hltbData[game.steam_id]?.[`${listBy}Count`] || 0) < +gamesWithoutHltbReportThreshold) {
         gamesWithoutHltb.push(game);
         return false;
       }
@@ -315,7 +315,7 @@
         }
 
         // Handle games
-        if (hltbData[game.steam_id][listBy]) {
+        if (hltbData[game.steam_id]?.[listBy]) {
           if ((hltbData[game.steam_id][listBy] ?? 0) >= +list.playtime * 3600 && (hltbData[game.steam_id][listBy] ?? 0) <= +list.maxPlaytime * 3600) {
             selectedList = list;
           }
@@ -336,11 +336,9 @@
 
         // Handle games without enough HLTB reports
 
-        if (gamesWithoutHltbBehavior === "allplaystyles") {
-          if (hltbData[game.steam_id][`${listBy}Count`] < +gamesWithoutHltbReportThreshold) {
-            if (hltbData[game.steam_id].avgComp && hltbData[game.steam_id].avgComp >= +list.playtime * 3600 && (hltbData[game.steam_id].avgComp ?? 0) <= +list.maxPlaytime * 3600) {
-              selectedList = list;
-            }
+        if (gamesWithoutHltbBehavior === "allplaystyles" && (hltbData?.[game.steam_id] || (hltbData[game.steam_id]?.[`${listBy}Count`] || 0) < +gamesWithoutHltbReportThreshold)) {
+          if (!hltbData[game.steam_id] || (hltbData[game.steam_id].avgComp >= +list.playtime * 3600 && (hltbData[game.steam_id].avgComp ?? 0) <= +list.maxPlaytime * 3600)) {
+            selectedList = list;
           }
         }
       }
@@ -393,17 +391,17 @@
         break;
       case "hltb-main":
         for (let game of games) {
-          game.value = hltbData[game.steam_id].main;
+          game.value = hltbData[game.steam_id]?.main || 0;
         }
         break;
       case "hltb-extra":
         for (let game of games) {
-          game.value = hltbData[game.steam_id].extra;
+          game.value = hltbData[game.steam_id]?.extra || 0;
         }
         break;
       case "hltb-100":
         for (let game of games) {
-          game.value = hltbData[game.steam_id].everything;
+          game.value = hltbData[game.steam_id]?.everything || 0;
         }
         break;
     }
