@@ -9,6 +9,8 @@
     tags: [] as any[],
     protonDbRatings: [] as any[],
     deckVerifiedStatuses: [] as any[],
+    availableSteamTags: [] as any[],
+    steamTags: [] as any[],
   };
   export let gameStats: {
     "wont-play": number;
@@ -35,6 +37,7 @@
   export let showModesFilter = true;
   export let showProtonDbFilter = true;
   export let showDeckVerifiedFilter = true;
+  export let showSteamTagsFilter = true;
 
   const dispatch = createEventDispatcher();
 
@@ -64,10 +67,32 @@
     return 0;
   });
 
+  const availableSteamTags = Array.from(filters.availableSteamTags, (tag) => {
+    return {
+      label: tag[1].label,
+      color: tag[1].color,
+      value: tag[0],
+    };
+  });
+
+  availableSteamTags.sort((a, b) => {
+    if (a.value === "not-steam-tags" || a.value === "and-steam-tags") {
+      return -1;
+    }
+    if (a.label < b.label) {
+      return -1;
+    }
+    if (a.label > b.label) {
+      return 1;
+    }
+    return 0;
+  });
+
   let selectedTags = [] as any[];
   let selectedModes = [] as any[];
   let selectedProtonDbRatings = [] as any[];
   let selectedDeckVerifiedStatuses = [] as any[];
+  let selectedSteamTags = [] as any[];
 
   function changeMode() {
     filters.modes = selectedModes;
@@ -86,6 +111,11 @@
 
   function changeDeckVerifiedStatus() {
     filters.deckVerifiedStatuses = selectedDeckVerifiedStatuses;
+    dispatch("filters-changed");
+  }
+
+  function changeSteamTag() {
+    filters.steamTags = selectedSteamTags;
     dispatch("filters-changed");
   }
 </script>
@@ -156,58 +186,71 @@
       </button>
     </div>
   {/if}
-  {#if showTagsFilter}
-    <div class="bp-filters-wrapper bp-filters-tags">
-      <MultiSelect bind:selected={selectedTags} on:change={changeTag} options={availableTags} outerDivClass="bp-tag-select" placeholder={"Tags"} selectedOptionsDraggable={false}>
-        <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-          {option.label}
-        </div>
-      </MultiSelect>
-    </div>
-  {/if}
-  {#if showModesFilter}
-    <div class="bp-filters-wrapper bp-filters-modes">
-      <MultiSelect bind:selected={selectedModes} on:change={changeMode} options={modes} outerDivClass="bp-tag-select" placeholder={"Modes"} sortSelected={(a, b) => a.sortValue - b.sortValue} selectedOptionsDraggable={false}>
-        <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-          {option.label}
-        </div>
-      </MultiSelect>
-    </div>
-  {/if}
-  {#if showProtonDbFilter}
-    <div class="bp-filters-wrapper bp-filters-protondb">
-      <MultiSelect
-        bind:selected={selectedProtonDbRatings}
-        on:change={changeProtonDbRating}
-        options={protonDbRatings}
-        outerDivClass="bp-protondbstatuses-select"
-        placeholder={"ProtonDB ratings"}
-        sortSelected={(a, b) => a.sortValue - b.sortValue}
-        selectedOptionsDraggable={false}
-      >
-        <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-          {option.label}
-        </div>
-      </MultiSelect>
-    </div>
-  {/if}
-  {#if showDeckVerifiedFilter}
-    <div class="bp-filters-wrapper bp-filters-deckverified">
-      <MultiSelect
-        bind:selected={selectedDeckVerifiedStatuses}
-        on:change={changeDeckVerifiedStatus}
-        options={deckVerifiedStatuses}
-        outerDivClass="bp-protondbstatuses-select"
-        placeholder={"Steam Deck Verified statuses"}
-        sortSelected={(a, b) => a.sortValue - b.sortValue}
-        selectedOptionsDraggable={false}
-      >
-        <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-          {option.label}
-        </div>
-      </MultiSelect>
-    </div>
-  {/if}
+  <div class="bp-filters-row">
+    {#if showTagsFilter}
+      <div class="bp-filters-wrapper bp-filters-tags">
+        <MultiSelect bind:selected={selectedTags} on:change={changeTag} options={availableTags} outerDivClass="bp-tag-select" placeholder={"Tags"} selectedOptionsDraggable={false}>
+          <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
+            {option.label}
+          </div>
+        </MultiSelect>
+      </div>
+    {/if}
+    {#if showSteamTagsFilter}
+      <div class="bp-filters-wrapper bp-filters-steam-tags">
+        <MultiSelect bind:selected={selectedSteamTags} on:change={changeSteamTag} options={availableSteamTags} outerDivClass="bp-steam-tag-select" placeholder={"Steam tags"} selectedOptionsDraggable={false}>
+          <div let:option slot="option" class="" style:border-left={`7px solid #000000`}>
+            {option.label}
+          </div>
+        </MultiSelect>
+      </div>
+    {/if}
+  </div>
+  <div class="bp-filters-row">
+    {#if showModesFilter}
+      <div class="bp-filters-wrapper bp-filters-modes">
+        <MultiSelect bind:selected={selectedModes} on:change={changeMode} options={modes} outerDivClass="bp-tag-select" placeholder={"Modes"} sortSelected={(a, b) => a.sortValue - b.sortValue} selectedOptionsDraggable={false}>
+          <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
+            {option.label}
+          </div>
+        </MultiSelect>
+      </div>
+    {/if}
+    {#if showProtonDbFilter}
+      <div class="bp-filters-wrapper bp-filters-protondb">
+        <MultiSelect
+          bind:selected={selectedProtonDbRatings}
+          on:change={changeProtonDbRating}
+          options={protonDbRatings}
+          outerDivClass="bp-protondbstatuses-select"
+          placeholder={"ProtonDB ratings"}
+          sortSelected={(a, b) => a.sortValue - b.sortValue}
+          selectedOptionsDraggable={false}
+        >
+          <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
+            {option.label}
+          </div>
+        </MultiSelect>
+      </div>
+    {/if}
+    {#if showDeckVerifiedFilter}
+      <div class="bp-filters-wrapper bp-filters-deckverified">
+        <MultiSelect
+          bind:selected={selectedDeckVerifiedStatuses}
+          on:change={changeDeckVerifiedStatus}
+          options={deckVerifiedStatuses}
+          outerDivClass="bp-protondbstatuses-select"
+          placeholder={"Steam Deck Verified statuses"}
+          sortSelected={(a, b) => a.sortValue - b.sortValue}
+          selectedOptionsDraggable={false}
+        >
+          <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
+            {option.label}
+          </div>
+        </MultiSelect>
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style lang="scss" global>
@@ -220,6 +263,13 @@
       appearance: none;
       border: none;
       padding-right: 0;
+    }
+
+    .bp-filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 8px;
+      width: 100%;
     }
 
     .bp-filters-wrapper {
@@ -308,8 +358,13 @@
     }
   }
 
-  .bp-filters-tags {
+  .bp-filters-tags,
+  .bp-filters-steam-tags {
     width: 100%;
+    @media (min-width: 1024px) {
+      width: 40%;
+      flex-grow: 1;
+    }
   }
 
   .bp-filters-modes,

@@ -1,4 +1,16 @@
 <div class="main">
+  <h3>v1.2.4 - January 1st, 2025</h3>
+  <ul>
+    <li>
+      Added Steam store integration
+      <ul>
+        <li>Gets data about Steam tags</li>
+        <li>Disabled by default; visit options to enable</li>
+      </ul>
+    </li>
+    <li>Added Steam tags filters</li>
+    <li>Fixed some breaking issues if a game had missing Steam Deck compatibility data</li>
+  </ul>
   <h3>v1.2.3 - March 3rd, 2024</h3>
   <ul>
     <li>BLAEO fix: The "My games" dropdown no longer extends past the screen and is now scrollable if too large to fit on screen</li>

@@ -3,6 +3,7 @@ import { linuxData } from "@/lib/linuxService";
 import { removeAllNodesIfExist } from "@/lib/utilities";
 import DeckBadge from "@/modules/games/DeckBadge.svelte";
 import { addedComponents } from "@/globals";
+import { getGamesContainer, waitUntilGamesContainerLoaded } from "@/lib/waitUntilGamesContainerLoaded";
 
 const deckRatingScore = {
   unknown: -1,
@@ -13,7 +14,7 @@ const deckRatingScore = {
 };
 
 function getDeckScore(steamId: number): number {
-  return deckRatingScore[linuxData[steamId].deckRating];
+  return deckRatingScore[linuxData[steamId]?.deckRating || -1];
 }
 
 function getDeckVerifiedHtml(steamId: number, mode: string): string {
@@ -32,7 +33,7 @@ function getDeckVerifiedHtml(steamId: number, mode: string): string {
 function getDeckVerifiedTableHtml(steamId: number): string {
   let html = "";
 
-  if (linuxData[steamId].deckRating != "unknown") {
+  if (linuxData[steamId]?.deckRating != "unknown") {
     html += `
     <td class="text-center bp-deckverified-element" data-value="${getDeckScore(steamId)}"></td>
     `;
@@ -48,7 +49,7 @@ function getDeckVerifiedTableHtml(steamId: number): string {
 function getDeckVerifiedListHtml(steamId: number) {
   let html = "";
 
-  if (linuxData[steamId].deckRating != "unknown") {
+  if (linuxData[steamId]?.deckRating != "unknown") {
     html += `
     <div class="bp-deckverified-element"></div>
     `;
@@ -66,7 +67,7 @@ function getDeckVerifiedListHtml(steamId: number) {
 function getDeckVerifiedGridHtml(steamId: number) {
   let html = "";
 
-  if (linuxData[steamId].deckRating != "unknown") {
+  if (linuxData[steamId]?.deckRating != "unknown") {
     html += `
     <div class="bp-deckverified-element"></div>
     `;
@@ -82,19 +83,14 @@ function getDeckVerifiedGridHtml(steamId: number) {
 }
 
 export async function initDeckVerified() {
-  let gameContainer = document.querySelector("#games") as HTMLElement;
+  let gameContainer = getGamesContainer();
+
   if (!gameContainer) {
-    if (document.querySelector("#main > .game.game-media")) {
-      gameContainer = document.querySelector("#main") as HTMLElement;
-    } else if (document.querySelector("#main > ul.games")) {
-      gameContainer = document.querySelector("#main > ul.games") as HTMLElement;
-    } else {
-      return;
-    }
+    return;
   }
 
-  if (gameContainer.classList.contains("games") && gameContainer.tagName === "UL") {
-    gameContainer.classList.add("bp-game-list");
+  if (gameContainer.type === "list") {
+    gameContainer.container.classList.add("bp-game-list");
   }
 
   const deckModalComponent = new DeckModal({
@@ -106,137 +102,132 @@ export async function initDeckVerified() {
 
   addedComponents.push(deckModalComponent);
 
-  let checkInterval: ReturnType<typeof setInterval>;
-  checkInterval = setInterval(() => {
-    if (!gameContainer.dataset.delayedLast) {
-      clearInterval(checkInterval);
+  await waitUntilGamesContainerLoaded();
 
-      const protonDbHeader = gameContainer.querySelector("tr > th[data-bp-protondb]") as HTMLElement;
-      const gameTableHeader = gameContainer.querySelector("tr > th:nth-child(3)") as HTMLTableCellElement;
-      const gameTableFullHeader = gameContainer.querySelector("tr") as HTMLTableRowElement;
-      const gameTableGroups = gameContainer.querySelector("colgroup") as HTMLElement;
-      const games = gameContainer.querySelectorAll(".game") as NodeListOf<HTMLElement>;
+  const protonDbHeader = gameContainer.container.querySelector("tr > th[data-bp-protondb]") as HTMLElement;
+  const gameTableHeader = gameContainer.container.querySelector("tr > th:nth-child(3)") as HTMLTableCellElement;
+  const gameTableFullHeader = gameContainer.container.querySelector("tr") as HTMLTableRowElement;
+  const gameTableGroups = gameContainer.container.querySelector("colgroup") as HTMLElement;
+  const games = gameContainer.container.querySelectorAll(".game") as NodeListOf<HTMLElement>;
 
-      if (protonDbHeader) {
-        protonDbHeader.insertAdjacentHTML(
-          "afterend",
-          `
+  if (protonDbHeader) {
+    protonDbHeader.insertAdjacentHTML(
+      "afterend",
+      `
             <th class="text-right bp-deckverified-element" data-bp-deckverified="asc">Deck<i class="fa fa-sort"></i></th>
           `,
-        );
-      } else if (gameTableHeader) {
-        if (gameTableHeader.textContent!.trim() === "Playtime This Month") {
-          gameTableFullHeader.querySelector("th:nth-child(4)").insertAdjacentHTML(
-            "afterend",
-            `
+    );
+  } else if (gameTableHeader) {
+    if (gameTableHeader.textContent!.trim() === "Playtime This Month") {
+      gameTableFullHeader.querySelector("th:nth-child(4)").insertAdjacentHTML(
+        "afterend",
+        `
               <th class="text-right bp-deckverified-element" data-bp-deckverified="asc">Deck <i class="fa fa-sort"></i></th>
             `,
-          );
-        } else {
-          gameTableHeader.insertAdjacentHTML(
-            "afterend",
-            `
+      );
+    } else {
+      gameTableHeader.insertAdjacentHTML(
+        "afterend",
+        `
               <th class="text-right bp-deckverified-element" data-bp-deckverified="asc">Deck <i class="fa fa-sort"></i></th>
             `,
-          );
-        }
-      }
-
-      const gameDeckVerifiedHeader = gameContainer.querySelector("tr > th[data-bp-deckverified]") as HTMLElement;
-
-      if (gameDeckVerifiedHeader) {
-        gameDeckVerifiedHeader.addEventListener("click", () => {
-          $(gameContainer).sortable_table("sort", $(gameDeckVerifiedHeader).index(), gameDeckVerifiedHeader.dataset.bpDeckVerified === "asc");
-          if (gameDeckVerifiedHeader.dataset.bpDeckVerified === "asc") {
-            gameDeckVerifiedHeader.dataset.bpDeckVerified = "desc";
-          } else {
-            gameDeckVerifiedHeader.dataset.bpDeckVerified = "asc";
-          }
-        });
-      }
-
-      if (gameTableGroups) {
-        if (protonDbHeader) {
-          const afterColgroup = gameTableGroups.querySelector("col.bp-protondb-element");
-
-          afterColgroup!.insertAdjacentHTML("afterend", `<col class="bp-deckverified-element" style="width: 50px">`);
-        } else if (gameTableFullHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableFullHeader!.firstElementChild!.textContent!.trim() === "Date Won" || gameTableHeader.textContent!.trim() === "Playtime This Month") {
-          const afterColgroup = gameTableGroups.querySelector("col:nth-child(4)");
-
-          afterColgroup!.insertAdjacentHTML("afterend", `<col class="bp-deckverified-element" style="width: 50px">`);
-        } else {
-          const afterColgroup = gameTableGroups.querySelector("col:nth-child(3)");
-
-          afterColgroup!.insertAdjacentHTML("afterend", '<col class="bp-deckverified-element" style="width: 50px">');
-        }
-      }
-
-      games.forEach((game) => {
-        const steamStoreLink = game.querySelector('a[href*="store.steampowered.com/app/"]') as HTMLAnchorElement;
-        const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1] as number;
-        let gameName;
-
-        if (game.tagName === "TR") {
-          gameName = game.querySelector("td:not(.text-right)")?.firstChild?.textContent;
-          const protonDbCell = game.querySelector("td.bp-protondb-element") as HTMLTableCellElement;
-
-          if (protonDbCell) {
-            protonDbCell.insertAdjacentHTML("afterend", getDeckVerifiedHtml(steamId, "table"));
-          } else {
-            let nameCell;
-
-            if (gameTableHeader.textContent!.trim() === "Playtime This Month") {
-              nameCell = game.querySelector("td:nth-child(4)") as HTMLTableCellElement;
-            } else {
-              nameCell = game.querySelector("td:nth-child(3)") as HTMLTableCellElement;
-            }
-
-            nameCell.insertAdjacentHTML("afterend", getDeckVerifiedHtml(steamId, "table"));
-          }
-        } else if (game.classList.contains("game-media")) {
-          gameName = game.querySelector(".media-heading")?.firstChild?.textContent;
-          const linuxCell = game.querySelector(".bp-linux-media");
-          const hltbCell = game.querySelector(".bp-list-hltb-info");
-
-          if (linuxCell) {
-            linuxCell.insertAdjacentHTML("beforeend", getDeckVerifiedHtml(steamId, "list"));
-          } else if (hltbCell) {
-            hltbCell.insertAdjacentHTML("beforebegin", `<div class="bp-linux-media">${getDeckVerifiedHtml(steamId, "list")}</div>`);
-          } else {
-            const mediaBody = game.querySelector(".media-body");
-
-            mediaBody!.insertAdjacentHTML("beforeend", getDeckVerifiedHtml(steamId, "list"));
-          }
-        } else if (game.classList.contains("game-thumbnail")) {
-          gameName = game.querySelector(".title")?.textContent;
-          const linuxCell = game.querySelector(".bp-linux-grid");
-
-          if (linuxCell) {
-            linuxCell.insertAdjacentHTML("beforeend", getDeckVerifiedHtml(steamId, "grid"));
-          } else {
-            const caption = game.querySelector(".caption");
-
-            caption?.insertAdjacentHTML("beforeend", `<div class="bp-linux-grid">${getDeckVerifiedHtml(steamId, "grid")}</div>`);
-          }
-        }
-
-        const deckVerifiedElement = game.querySelector(".bp-deckverified-element:not(.bp-deckverified-unknown)") as HTMLElement;
-
-        if (deckVerifiedElement) {
-          const deckBadge = new DeckBadge({
-            target: deckVerifiedElement,
-            props: {
-              gameData: linuxData[steamId],
-              gameName: gameName,
-              modal: deckModalComponent,
-            },
-          });
-
-          addedComponents.push(deckBadge);
-        }
-      });
+      );
     }
-  }, 100);
+  }
+
+  const gameDeckVerifiedHeader = gameContainer.container.querySelector("tr > th[data-bp-deckverified]") as HTMLElement;
+
+  if (gameDeckVerifiedHeader) {
+    gameDeckVerifiedHeader.addEventListener("click", () => {
+      $(gameContainer).sortable_table("sort", $(gameDeckVerifiedHeader).index(), gameDeckVerifiedHeader.dataset.bpDeckVerified === "asc");
+      if (gameDeckVerifiedHeader.dataset.bpDeckVerified === "asc") {
+        gameDeckVerifiedHeader.dataset.bpDeckVerified = "desc";
+      } else {
+        gameDeckVerifiedHeader.dataset.bpDeckVerified = "asc";
+      }
+    });
+  }
+
+  if (gameTableGroups) {
+    if (protonDbHeader) {
+      const afterColgroup = gameTableGroups.querySelector("col.bp-protondb-element");
+
+      afterColgroup!.insertAdjacentHTML("afterend", `<col class="bp-deckverified-element" style="width: 50px">`);
+    } else if (gameTableFullHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableFullHeader!.firstElementChild!.textContent!.trim() === "Date Won" || gameTableHeader.textContent!.trim() === "Playtime This Month") {
+      const afterColgroup = gameTableGroups.querySelector("col:nth-child(4)");
+
+      afterColgroup!.insertAdjacentHTML("afterend", `<col class="bp-deckverified-element" style="width: 50px">`);
+    } else {
+      const afterColgroup = gameTableGroups.querySelector("col:nth-child(3)");
+
+      afterColgroup!.insertAdjacentHTML("afterend", '<col class="bp-deckverified-element" style="width: 50px">');
+    }
+  }
+
+  games.forEach((game) => {
+    const steamStoreLink = game.querySelector('a[href*="store.steampowered.com/app/"]') as HTMLAnchorElement;
+    const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1] as number;
+    let gameName;
+
+    if (gameContainer.type === "table") {
+      gameName = game.querySelector("td:not(.text-right)")?.firstChild?.textContent;
+      const protonDbCell = game.querySelector("td.bp-protondb-element") as HTMLTableCellElement;
+
+      if (protonDbCell) {
+        protonDbCell.insertAdjacentHTML("afterend", getDeckVerifiedHtml(steamId, "table"));
+      } else {
+        let nameCell;
+
+        if (gameTableHeader.textContent!.trim() === "Playtime This Month") {
+          nameCell = game.querySelector("td:nth-child(4)") as HTMLTableCellElement;
+        } else {
+          nameCell = game.querySelector("td:nth-child(3)") as HTMLTableCellElement;
+        }
+
+        nameCell.insertAdjacentHTML("afterend", getDeckVerifiedHtml(steamId, "table"));
+      }
+    } else if (gameContainer.type === "list") {
+      gameName = game.querySelector(".media-heading")?.firstChild?.textContent;
+      const linuxCell = game.querySelector(".bp-linux-media");
+      const hltbCell = game.querySelector(".bp-list-hltb-info");
+
+      if (linuxCell) {
+        linuxCell.insertAdjacentHTML("beforeend", getDeckVerifiedHtml(steamId, "list"));
+      } else if (hltbCell) {
+        hltbCell.insertAdjacentHTML("beforebegin", `<div class="bp-linux-media">${getDeckVerifiedHtml(steamId, "list")}</div>`);
+      } else {
+        const mediaBody = game.querySelector(".media-body");
+
+        mediaBody!.insertAdjacentHTML("beforeend", getDeckVerifiedHtml(steamId, "list"));
+      }
+    } else if (gameContainer.type === "grid") {
+      gameName = game.querySelector(".title")?.textContent;
+      const linuxCell = game.querySelector(".bp-linux-grid");
+
+      if (linuxCell) {
+        linuxCell.insertAdjacentHTML("beforeend", getDeckVerifiedHtml(steamId, "grid"));
+      } else {
+        const caption = game.querySelector(".caption");
+
+        caption?.insertAdjacentHTML("beforeend", `<div class="bp-linux-grid">${getDeckVerifiedHtml(steamId, "grid")}</div>`);
+      }
+    }
+
+    const deckVerifiedElement = game.querySelector(".bp-deckverified-element:not(.bp-deckverified-unknown)") as HTMLElement;
+
+    if (deckVerifiedElement && linuxData[steamId]?.deckRating) {
+      const deckBadge = new DeckBadge({
+        target: deckVerifiedElement,
+        props: {
+          gameData: linuxData[steamId],
+          gameName: gameName,
+          modal: deckModalComponent,
+        },
+      });
+
+      addedComponents.push(deckBadge);
+    }
+  });
 }
 
 export function cleanupDeckVerified() {

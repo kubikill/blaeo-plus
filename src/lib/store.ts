@@ -51,6 +51,9 @@ let options = mergeDeep(
         deckVerifiedIntegration: {
           enabled: false,
         },
+        steamStoreIntegration: {
+          enabled: false,
+        },
         lists: {
           quickRearrange: true,
           automaticHltb: true,

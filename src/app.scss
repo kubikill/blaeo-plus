@@ -275,3 +275,19 @@ body.bp-mobile-comment-layout {
     width: 100%;
   }
 }
+
+.bp-steam-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: 100%;
+  padding-left: 0;
+  list-style: none;
+  font-size: 75%;
+}
+
+.bp-steam-tag {
+  font-size: inherit;
+  padding: 4px;
+}

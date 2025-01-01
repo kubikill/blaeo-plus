@@ -26,6 +26,8 @@ import { addUncategorizedGamesShortcut, cleanupUncategorizedGamesShortcut } from
 import { cleanupOldListBackups } from "./lib/cleanupOldListBackups";
 import { initBulkRemoveGames } from "./modules/games/bulkRemoveGames/bulkRemoveGames";
 import { initFullWidthTable } from "./modules/games/fullWidthTable";
+import { initSteamTags } from "./modules/games/steamTags";
+import { steamspyLastUpdate, syncSteamspy } from "./lib/steamspyService";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
@@ -68,6 +70,11 @@ function init(): void {
     }
   }
 
+  if (steamspyLastUpdate.getTime() < Date.now() - 86400) {
+    // if last sync was at least 1 day ago
+    syncSteamspy();
+  }
+
   getUserName();
 
   cleanupOldListBackups();
@@ -104,8 +111,8 @@ function initEachPage(): void {
     initMobileMessageIcon();
   }
 
-  if (options.modules.games.filters.progress || options.modules.games.filters.tags || (options.modules.games.filters.modes && options.modules.games.hltbIntegration.enabled)) {
-    initFilter(checkIfProgressPage(currentUrl));
+  if (options.modules.games.steamStoreIntegration.enabled) {
+    initSteamTags();
   }
 
   if (options.modules.games.hltbIntegration.enabled) {
@@ -118,6 +125,10 @@ function initEachPage(): void {
 
   if (options.modules.games.deckVerifiedIntegration.enabled) {
     initDeckVerified();
+  }
+
+  if (options.modules.games.filters.progress || options.modules.games.filters.tags || (options.modules.games.filters.modes && options.modules.games.hltbIntegration.enabled)) {
+    initFilter(checkIfProgressPage(currentUrl));
   }
 
   if (options.modules.posts.mobileLayout) {

@@ -3,6 +3,7 @@ import { enqueueHltbData, hltbExcludedGames, hltbData } from "@/lib/hltbService"
 import { removeAllNodesIfExist } from "@/lib/utilities";
 import { optionsStore } from "@/lib/store";
 import { get } from "svelte/store";
+import { getGamesContainer, waitUntilGamesContainerLoaded } from "@/lib/waitUntilGamesContainerLoaded";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
@@ -320,211 +321,205 @@ function getHltbListHtml(steamId: number, gameData: any): string {
 }
 
 export async function initHltbTimes() {
-  let gameContainer = document.querySelector("#games") as HTMLElement;
-  if (!gameContainer) {
-    if (document.querySelector("#main > .game.game-media")) {
-      gameContainer = document.querySelector("#main") as HTMLElement;
-    } else {
-      return;
-    }
+  let gameContainer = getGamesContainer();
+
+  if (!gameContainer || gameContainer.type === "grid") {
+    return;
   }
 
-  let checkInterval: ReturnType<typeof setInterval>;
-  checkInterval = setInterval(() => {
-    if (!gameContainer.dataset.delayedLast) {
-      clearInterval(checkInterval);
+  await waitUntilGamesContainerLoaded();
 
-      const gameTableHeader = gameContainer.querySelector("tr") as HTMLTableRowElement;
-      const gameTableGroups = gameContainer.querySelector("colgroup") as HTMLElement;
-      const games = gameContainer.querySelectorAll(".game") as NodeListOf<HTMLElement>;
-      const oneColumnMode = options.modules.games.hltbIntegration.oneColumnMode;
+  const games = gameContainer.container.querySelectorAll(".game") as NodeListOf<HTMLElement>;
+  const gameTableHeader = gameContainer.container.querySelector("tr") as HTMLTableRowElement;
+  const gameTableGroups = gameContainer.container.querySelector("colgroup") as HTMLElement;
+  const oneColumnMode = options.modules.games.hltbIntegration.oneColumnMode;
 
-      let colspan = 0;
+  if (gameContainer.type === "table") {
+    let colspan = 0;
 
-      for (let column of Object.entries(options.modules.games.hltbIntegration.displayColumns)) {
-        if (column[1]) {
-          colspan++;
-        }
+    for (let column of Object.entries(options.modules.games.hltbIntegration.displayColumns)) {
+      if (column[1]) {
+        colspan++;
       }
+    }
 
-      if (options.modules.games.hltbIntegration.displayColumns)
-        if (gameTableHeader && oneColumnMode) {
+    if (options.modules.games.hltbIntegration.displayColumns)
+      if (gameTableHeader && oneColumnMode) {
+        gameTableHeader.insertAdjacentHTML(
+          "beforeend",
+          `
+            <th class="text-right bp-hltb-element" data-bp-ttb-main="asc">Time to beat <i class="fa fa-sort"></i></th>
+          `,
+        );
+
+        const gameTtbMainHeader = gameTableHeader.querySelector("[data-bp-ttb-main]") as HTMLElement;
+
+        gameTtbMainHeader.addEventListener("click", () => {
+          $(gameContainer.container).sortable_table("sort", $(gameTtbMainHeader).index(), gameTtbMainHeader.dataset.bpTtbMain === "asc");
+          if (gameTtbMainHeader.dataset.bpTtbMain === "asc") {
+            gameTtbMainHeader.dataset.bpTtbMain = "desc";
+          } else {
+            gameTtbMainHeader.dataset.bpTtbMain = "asc";
+          }
+        });
+      } else if (gameTableHeader) {
+        if (options.modules.games.hltbIntegration.displayColumns.main) {
           gameTableHeader.insertAdjacentHTML(
             "beforeend",
             `
-            <th class="text-right bp-hltb-element" data-bp-ttb-main="asc">Time to beat <i class="fa fa-sort"></i></th>
-          `,
+              <th class="text-right bp-hltb-element" data-bp-ttb-main="asc">TTB Main <i class="fa fa-sort"></i></th>
+            `,
           );
 
           const gameTtbMainHeader = gameTableHeader.querySelector("[data-bp-ttb-main]") as HTMLElement;
 
           gameTtbMainHeader.addEventListener("click", () => {
-            $(gameContainer).sortable_table("sort", $(gameTtbMainHeader).index(), gameTtbMainHeader.dataset.bpTtbMain === "asc");
+            $(gameContainer.container).sortable_table("sort", $(gameTtbMainHeader).index(), gameTtbMainHeader.dataset.bpTtbMain === "asc");
             if (gameTtbMainHeader.dataset.bpTtbMain === "asc") {
               gameTtbMainHeader.dataset.bpTtbMain = "desc";
             } else {
               gameTtbMainHeader.dataset.bpTtbMain = "asc";
             }
           });
-        } else if (gameTableHeader) {
-          if (options.modules.games.hltbIntegration.displayColumns.main) {
-            gameTableHeader.insertAdjacentHTML(
-              "beforeend",
-              `
-              <th class="text-right bp-hltb-element" data-bp-ttb-main="asc">TTB Main <i class="fa fa-sort"></i></th>
-            `,
-            );
-
-            const gameTtbMainHeader = gameTableHeader.querySelector("[data-bp-ttb-main]") as HTMLElement;
-
-            gameTtbMainHeader.addEventListener("click", () => {
-              $(gameContainer).sortable_table("sort", $(gameTtbMainHeader).index(), gameTtbMainHeader.dataset.bpTtbMain === "asc");
-              if (gameTtbMainHeader.dataset.bpTtbMain === "asc") {
-                gameTtbMainHeader.dataset.bpTtbMain = "desc";
-              } else {
-                gameTtbMainHeader.dataset.bpTtbMain = "asc";
-              }
-            });
-          }
-
-          if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-            gameTableHeader.insertAdjacentHTML(
-              "beforeend",
-              `
-              <th class="text-right bp-hltb-element" data-bp-ttb-extra="asc">TTB +Extra <i class="fa fa-sort"></i></th>
-            `,
-            );
-
-            const gameTtbExtraHeader = gameTableHeader.querySelector("[data-bp-ttb-extra]") as HTMLElement;
-
-            gameTtbExtraHeader.addEventListener("click", () => {
-              $(gameContainer).sortable_table("sort", $(gameTtbExtraHeader).index(), gameTtbExtraHeader.dataset.bpTtbExtra === "asc");
-              if (gameTtbExtraHeader.dataset.bpTtbExtra === "asc") {
-                gameTtbExtraHeader.dataset.bpTtbExtra = "desc";
-              } else {
-                gameTtbExtraHeader.dataset.bpTtbExtra = "asc";
-              }
-            });
-          }
-
-          if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-            gameTableHeader.insertAdjacentHTML(
-              "beforeend",
-              `
-              <th class="text-right bp-hltb-element" data-bp-ttb-everything="asc">TTB 100% <i class="fa fa-sort"></i></th>
-            `,
-            );
-
-            const gameTtbEverythingHeader = gameTableHeader.querySelector("[data-bp-ttb-everything]") as HTMLElement;
-
-            gameTtbEverythingHeader.addEventListener("click", () => {
-              $(gameContainer).sortable_table("sort", $(gameTtbEverythingHeader).index(), gameTtbEverythingHeader.dataset.bpTtbEverything === "asc");
-              if (gameTtbEverythingHeader.dataset.bpTtbEverything === "asc") {
-                gameTtbEverythingHeader.dataset.bpTtbEverything = "desc";
-              } else {
-                gameTtbEverythingHeader.dataset.bpTtbEverything = "asc";
-              }
-            });
-          }
         }
 
-      if (gameTableGroups) {
-        let columnWidth = options.modules.games.other.fullWidthTable ? 150 : 130;
-        if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won") {
-          gameTableGroups.innerHTML = `
+        if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
+          gameTableHeader.insertAdjacentHTML(
+            "beforeend",
+            `
+              <th class="text-right bp-hltb-element" data-bp-ttb-extra="asc">TTB +Extra <i class="fa fa-sort"></i></th>
+            `,
+          );
+
+          const gameTtbExtraHeader = gameTableHeader.querySelector("[data-bp-ttb-extra]") as HTMLElement;
+
+          gameTtbExtraHeader.addEventListener("click", () => {
+            $(gameContainer.container).sortable_table("sort", $(gameTtbExtraHeader).index(), gameTtbExtraHeader.dataset.bpTtbExtra === "asc");
+            if (gameTtbExtraHeader.dataset.bpTtbExtra === "asc") {
+              gameTtbExtraHeader.dataset.bpTtbExtra = "desc";
+            } else {
+              gameTtbExtraHeader.dataset.bpTtbExtra = "asc";
+            }
+          });
+        }
+
+        if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
+          gameTableHeader.insertAdjacentHTML(
+            "beforeend",
+            `
+              <th class="text-right bp-hltb-element" data-bp-ttb-everything="asc">TTB 100% <i class="fa fa-sort"></i></th>
+            `,
+          );
+
+          const gameTtbEverythingHeader = gameTableHeader.querySelector("[data-bp-ttb-everything]") as HTMLElement;
+
+          gameTtbEverythingHeader.addEventListener("click", () => {
+            $(gameContainer.container).sortable_table("sort", $(gameTtbEverythingHeader).index(), gameTtbEverythingHeader.dataset.bpTtbEverything === "asc");
+            if (gameTtbEverythingHeader.dataset.bpTtbEverything === "asc") {
+              gameTtbEverythingHeader.dataset.bpTtbEverything = "desc";
+            } else {
+              gameTtbEverythingHeader.dataset.bpTtbEverything = "asc";
+            }
+          });
+        }
+      }
+
+    if (gameTableGroups) {
+      let columnWidth = options.modules.games.other.fullWidthTable ? 150 : 130;
+      if (gameTableHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableHeader!.firstElementChild!.textContent!.trim() === "Date Won") {
+        gameTableGroups.innerHTML = `
           <col class="bp-hltb-element" style="width: 1%;">
           <col class="bp-hltb-element">
           <col class="bp-hltb-element" style="width: ${columnWidth}px">
           <col class="bp-hltb-element" style="width: ${columnWidth}px">
         `;
-        } else if (gameTableHeader.children[2].textContent!.trim() === "Playtime This Month" || gameTableHeader.children[2].textContent!.trim().startsWith("Playtime In")) {
-          gameTableGroups.innerHTML = `
+      } else if (gameTableHeader.children[2].textContent!.trim() === "Playtime This Month" || gameTableHeader.children[2].textContent!.trim().startsWith("Playtime In")) {
+        gameTableGroups.innerHTML = `
           <col class="bp-hltb-element">
           <col class="bp-hltb-element" style="width: ${columnWidth}px">
           <col class="bp-hltb-element" style="width: ${columnWidth}px">
           <col class="bp-hltb-element" style="width: ${columnWidth}px">
         `;
-        } else {
-          gameTableGroups.innerHTML = `
+      } else {
+        gameTableGroups.innerHTML = `
             <col class="bp-hltb-element">
             <col class="bp-hltb-element" style="width: ${columnWidth}px">
             <col class="bp-hltb-element" style="width: ${columnWidth}px">
           `;
-        }
-
-        if (oneColumnMode) {
-          gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 160px;">`;
-        } else {
-          if (options.modules.games.hltbIntegration.displayColumns.main) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
-          }
-
-          if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
-          }
-
-          if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
-            gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
-          }
-        }
       }
 
-      const queryList = [] as QueryGame[];
+      if (oneColumnMode) {
+        gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: 160px;">`;
+      } else {
+        if (options.modules.games.hltbIntegration.displayColumns.main) {
+          gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
+        }
 
-      games.forEach((game) => {
-        const steamStoreLink = game.querySelector('a[href*="store.steampowered.com/app/"]') as HTMLAnchorElement;
-        const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1];
+        if (options.modules.games.hltbIntegration.displayColumns["+extra"]) {
+          gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
+        }
 
-        if (game.tagName === "TR") {
-          game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "table", oneColumnMode));
+        if (options.modules.games.hltbIntegration.displayColumns["100%"]) {
+          gameTableGroups.innerHTML += `<col class="bp-hltb-element" style="width: ${columnWidth - 20}px;">`;
+        }
+      }
+    }
+  }
 
-          const gameToolbar = game.querySelector(".toolbar");
+  const queryList = [] as QueryGame[];
 
-          if (options.modules.games.hltbIntegration.addHltbLinks && gameToolbar && hltbData[steamId] && hltbData[steamId].hltbId != -1) {
-            gameToolbar.insertAdjacentHTML(
-              "beforeend",
-              `
+  games.forEach((game) => {
+    const steamStoreLink = game.querySelector('a[href*="store.steampowered.com/app/"]') as HTMLAnchorElement;
+    const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1];
+
+    if (gameContainer.type === "table") {
+      game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "table", oneColumnMode));
+
+      const gameToolbar = game.querySelector(".toolbar");
+
+      if (options.modules.games.hltbIntegration.addHltbLinks && gameToolbar && hltbData[steamId] && hltbData[steamId].hltbId != -1) {
+        gameToolbar.insertAdjacentHTML(
+          "beforeend",
+          `
               <li class="bp-hltb-element" style="vertical-align: middle">
                 <a href="https://howlongtobeat.com/game/${hltbData[steamId].hltbId}" aria-label="HLTB game page" title="HLTB game page">${hltbLogo}</a>
               </li>
             `,
-            );
-          }
+        );
+      }
 
-          const gameName = game!.querySelector("td:not(.text-right, .achievements)")!.firstChild!.textContent!.trim();
+      const gameName = game!.querySelector("td:not(.text-right, .achievements)")!.firstChild!.textContent!.trim();
 
-          if (hltbData && !hltbData[steamId] && !hltbExcludedGames.includes(+steamId)) {
-            queryList.push({
-              name: gameName,
-              steamId: steamId,
-            });
-          }
-        } else if (game.classList.contains("game-media")) {
-          game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "list", oneColumnMode));
+      if (hltbData && !hltbData[steamId] && !hltbExcludedGames.includes(+steamId)) {
+        queryList.push({
+          name: gameName,
+          steamId: steamId,
+        });
+      }
+    } else if (gameContainer.type === "list") {
+      game.insertAdjacentHTML("beforeend", getHltbHtml(steamId, "list", oneColumnMode));
 
-          const gameHeading = game.querySelector("h4.media-heading");
+      const gameHeading = game.querySelector("h4.media-heading");
 
-          if (options.modules.games.hltbIntegration.addHltbLinks && gameHeading && hltbData[steamId] && hltbData[steamId].hltbId != -1) {
-            gameHeading.insertAdjacentHTML(
-              "beforeend",
-              `
+      if (options.modules.games.hltbIntegration.addHltbLinks && gameHeading && hltbData[steamId] && hltbData[steamId].hltbId != -1) {
+        gameHeading.insertAdjacentHTML(
+          "beforeend",
+          `
               <a href="https://howlongtobeat.com/game/${hltbData[steamId].hltbId}" aria-label="HLTB game page" title="HLTB game page">${hltbLogo}</a>
             `,
-            );
-          }
+        );
+      }
 
-          if (gameHeading && hltbData && !hltbData[steamId] && !hltbExcludedGames.includes(+steamId)) {
-            queryList.push({
-              name: gameHeading.textContent || "",
-              steamId: steamId,
-            });
-          }
-        }
-      });
-
-      enqueueHltbData(queryList);
+      if (gameHeading && hltbData && !hltbData[steamId] && !hltbExcludedGames.includes(+steamId)) {
+        queryList.push({
+          name: gameHeading.textContent || "",
+          steamId: steamId,
+        });
+      }
     }
-  }, 100);
+  });
+
+  enqueueHltbData(queryList);
 }
 
 export function cleanupHltbTimes() {

@@ -41,10 +41,17 @@
       </div>
     </OptionsToggle>
 
-    <OptionsToggle id="bp-options-modules-games-protondb-integration-enabled" bind:boundValue={$optionsStore.modules.games.deckVerifiedIntegration.enabled}>
+    <OptionsToggle id="bp-options-modules-games-deckverified-integration-enabled" bind:boundValue={$optionsStore.modules.games.deckVerifiedIntegration.enabled}>
       Enable Steam Deck Verified integration
       <div slot="description">
         <p>Display Steam Deck Verified ratings for games on any games page on BLAEO. Currently works only when using table or list view.</p>
+      </div>
+    </OptionsToggle>
+
+    <OptionsToggle id="bp-options-modules-games-steamstore-integration-enabled" bind:boundValue={$optionsStore.modules.games.steamStoreIntegration.enabled}>
+      Enable Steam store integration
+      <div slot="description">
+        <p>Display Steam tags for games on any games page on BLAEO. Currently works only when using table or list view.</p>
       </div>
     </OptionsToggle>
 
@@ -87,6 +94,16 @@
         <p>
           Adds filtering games by Steam Deck Verified statuses.<br />
           Requires Steam Deck Verified integration.
+        </p>
+      </div>
+    </OptionsToggle>
+
+    <OptionsToggle id="bp-options-modules-games-filters-steam-tags" bind:boundValue={$optionsStore.modules.games.filters.steamTags} bind:disabled={$optionsStore.modules.games.steamStoreIntegration.enabled}>
+      Add Steam tags filters
+      <div slot="description">
+        <p>
+          Adds filtering games by Steam tags.<br />
+          Requires Steam store integration.
         </p>
       </div>
     </OptionsToggle>

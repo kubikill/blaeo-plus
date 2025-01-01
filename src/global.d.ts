@@ -33,6 +33,7 @@ type Options = {
         modes: boolean;
         protonDbRatings: boolean;
         deckVerifiedStatuses: boolean;
+        steamTags: boolean;
       };
       hltbIntegration: {
         enabled: boolean;
@@ -48,6 +49,9 @@ type Options = {
         enabled: boolean;
       };
       deckVerifiedIntegration: {
+        enabled: boolean;
+      };
+      steamStoreIntegration: {
         enabled: boolean;
       };
       lists: {
@@ -124,6 +128,16 @@ type LinuxData = {
 
 type LinuxDataList = {
   [key: number]: LinuxData;
+};
+
+type SteamspyData = {
+  tags: string[];
+  posRevs: number;
+  negRevs: number;
+};
+
+type SteamspyDataList = {
+  [key: number]: SteamspyData;
 };
 
 type AutomaticHltbTagInfo = {
