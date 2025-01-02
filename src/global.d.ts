@@ -131,7 +131,7 @@ type LinuxDataList = {
 };
 
 type SteamspyData = {
-  tags: string[];
+  tags: string[] | string;
   posRevs: number;
   negRevs: number;
 };

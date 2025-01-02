@@ -127,7 +127,7 @@ function initEachPage(): void {
     initDeckVerified();
   }
 
-  if (options.modules.games.filters.progress || options.modules.games.filters.tags || (options.modules.games.filters.modes && options.modules.games.hltbIntegration.enabled)) {
+  if (options.modules.games.filters.progress || options.modules.games.filters.tags || options.modules.games.filters.steamTags || (options.modules.games.filters.modes && options.modules.games.hltbIntegration.enabled)) {
     initFilter(checkIfProgressPage(currentUrl));
   }
 

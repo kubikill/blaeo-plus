@@ -1,4 +1,9 @@
 <div class="main">
+  <h3>v1.2.5 - January 2nd, 2025</h3>
+  <ul>
+    <li>Fix tags not appearing due to backend changes</li>
+    <li>Fix Steam tags filter not appearing if all other filters are disabled</li>
+  </ul>
   <h3>v1.2.4 - January 1st, 2025</h3>
   <ul>
     <li>

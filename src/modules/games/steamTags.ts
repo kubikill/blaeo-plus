@@ -14,9 +14,25 @@ function getGameSteamTagsHtml(steamId: number): string {
 
   if (steamspyData[steamId]) {
     const steamspy = steamspyData[steamId];
+    let tags = steamspy.tags;
 
-    if (steamspy.tags && steamspy.tags.length > 0) {
-      steamspy.tags.forEach((tag) => {
+    console.log(tags);
+
+    try {
+      tags = JSON.parse(tags);
+      tags = Object.keys(tags);
+    } catch {
+      tags = tags.split(";");
+    }
+
+    console.log(tags);
+
+    if (tags && tags.length > 0) {
+      tags.forEach((tag) => {
+        if (tag === "+") {
+          return;
+        }
+
         html += `<li class="badge badge-secondary bp-steam-tag" data-steam-tag="${tag}">${tag}</li>`;
       });
     } else {
