@@ -16,16 +16,12 @@ function getGameSteamTagsHtml(steamId: number): string {
     const steamspy = steamspyData[steamId];
     let tags = steamspy.tags;
 
-    console.log(tags);
-
     try {
       tags = JSON.parse(tags);
       tags = Object.keys(tags);
     } catch {
       tags = tags.split(";");
     }
-
-    console.log(tags);
 
     if (tags && tags.length > 0) {
       tags.forEach((tag) => {
