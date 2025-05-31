@@ -23,6 +23,14 @@ A userscript for Backlog Assassins Extraordinaire that adds new features and QoL
 ![](https://i.imgur.com/lTzxMaE.png)
 ![](https://i.imgur.com/OW9oIg5.png)
 
+## How to install
+
+1. Install any extension for your browser that manages userscripts (for example, Tampermonkey or Violentmonkey)
+2. Click on [Install](https://github.com/kubikill/blaeo-plus/releases/latest/download/blaeo-plus.user.js)
+3. The extension will prompt you to install the userscript, install it
+4. If using Tampermonkey on Chrome, Edge or other Chrome-based browsers, [give Tampermonkey permission to execute userscripts or enable your browser's developer mode](https://www.tampermonkey.net/faq.php#Q209)
+5. Go to BLAEO. The userscript should take effect. You can verify that it works by clicking the dropdown by your avatar in the header and checking if the "BLAEO+ settings" is there.
+
 ## Tested on
 
 - Firefox with Violentmonkey
