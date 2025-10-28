@@ -34,7 +34,7 @@
       <Changelog />
     </div>
     <div class="modal-footer">
-      <OptionsToggle id="bp-options-modules-misc-update-notifier" bind:boundValue={$optionsStore.modules.misc.updateNotifier}>Notify me about updates (can be later reenabled in options)</OptionsToggle>
+      <OptionsToggle id="bp-options-modules-misc-update-notifier" bind:boundValue={$optionsStore.modules.misc.updateNotifier}>Show changelog when new update is installed (can be later reenabled in options)</OptionsToggle>
       <button type="button" class="btn btn-default" on:click={goToOptions}>Settings</button>
       <button type="button" class="btn btn-primary" on:click={hideModal}>Close</button>
     </div>
@@ -88,7 +88,7 @@
       flex-direction: column;
       max-height: 100%;
       width: 100%;
-      max-width: 700px;
+      max-width: 800px;
     }
 
     .modal-header {

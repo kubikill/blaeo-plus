@@ -212,7 +212,7 @@
   </OptionsItem>
 
   <OptionsItem title="Misc" titleClass="h3">
-    <OptionsToggle id="bp-options-modules-misc-update-notifier" bind:boundValue={$optionsStore.modules.misc.updateNotifier}>Notify me about updates</OptionsToggle>
+    <OptionsToggle id="bp-options-modules-misc-update-notifier" bind:boundValue={$optionsStore.modules.misc.updateNotifier}>Show changelog when new update is installed</OptionsToggle>
   </OptionsItem>
 </div>
 

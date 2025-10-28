@@ -1,10 +1,10 @@
 import { GM_getValue, GM_setValue, GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
-import { splitArrayIntoChunks } from "./utilities";
+import { splitArrayIntoChunks, tryJsonParse } from "./utilities";
 import { getUserGames, userData } from "@/globals";
+import { lastCacheUpdatesStore } from "./store";
 
-export let hltbExcludedGames = JSON.parse(GM_getValue("hltb-excluded-games", "[]") || "[]");
-export let hltbData = JSON.parse(GM_getValue("hltb-data", "{}") || "{}") as GameInfo;
-export let hltbLastUpdate = new Date(GM_getValue("hltb-last-update", 0));
+export let hltbExcludedGames = tryJsonParse(GM_getValue("hltb-excluded-games", "[]") || "[]", []);
+export let hltbData = tryJsonParse(GM_getValue("hltb-data", "{}") || "{}", {}) as GameInfo;
 
 export function syncHltbGames() {
   return new Promise((resolve, reject) => {
@@ -62,8 +62,12 @@ export async function syncHltb() {
   await hltbGames;
   await hltbExcludedGames;
 
-  hltbLastUpdate = new Date();
-  GM_setValue("hltb-last-update", Date.now());
+  lastCacheUpdatesStore.update((updates) => {
+    updates.hltb = new Date();
+    return updates;
+  });
+
+  return true;
 }
 
 export function enqueueHltbData(games: Array<any>) {

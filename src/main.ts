@@ -1,5 +1,5 @@
 import "@/app.scss";
-import { optionsStore } from "./lib/store";
+import { lastCacheUpdatesStore, optionsStore } from "./lib/store";
 import { BP_VERSION, addedComponents, getUserName } from "@/globals";
 import { addHeaderShortcuts, cleanupHeaderShortcuts } from "@/modules/header/shortcuts";
 import { initMobileMessageIcon, cleanupMobileMessageIcon } from "@/modules/header/mobileMessageIcon";
@@ -8,10 +8,10 @@ import { initFilter } from "@/modules/games/filter";
 import { cleanupHltbTimes, initHltbTimes } from "@/modules/games/hltbTimes";
 import { addCommentPreview, cleanupCommentPreview } from "./modules/comments/commentPreview";
 import { initSaveLoad } from "./modules/newPost/saveLoad";
-import { hltbLastUpdate, syncHltb } from "./lib/hltbService";
+import { syncHltb } from "./lib/hltbService";
 import initMobilePostLayout from "./modules/posts/mobileLayout";
 import initMobileCommentLayout from "./modules/comments/mobileLayout";
-import { linuxLastUpdate, syncLinux } from "./lib/linuxService";
+import { syncLinux } from "./lib/linuxService";
 import { cleanupProtonDb, initProtonDb } from "./modules/games/protonDb";
 import { cleanupDeckVerified, initDeckVerified } from "./modules/games/deckVerified";
 import type { SvelteComponent } from "svelte";
@@ -27,7 +27,7 @@ import { cleanupOldListBackups } from "./lib/cleanupOldListBackups";
 import { initBulkRemoveGames } from "./modules/games/bulkRemoveGames/bulkRemoveGames";
 import { initFullWidthTable } from "./modules/games/fullWidthTable";
 import { initSteamTags } from "./modules/games/steamTags";
-import { steamspyLastUpdate, syncSteamspy } from "./lib/steamspyService";
+import { syncSteamspy } from "./lib/steamspyService";
 
 let options = get(optionsStore) as Options;
 optionsStore.subscribe((value) => {
@@ -56,23 +56,26 @@ function cleanup(): void {
 }
 
 function init(): void {
+  let lastCacheUpdates = get(lastCacheUpdatesStore);
   if (options.modules.games.hltbIntegration.enabled) {
-    if (hltbLastUpdate.getTime() < Date.now() - 86400) {
+    if (lastCacheUpdates?.hltb.getTime() < Date.now() - 86400) {
       // if last sync was at least 1 day ago
       syncHltb();
     }
   }
 
   if (options.modules.games.protonDbIntegration.enabled || options.modules.games.deckVerifiedIntegration.enabled) {
-    if (linuxLastUpdate.getTime() < Date.now() - 86400) {
+    if (lastCacheUpdates?.linux.getTime() < Date.now() - 86400) {
       // if last sync was at least 1 day ago
       syncLinux();
     }
   }
 
-  if (steamspyLastUpdate.getTime() < Date.now() - 86400) {
-    // if last sync was at least 1 day ago
-    syncSteamspy();
+  if (options.modules.games.steamStoreIntegration.enabled) {
+    if (lastCacheUpdates?.steamspy.getTime() < Date.now() - 86400) {
+      // if last sync was at least 1 day ago
+      syncSteamspy();
+    }
   }
 
   getUserName();

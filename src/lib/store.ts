@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { mergeDeep } from "./utilities";
+import { mergeDeep, tryJsonParse } from "./utilities";
 import { GM_getValue, GM_setValue } from "vite-plugin-monkey/dist/client";
 import { BP_VERSION } from "@/globals";
 
@@ -86,7 +86,7 @@ let options = mergeDeep(
     },
     blacklist: {},
   },
-  JSON.parse(GM_getValue("bp-options", "{}")),
+  tryJsonParse(GM_getValue("bp-options", "{}"), {}),
 ) as Options;
 
 export const optionsStore = writable(options);
@@ -99,14 +99,26 @@ lastVersionStore.subscribe((value) => {
   GM_setValue("bp-last-version", value);
 });
 
-let listBackups = JSON.parse(GM_getValue("bp-list-backups", "[]")) as ListBackup[];
+let listBackups = tryJsonParse(GM_getValue("bp-list-backups", "[]"), []) as ListBackup[];
 export const listBackupStore = writable(listBackups);
 listBackupStore.subscribe((value) => {
   GM_setValue("bp-list-backups", JSON.stringify(value));
 });
 
-let automaticHltbPresets = JSON.parse(GM_getValue("bp-automatic-hltb-presets", "[]")) as AutomaticHltbPreset[];
+let automaticHltbPresets = tryJsonParse(GM_getValue("bp-automatic-hltb-presets", "[]"), []) as AutomaticHltbPreset[];
 export const automaticHltbPresetsStore = writable(automaticHltbPresets);
 automaticHltbPresetsStore.subscribe((value) => {
   GM_setValue("bp-automatic-hltb-presets", JSON.stringify(value));
+});
+
+export const lastCacheUpdatesStore = writable({
+  hltb: new Date(GM_getValue("hltb-last-update", 0)),
+  linux: new Date(GM_getValue("linux-last-update", 0)),
+  steamspy: new Date(GM_getValue("steamspy-last-update", 0)),
+});
+
+lastCacheUpdatesStore.subscribe((value) => {
+  GM_setValue("hltb-last-update", value.hltb.getTime());
+  GM_setValue("linux-last-update", value.linux.getTime());
+  GM_setValue("steamspy-last-update", value.steamspy.getTime());
 });

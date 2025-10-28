@@ -1,6 +1,8 @@
 import { GM_getValue, GM_setValue, GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
+import { tryJsonParse } from "./utilities";
+import { lastCacheUpdatesStore } from "./store";
 
-export let linuxData = JSON.parse(GM_getValue("linux-data", "{}") || "{}") as LinuxDataList;
+export let linuxData = tryJsonParse(GM_getValue("linux-data", "{}") || "{}", {}) as LinuxDataList;
 export let linuxLastUpdate = new Date(GM_getValue("linux-last-update", 0));
 
 export function syncLinuxGames() {
@@ -33,8 +35,12 @@ export async function syncLinux() {
 
   await linuxGames;
 
-  linuxLastUpdate = new Date();
-  GM_setValue("linux-last-update", Date.now());
+  lastCacheUpdatesStore.update((updates) => {
+    updates.linux = new Date();
+    return updates;
+  });
+
+  return true;
 }
 
 export const deckMessageLoc: any = {

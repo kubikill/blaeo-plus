@@ -6,6 +6,7 @@
   import ChangelogTab from "./tabs/ChangelogTab.svelte";
   import BlacklistTab from "./tabs/BlacklistTab.svelte";
   import ListBackupsTab from "./tabs/ListBackupsTab.svelte";
+  import CacheTab from "./tabs/CacheTab.svelte";
   export let showOptions: boolean;
 
   let activeTab = 0;
@@ -42,6 +43,7 @@
             { name: "Options", content: OptionsTab },
             { name: "Blacklist", content: BlacklistTab },
             { name: "List backups", content: ListBackupsTab },
+            { name: "Cache", content: CacheTab },
             { name: "Changelog", content: ChangelogTab },
             { name: "About", content: AboutTab },
           ]}

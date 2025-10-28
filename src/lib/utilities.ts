@@ -79,3 +79,12 @@ export function reformatBlaeoGameListToBlaeoIdColumn(blaeoGameList: BlaeoGamesJs
 
   return gameList;
 }
+
+export function tryJsonParse<T>(jsonString: string, fallbackValue: any): T | null {
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    console.error("Failed to parse JSON! Using fallback!", error);
+    return fallbackValue;
+  }
+}

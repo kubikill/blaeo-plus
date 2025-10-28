@@ -1,6 +1,8 @@
 import { GM_getValue, GM_setValue, GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
+import { tryJsonParse } from "./utilities";
+import { lastCacheUpdatesStore } from "./store";
 
-export let steamspyData = JSON.parse(GM_getValue("steamspy-data", "{}") || "{}") as SteamspyDataList;
+export let steamspyData = tryJsonParse(GM_getValue("steamspy-data", "{}") || "{}", {}) as SteamspyDataList;
 export let steamspyLastUpdate = new Date(GM_getValue("steamspy-last-update", 0));
 
 export function syncSteamspyGames() {
@@ -33,6 +35,10 @@ export async function syncSteamspy() {
 
   await steamspyGames;
 
-  steamspyLastUpdate = new Date();
-  GM_setValue("steamspy-last-update", Date.now());
+  lastCacheUpdatesStore.update((updates) => {
+    updates.steamspy = new Date();
+    return updates;
+  });
+
+  return true;
 }

@@ -1,4 +1,10 @@
 <div class="main">
+  <h3>v1.2.6 - October 28th, 2025</h3>
+  <ul>
+    <li>Added "Cache" tab in BLAEO+ options to view last cache update times and buttons to force update them</li>
+    <li>Fixed Steam store integration data syncing even when integration is disabled</li>
+    <li>Fixed userscript breaking when invalid JSON is received during HLTB/Linux/Steam store sync</li>
+  </ul>
   <h3>v1.2.5 - January 2nd, 2025</h3>
   <ul>
     <li>Fix tags not appearing due to backend changes</li>
