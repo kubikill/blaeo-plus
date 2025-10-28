@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: DerYeger/yarn-setup-action@v1.0.1
+      - uses: DerYeger/yarn-setup-action@master
         with:
           node-version: 18
       - run: yarn build
       - name: Upload
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: dist/*
