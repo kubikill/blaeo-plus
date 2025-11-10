@@ -24,11 +24,13 @@
 
 <ul class="nav nav-tabs" role="tablist">
   {#each tabs as tab, idx}
-    <li role="presentation" class:active={idx === activeTab}>
-      <button class="tab" on:click={() => switchTab(idx)} role="tab" aria-controls={slugify(`options-${tab.name}`)}>
-        {tab.name}
-      </button>
-    </li>
+    {#if tab}
+      <li role="presentation" class:active={idx === activeTab}>
+        <button class="tab" on:click={() => switchTab(idx)} role="tab" aria-controls={slugify(`options-${tab.name}`)}>
+          {tab.name}
+        </button>
+      </li>
+    {/if}
   {/each}
 </ul>
 
