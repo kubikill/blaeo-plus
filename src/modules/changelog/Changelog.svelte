@@ -1,4 +1,8 @@
 <div class="main">
+  <h3>v1.2.7 - November 10th, 2025</h3>
+  <ul>
+    <li>Fix regression from last update that caused the HLTB list maker to break</li>
+  </ul>
   <h3>v1.2.6 - October 28th, 2025</h3>
   <ul>
     <li>Added "Cache" tab in BLAEO+ options to view last cache update times and buttons to force update them</li>
