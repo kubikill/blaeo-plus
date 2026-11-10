@@ -1,5 +1,5 @@
 import { removeNodeIfExists } from "@/lib/utilities";
-import { GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
+import { gmRequest } from "@/lib/request";
 import { authenticityToken } from "@/globals";
 
 const previewButtonHtml = `
@@ -41,24 +41,17 @@ export function addCommentPreview() {
           "post[text]": textarea.value,
         });
 
-        GM_xmlhttpRequest({
+        gmRequest({
           method: "POST",
           url: "https://www.backlog-assassins.net/posts/preview",
-          nocache: true,
           responseType: "text",
           data: formData,
-          onload: (response) => {
-            if (response.status === 200) {
-              preview.innerHTML = response.response;
-              previewContainer.style.display = "";
-            } else {
-              console.error(`Failed preview: ${response.responseText}`);
-            }
-          },
-          onerror: (error) => {
-            console.error(`Failed preview: ${error.responseText}`);
-          },
-        });
+        })
+          .then((response) => {
+            preview.innerHTML = response.response;
+            previewContainer.style.display = "";
+          })
+          .catch((error) => console.error(`Failed preview: ${error?.responseText ?? error}`));
       });
     },
     { once: true },

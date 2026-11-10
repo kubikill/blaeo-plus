@@ -1,255 +1,105 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  import MultiSelect from "svelte-multiselect";
+  import { untrack } from "svelte";
+  import ColorMultiSelect from "@/lib/ColorMultiSelect.svelte";
+  import { PROGRESS_LABELS, type DeviceFilter, type Filters, type FilterOption, type GameStats, type Progress } from "./filterTypes";
 
-  export let filters = {
-    progresses: [] as any[],
-    modes: [] as any[],
-    availableTags: [] as any[],
-    tags: [] as any[],
-    protonDbRatings: [] as any[],
-    deckVerifiedStatuses: [] as any[],
-    availableSteamTags: [] as any[],
-    steamTags: [] as any[],
-  };
-  export let gameStats: {
-    "wont-play": number;
-    "wont-play-percent": string;
-    "never-played": number;
-    "never-played-percent": string;
-    unfinished: number;
-    "unfinished-percent": string;
-    beaten: number;
-    "beaten-percent": string;
-    completed: number;
-    "completed-percent": string;
-    uncategorized: number;
-    "uncategorized-percent": string;
-    total: number;
-  };
-
-  export let progresses: any;
-  export let modes: any;
-  export let protonDbRatings: any;
-  export let deckVerifiedStatuses: any;
-  export let showProgressFilter = true;
-  export let showTagsFilter = true;
-  export let showModesFilter = true;
-  export let showProtonDbFilter = true;
-  export let showDeckVerifiedFilter = true;
-  export let showSteamTagsFilter = true;
-
-  const dispatch = createEventDispatcher();
-
-  function changeTag() {
-    filters.tags = selectedTags;
-    dispatch("filters-changed");
+  interface Props {
+    progresses: readonly Progress[];
+    availableTags: Map<string, TagOption>;
+    availableSteamTags: Map<string, TagOption>;
+    gameStats: GameStats;
+    modes: FilterOption[];
+    protonDbRatings: FilterOption[];
+    deviceFilters: DeviceFilter[];
+    showProgressFilter?: boolean;
+    showTagsFilter?: boolean;
+    showModesFilter?: boolean;
+    showProtonDbFilter?: boolean;
+    showSteamTagsFilter?: boolean;
+    onfilterschanged: (filters: Filters, shownProgresses: Record<Progress, boolean>) => void;
   }
 
-  const availableTags = Array.from(filters.availableTags, (tag) => {
-    return {
-      label: tag[1].label,
-      color: tag[1].color,
-      value: tag[0],
-    };
+  let {
+    progresses,
+    availableTags,
+    availableSteamTags,
+    gameStats,
+    modes,
+    protonDbRatings,
+    deviceFilters,
+    showProgressFilter = true,
+    showTagsFilter = true,
+    showModesFilter = true,
+    showProtonDbFilter = true,
+    showSteamTagsFilter = true,
+    onfilterschanged,
+  }: Props = $props();
+
+  function toSortedOptions(tags: Map<string, TagOption>, pseudoValues: string[]): FilterOption[] {
+    const options = Array.from(tags, ([value, tag]) => ({ label: tag.label, color: tag.color, value }));
+    const isPseudo = (option: FilterOption) => pseudoValues.includes(option.value);
+
+    return options.sort((a, b) => +isPseudo(b) - +isPseudo(a) || (a.label < b.label ? -1 : a.label > b.label ? 1 : 0));
+  }
+
+  const tagOptions = $derived(toSortedOptions(availableTags, ["and-tags", "not-tags"]));
+  const steamTagOptions = $derived(toSortedOptions(availableSteamTags, ["and-steam-tags", "not-steam-tags"]));
+  const bySortValue = (a: FilterOption, b: FilterOption) => (a.sortValue ?? 0) - (b.sortValue ?? 0);
+
+  let selected: Filters = $state({ tags: [], steamTags: [], modes: [], protonDbRatings: [], deviceStatuses: { deck: [], steamos: [], steammachine: [], steamframe: [] } });
+  let shownProgresses = $state(untrack(() => Object.fromEntries(progresses.map((progress) => [progress, true]))) as Record<Progress, boolean>);
+
+  $effect(() => {
+    onfilterschanged($state.snapshot(selected) as Filters, $state.snapshot(shownProgresses));
   });
-
-  availableTags.sort((a, b) => {
-    if (a.value === "not-tags" || a.value === "and-tags") {
-      return -1;
-    }
-    if (a.label < b.label) {
-      return -1;
-    }
-    if (a.label > b.label) {
-      return 1;
-    }
-    return 0;
-  });
-
-  const availableSteamTags = Array.from(filters.availableSteamTags, (tag) => {
-    return {
-      label: tag[1].label,
-      color: tag[1].color,
-      value: tag[0],
-    };
-  });
-
-  availableSteamTags.sort((a, b) => {
-    if (a.value === "not-steam-tags" || a.value === "and-steam-tags") {
-      return -1;
-    }
-    if (a.label < b.label) {
-      return -1;
-    }
-    if (a.label > b.label) {
-      return 1;
-    }
-    return 0;
-  });
-
-  let selectedTags = [] as any[];
-  let selectedModes = [] as any[];
-  let selectedProtonDbRatings = [] as any[];
-  let selectedDeckVerifiedStatuses = [] as any[];
-  let selectedSteamTags = [] as any[];
-
-  function changeMode() {
-    filters.modes = selectedModes;
-    dispatch("filters-changed");
-  }
-
-  function toggleProgress(progress: string) {
-    progresses[progress] = !progresses[progress];
-    dispatch("filters-changed");
-  }
-
-  function changeProtonDbRating() {
-    filters.protonDbRatings = selectedProtonDbRatings;
-    dispatch("filters-changed");
-  }
-
-  function changeDeckVerifiedStatus() {
-    filters.deckVerifiedStatuses = selectedDeckVerifiedStatuses;
-    dispatch("filters-changed");
-  }
-
-  function changeSteamTag() {
-    filters.steamTags = selectedSteamTags;
-    dispatch("filters-changed");
-  }
 </script>
 
 <div class="bp-filters-container">
   <h4>Filters</h4>
   {#if showProgressFilter}
     <div class="list-progress">
-      <button
-        class="progress-bar game-wont-play"
-        class:disabled={!progresses["wont-play"]}
-        class:hidden={gameStats["wont-play"] == 0}
-        title="won't play: {gameStats['wont-play']} of {gameStats.total} games (click to show/hide)"
-        style:width={`${gameStats["wont-play-percent"]}%`}
-        on:click={() => toggleProgress("wont-play")}
-      >
-        {gameStats["wont-play-percent"]}% won't play
-      </button>
-      <button
-        class="progress-bar game-never-played"
-        class:disabled={!progresses["never-played"]}
-        class:hidden={gameStats["never-played"] == 0}
-        title="never played: {gameStats['never-played']} of {gameStats.total} games (click to show/hide)"
-        style:width={`${gameStats["never-played-percent"]}%`}
-        on:click={() => toggleProgress("never-played")}
-      >
-        {gameStats["never-played-percent"]}% never played
-      </button>
-      <button
-        class="progress-bar game-unfinished"
-        class:disabled={!progresses["unfinished"]}
-        class:hidden={gameStats["unfinished"] == 0}
-        title="unfinished: {gameStats.unfinished} of {gameStats.total} games (click to show/hide)"
-        style:width={`${gameStats["unfinished-percent"]}%`}
-        on:click={() => toggleProgress("unfinished")}
-      >
-        {gameStats["unfinished-percent"]}% unfinished
-      </button>
-      <button
-        class="progress-bar game-beaten"
-        class:disabled={!progresses["beaten"]}
-        class:hidden={gameStats["beaten"] == 0}
-        title="beaten: {gameStats.beaten} of {gameStats.total} games (click to show/hide)"
-        style:width={`${gameStats["beaten-percent"]}%`}
-        on:click={() => toggleProgress("beaten")}
-      >
-        {gameStats["beaten-percent"]}% beaten
-      </button>
-      <button
-        class="progress-bar game-completed"
-        class:disabled={!progresses["completed"]}
-        class:hidden={gameStats["completed"] == 0}
-        title="completed: {gameStats.completed} of {gameStats.total} games (click to show/hide)"
-        style:width={`${gameStats["completed-percent"]}%`}
-        on:click={() => toggleProgress("completed")}
-      >
-        {gameStats["completed-percent"]}% completed
-      </button>
-      <button
-        class="progress-bar game-uncategorized"
-        class:disabled={!progresses["uncategorized"]}
-        class:hidden={gameStats["uncategorized"] == 0}
-        title="uncategorized: {gameStats.uncategorized} of {gameStats.total} games (click to show/hide)"
-        style:width={`${gameStats["uncategorized-percent"]}%`}
-        on:click={() => toggleProgress("uncategorized")}
-      >
-        {gameStats["uncategorized-percent"]}% uncategorized
-      </button>
+      {#each progresses as progress}
+        <button
+          class="progress-bar game-{progress}"
+          class:disabled={!shownProgresses[progress]}
+          class:hidden={gameStats[progress] == 0}
+          title="{PROGRESS_LABELS[progress]}: {gameStats[progress]} of {gameStats.total} games (click to show/hide)"
+          style:width={`${gameStats[`${progress}-percent`]}%`}
+          onclick={() => (shownProgresses[progress] = !shownProgresses[progress])}
+        >
+          {gameStats[`${progress}-percent`]}% {PROGRESS_LABELS[progress]}
+        </button>
+      {/each}
     </div>
   {/if}
   <div class="bp-filters-row">
     {#if showTagsFilter}
       <div class="bp-filters-wrapper bp-filters-tags">
-        <MultiSelect bind:selected={selectedTags} on:change={changeTag} options={availableTags} outerDivClass="bp-tag-select" placeholder={"Tags"} selectedOptionsDraggable={false}>
-          <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-            {option.label}
-          </div>
-        </MultiSelect>
+        <ColorMultiSelect bind:selected={selected.tags} options={tagOptions} outerDivClass="bp-tag-select" placeholder={"Tags"} />
       </div>
     {/if}
     {#if showSteamTagsFilter}
       <div class="bp-filters-wrapper bp-filters-steam-tags">
-        <MultiSelect bind:selected={selectedSteamTags} on:change={changeSteamTag} options={availableSteamTags} outerDivClass="bp-steam-tag-select" placeholder={"Steam tags"} selectedOptionsDraggable={false}>
-          <div let:option slot="option" class="" style:border-left={`7px solid #000000`}>
-            {option.label}
-          </div>
-        </MultiSelect>
+        <ColorMultiSelect bind:selected={selected.steamTags} options={steamTagOptions} outerDivClass="bp-steam-tag-select" placeholder={"Steam tags"} />
       </div>
     {/if}
   </div>
   <div class="bp-filters-row">
     {#if showModesFilter}
       <div class="bp-filters-wrapper bp-filters-modes">
-        <MultiSelect bind:selected={selectedModes} on:change={changeMode} options={modes} outerDivClass="bp-tag-select" placeholder={"Modes"} sortSelected={(a, b) => a.sortValue - b.sortValue} selectedOptionsDraggable={false}>
-          <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-            {option.label}
-          </div>
-        </MultiSelect>
+        <ColorMultiSelect bind:selected={selected.modes} options={modes} outerDivClass="bp-tag-select" placeholder={"Modes"} sortSelected={bySortValue} />
       </div>
     {/if}
     {#if showProtonDbFilter}
       <div class="bp-filters-wrapper bp-filters-protondb">
-        <MultiSelect
-          bind:selected={selectedProtonDbRatings}
-          on:change={changeProtonDbRating}
-          options={protonDbRatings}
-          outerDivClass="bp-protondbstatuses-select"
-          placeholder={"ProtonDB ratings"}
-          sortSelected={(a, b) => a.sortValue - b.sortValue}
-          selectedOptionsDraggable={false}
-        >
-          <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-            {option.label}
-          </div>
-        </MultiSelect>
+        <ColorMultiSelect bind:selected={selected.protonDbRatings} options={protonDbRatings} outerDivClass="bp-protondbstatuses-select" placeholder={"ProtonDB ratings"} sortSelected={bySortValue} />
       </div>
     {/if}
-    {#if showDeckVerifiedFilter}
-      <div class="bp-filters-wrapper bp-filters-deckverified">
-        <MultiSelect
-          bind:selected={selectedDeckVerifiedStatuses}
-          on:change={changeDeckVerifiedStatus}
-          options={deckVerifiedStatuses}
-          outerDivClass="bp-protondbstatuses-select"
-          placeholder={"Steam Deck Verified statuses"}
-          sortSelected={(a, b) => a.sortValue - b.sortValue}
-          selectedOptionsDraggable={false}
-        >
-          <div let:option slot="option" class="" style:border-left={`7px solid ${option.color}`}>
-            {option.label}
-          </div>
-        </MultiSelect>
+    {#each deviceFilters as { id, placeholder, options } (id)}
+      <div class="bp-filters-wrapper bp-filters-device">
+        <ColorMultiSelect bind:selected={selected.deviceStatuses[id]} {options} outerDivClass="bp-protondbstatuses-select" {placeholder} sortSelected={bySortValue} />
       </div>
-    {/if}
+    {/each}
   </div>
 </div>
 
@@ -288,14 +138,6 @@
             width: 270px;
             margin-right: 8px;
             flex-shrink: 0;
-          }
-        }
-
-        > ul.options > li {
-          padding: 0 !important;
-
-          > div {
-            padding: 6px 8px;
           }
         }
       }
@@ -369,7 +211,7 @@
 
   .bp-filters-modes,
   .bp-filters-protondb,
-  .bp-filters-deckverified {
+  .bp-filters-device {
     width: 100%;
     @media (min-width: 768px) {
       width: 40%;

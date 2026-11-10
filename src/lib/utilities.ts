@@ -70,21 +70,37 @@ export function reformatBlaeoGameListToSteamIdColumn(blaeoGameList: BlaeoGamesJs
   return gameList;
 }
 
-export function reformatBlaeoGameListToBlaeoIdColumn(blaeoGameList: BlaeoGamesJson): BlaeoGamesSteamIdJson {
-  const gameList: any = {};
-
-  for (let game of blaeoGameList) {
-    gameList[game.id] = game;
-  }
-
-  return gameList;
-}
-
-export function tryJsonParse<T>(jsonString: string, fallbackValue: any): T | null {
+export function tryJsonParse<T>(jsonString: string, fallbackValue: T): T {
   try {
     return JSON.parse(jsonString) as T;
   } catch (error) {
     console.error("Failed to parse JSON! Using fallback!", error);
     return fallbackValue;
   }
+}
+
+const htmlEscapes: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+export function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (char) => htmlEscapes[char]);
+}
+
+export function stripLeadingArticle(title: string): string {
+  return title.replace(/^(?:a|the)\s+/i, "");
+}
+
+export function progressClass(progress: string | undefined): string {
+  return (progress || "uncategorized").replaceAll(" ", "-");
+}
+
+export function formatDuration(seconds: number, sampleCount: number): string {
+  const countWarning = sampleCount <= 10 ? "!" : sampleCount <= 100 ? "~" : "";
+
+  return `${countWarning}${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}min`;
 }

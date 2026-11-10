@@ -1,5 +1,5 @@
 interface Window {
-  updateOptions: function;
+  updateOptions: Function;
 }
 
 type TagOption = {
@@ -33,6 +33,9 @@ type Options = {
         modes: boolean;
         protonDbRatings: boolean;
         deckVerifiedStatuses: boolean;
+        steamOsStatuses: boolean;
+        steamMachineStatuses: boolean;
+        steamFrameStatuses: boolean;
         steamTags: boolean;
       };
       hltbIntegration: {
@@ -44,6 +47,7 @@ type Options = {
         };
         oneColumnMode: boolean;
         addHltbLinks: boolean;
+        reportButtons: boolean;
       };
       protonDbIntegration: {
         enabled: boolean;
@@ -51,11 +55,26 @@ type Options = {
       deckVerifiedIntegration: {
         enabled: boolean;
       };
+      steamOsIntegration: {
+        enabled: boolean;
+      };
+      steamMachineIntegration: {
+        enabled: boolean;
+      };
+      steamFrameIntegration: {
+        enabled: boolean;
+      };
       steamStoreIntegration: {
         enabled: boolean;
+        hideTagsForProgress: Record<import("./modules/games/filterTypes").Progress, boolean>;
+      };
+      steamHuntersIntegration: {
+        enabled: boolean;
+        addSteamHuntersLinks: boolean;
       };
       lists: {
         quickRearrange: boolean;
+        rearrangeButtons: boolean;
         automaticHltb: boolean;
       };
       other: {
@@ -67,7 +86,7 @@ type Options = {
       mobileLayout: boolean;
     };
     newPosts: {
-      saving: fboolean;
+      saving: boolean;
     };
     comments: {
       previews: boolean;
@@ -93,6 +112,8 @@ type QueryGame = {
 };
 
 type GameTypes = "sp" | "mp" | "coop";
+
+type HltbTimeField = "main" | "extra" | "everything" | "mp" | "coop";
 
 type GameInfo = {
   [key: number]: {
@@ -122,8 +143,21 @@ type LinuxData = {
   protonDbRating: "unknown" | "no data" | "pending" | "borked" | "bronze" | "silver" | "gold" | "platinum";
   protonDbProvRating: "unknown" | "no data" | "pending" | "borked" | "bronze" | "silver" | "gold" | "platinum";
   protonDbReports: number;
-  deckRating: "unknown" | "untested" | "unsupported" | "playable" | "verified";
+  deckRating: CompatibilityRating;
   deckInfo: string;
+};
+
+type CompatibilityRating = "unknown" | "untested" | "unsupported" | "playable" | "verified";
+
+type CompatibilityDeviceId = "deck" | "steamos" | "steammachine" | "steamframe";
+
+type DeviceCompatibility = {
+  rating: CompatibilityRating;
+  info: string;
+};
+
+type DeviceCompatibilityList = {
+  [key: number]: DeviceCompatibility;
 };
 
 type LinuxDataList = {
@@ -132,8 +166,17 @@ type LinuxDataList = {
 
 type SteamspyData = {
   tags: string[] | string;
-  posRevs: number;
-  negRevs: number;
+};
+
+type SteamHuntersData = {
+  /** Median time to perfect the game, in minutes */
+  median: number | null;
+  /** Number of players who perfected the game */
+  perfected: number;
+};
+
+type SteamHuntersDataList = {
+  [key: number]: SteamHuntersData;
 };
 
 type SteamspyDataList = {
@@ -141,43 +184,56 @@ type SteamspyDataList = {
 };
 
 type AutomaticHltbTagInfo = {
+  games: BlaeoGameEntry[];
+  newGames: BlaeoGameEntry[];
+  oldList: BlaeoListJson | null;
+};
+
+type BlaeoListOption = { label: string; value: string; color: string };
+
+type AutomaticHltbTimeList = {
   playtime: number | string;
   maxPlaytime: number | string;
-  tagId: array;
-  games: any[];
-  newGames: any[];
-  oldList: BlaeoListJson | null;
+  tagId: BlaeoListOption[];
+};
+
+type ListMakerGameTime = {
+  seconds: number;
+  count: number;
+  label: string;
 };
 
 type AutomaticHltbPreset = {
   name: string;
   mode: string;
-  progresses: object;
+  progresses: Record<string, boolean>;
   sortWholeList: boolean;
-  listBy: "main" | "extra" | "everything";
+  listBy: "main" | "extra" | "everything" | "steamhunters";
   sortBy: string;
   sortByOrder: string;
+  ignoreLeadingArticles?: boolean;
   mpOnlyBehavior: string;
   endlessBehavior: string;
-  gamesWithoutHltbBehavior: string;
-  gamesWithoutHltbReportThreshold: string;
-  mpOnlyList: array;
-  endlessList: array;
-  gamesWithoutHltbList: array;
-  listArray: AutomaticHltbTagInfo[];
-  mpOnlyListArray: AutomaticHltbTagInfo;
-  endlessListArray: AutomaticHltbTagInfo;
-  gamesWithoutHltbListArray: AutomaticHltbTagInfo;
+  fallbackTime: "none" | "main" | "extra" | "everything" | "allplaystyles" | "steamhunters";
+  noTimeBehavior: string;
+  minHltbReports: string;
+  minSteamHuntersPlayers: string;
+  mpOnlyList: BlaeoListOption[];
+  endlessList: BlaeoListOption[];
+  noTimeList: BlaeoListOption[];
+  whitelistLists?: BlaeoListOption[];
+  blacklistLists?: BlaeoListOption[];
+  listFilterPriority?: "whitelist" | "blacklist";
+  listArray: AutomaticHltbTimeList[];
 };
 
 type BlaeoGameEntry = {
-  value?: any;
   id: string;
   steam_id: number;
   name: string;
   playtime: number;
   progress: string;
-  achievements: {
+  achievements?: {
     unlocked: number;
     total: number;
   };
@@ -214,8 +270,4 @@ type ListBackup = {
 
 interface JQuery<Element> {
   sortable_table(mode: string, columnIndex: number, order: boolean): null;
-}
-
-declare module "*.svelte" {
-  export { SvelteComponentDev as default } from "svelte/internal";
 }

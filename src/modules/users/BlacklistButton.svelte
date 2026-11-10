@@ -1,22 +1,25 @@
 <script lang="ts">
-  import { optionsStore } from "@/lib/store";
+  import { options } from "@/lib/store.svelte";
   import BlacklistModal from "./BlacklistModal.svelte";
   import { blacklistIcon } from "@/assets/icons";
-  export let name: string;
+  interface Props {
+    name: string;
+  }
 
-  let showModal = false;
+  let { name }: Props = $props();
+
+  let showModal = $state(false);
 
   function toggleBlacklist() {
-    if ($optionsStore.blacklist[name]) {
-      delete $optionsStore.blacklist[name];
-      $optionsStore = $optionsStore;
+    if (options.blacklist[name]) {
+      delete options.blacklist[name];
     } else {
       showModal = true;
     }
   }
 </script>
 
-<button class="btn btn-default" title="Toggle blacklist" aria-label="Toggle blacklist" data-value={!!$optionsStore.blacklist[name]} on:click={toggleBlacklist}>
+<button class="btn btn-default" title="Toggle blacklist" aria-label="Toggle blacklist" data-value={!!options.blacklist[name]} onclick={toggleBlacklist}>
   {@html blacklistIcon}
 </button>
 

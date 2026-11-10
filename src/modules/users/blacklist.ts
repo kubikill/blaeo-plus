@@ -1,101 +1,54 @@
 import BlacklistButton from "@/modules/users/BlacklistButton.svelte";
-import { optionsStore } from "@/lib/store";
-import { get } from "svelte/store";
+import { options } from "@/lib/store.svelte";
 import { blacklistIcon } from "@/assets/icons";
-import { addedComponents } from "@/globals";
+import { mountTracked } from "@/globals";
 import { removeAllNodesIfExist } from "@/lib/utilities";
 
-let options = get(optionsStore) as Options;
-optionsStore.subscribe((value) => {
-  options = value;
-});
+type BlockBehavior = Options["modules"]["users"]["blacklist"]["postBehavior"];
 
-function handlePostBlock(name: string, element: HTMLElement) {
-  if (!options.blacklist[name]) {
+function getUserNameFromLink(link: HTMLAnchorElement | null): string | null {
+  return link?.href.match(/\/users\/([\w+]+)$/)?.[1] ?? null;
+}
+
+function insertBlockedNotice(element: HTMLElement, kind: "post" | "comment", withUncollapseButton: boolean) {
+  const uncollapseButton = withUncollapseButton ? ` <button class="btn btn-uncollapse btn-default" type="button">Uncollapse</button>` : "";
+
+  element.insertAdjacentHTML(
+    "beforebegin",
+    `
+      <div class="bp-blacklist panel-default post blocked collapsed">
+        <div class="avatar">${blacklistIcon}</div>
+        <div class="body">
+          <div class="markdown">
+            This ${kind} was made by a blacklisted user.${uncollapseButton}
+          </div>
+        </div>
+      </div>`,
+  );
+
+  const notice = element.previousElementSibling;
+  notice?.querySelector(".btn-uncollapse")?.addEventListener("click", () => notice.classList.remove("collapsed"));
+}
+
+function applyBlockBehavior(name: string | null, element: HTMLElement, kind: "post" | "comment", behavior: BlockBehavior) {
+  if (!name || !options.blacklist[name]) {
     return;
   }
 
-  if (options.modules.users.blacklist.postBehavior === "hide") {
+  if (behavior === "hide" && kind === "comment" && element.parentElement?.classList.contains("reply")) {
+    behavior = "collapse";
+  }
+
+  if (behavior === "hide") {
     element.style.display = "none";
-  } else if (options.modules.users.blacklist.postBehavior === "collapse") {
-    element.insertAdjacentHTML(
-      "beforebegin",
-      `
-      <div class="bp-blacklist panel-default post blocked collapsed">
-        <div class="avatar">${blacklistIcon}</div>
-        <div class="body">
-          <div class="markdown">
-            This post was made by a blacklisted user.
-          </div>
-        </div>
-      </div>`,
-    );
-
-    element.previousElementSibling?.querySelector(".btn-uncollapse")?.addEventListener("click", () => {
-      element.previousElementSibling?.classList.remove("collapsed");
-    });
-  } else if (options.modules.users.blacklist.postBehavior === "collapse-with-uncollapse") {
-    element.insertAdjacentHTML(
-      "beforebegin",
-      `
-      <div class="bp-blacklist panel-default post blocked collapsed">
-        <div class="avatar">${blacklistIcon}</div>
-        <div class="body">
-          <div class="markdown">
-            This post was made by a blacklisted user. <button class="btn btn-uncollapse btn-default" type="button">Uncollapse</button>
-          </div>
-        </div>
-      </div>`,
-    );
-
-    element.previousElementSibling?.querySelector(".btn-uncollapse")?.addEventListener("click", () => {
-      element.previousElementSibling?.classList.remove("collapsed");
-    });
+  } else if (behavior === "collapse" || behavior === "collapse-with-uncollapse") {
+    insertBlockedNotice(element, kind, behavior === "collapse-with-uncollapse");
   }
 }
 
-function handleCommentBlock(name: string, element: HTMLElement) {
-  if (!options.blacklist[name]) {
-    return;
-  }
-
-  if (options.modules.users.blacklist.commentBehavior === "hide" && !element.parentElement?.classList.contains("reply")) {
-    element.style.display = "none";
-  } else if (options.modules.users.blacklist.commentBehavior === "collapse" || (options.modules.users.blacklist.commentBehavior === "hide" && element.parentElement?.classList.contains("reply"))) {
-    element.insertAdjacentHTML(
-      "beforebegin",
-      `
-      <div class="bp-blacklist panel-default post blocked collapsed">
-        <div class="avatar">${blacklistIcon}</div>
-        <div class="body">
-          <div class="markdown">
-            This comment was made by a blacklisted user.
-          </div>
-        </div>
-      </div>`,
-    );
-
-    element.previousElementSibling?.querySelector(".btn-uncollapse")?.addEventListener("click", () => {
-      element.previousElementSibling?.classList.remove("collapsed");
-    });
-  } else if (options.modules.users.blacklist.commentBehavior === "collapse-with-uncollapse") {
-    element.insertAdjacentHTML(
-      "beforebegin",
-      `
-      <div class="bp-blacklist panel-default post blocked collapsed">
-        <div class="avatar">${blacklistIcon}</div>
-        <div class="body">
-          <div class="markdown">
-            This comment was made by a blacklisted user. <button class="btn btn-uncollapse btn-default" type="button">Uncollapse</button>
-          </div>
-        </div>
-      </div>`,
-    );
-
-    element.previousElementSibling?.querySelector(".btn-uncollapse")?.addEventListener("click", () => {
-      element.previousElementSibling?.classList.remove("collapsed");
-    });
-  }
+function handlePost(post: HTMLElement) {
+  const author = getUserNameFromLink(post.querySelector<HTMLAnchorElement>(".body > a[href^='/users/']"));
+  applyBlockBehavior(author, post, "post", options.modules.users.blacklist.postBehavior);
 }
 
 export default function initBlacklist() {
@@ -104,34 +57,14 @@ export default function initBlacklist() {
   const profiles = Array.from(document.querySelectorAll("[data-endless^='/']")) as HTMLElement[];
 
   if (activityFeed) {
-    const posts = Array.from(activityFeed.querySelectorAll(".post:not(.blocked)")) as HTMLElement[];
-
-    for (let post of posts) {
-      const postAuthor = post.querySelector(".body > a[href^='/users/']") as HTMLAnchorElement;
-      const postAuthorName = postAuthor.href.match(/\/users\/([\w+]+)$/);
-
-      if (!postAuthorName) {
-        continue;
-      }
-
-      handlePostBlock(postAuthorName[1], post);
-    }
+    activityFeed.querySelectorAll<HTMLElement>(".post:not(.blocked)").forEach(handlePost);
 
     const activityFeedObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         for (let node of mutation.addedNodes) {
-          if (node.nodeType !== Node.ELEMENT_NODE || !(node as HTMLElement).classList.contains("post") || (node as HTMLElement).classList.contains("blocked")) {
-            continue;
+          if (node instanceof HTMLElement && node.classList.contains("post") && !node.classList.contains("blocked")) {
+            handlePost(node);
           }
-
-          const postAuthor = (node as HTMLElement).querySelector(".body > a[href^='/users/']") as HTMLAnchorElement;
-          const postAuthorName = postAuthor.href.match(/\/users\/([\w+]+)$/);
-
-          if (!postAuthorName) {
-            continue;
-          }
-
-          handlePostBlock(postAuthorName[1], node as HTMLElement);
         }
       }
     });
@@ -140,33 +73,24 @@ export default function initBlacklist() {
   }
 
   for (let comment of comments) {
-    const commentAuthor = comment.querySelector(".avatar[href^='/users/']") as HTMLAnchorElement;
-    const commentAuthorName = commentAuthor.href.match(/\/users\/([\w+]+)$/);
-
-    if (!commentAuthorName) {
-      continue;
-    }
-
-    handleCommentBlock(commentAuthorName[1], comment);
+    const author = getUserNameFromLink(comment.querySelector<HTMLAnchorElement>(".avatar[href^='/users/']"));
+    applyBlockBehavior(author, comment, "comment", options.modules.users.blacklist.commentBehavior);
   }
 
   for (let profile of profiles) {
-    const profileName = profile!.dataset!.endless!.match(/\/users\/([\w+]+)$/);
+    const profileName = profile.dataset.endless?.match(/\/users\/([\w+]+)$/);
+    const profileToolbar = profile.querySelector<HTMLElement>(".profile-toolbar");
 
-    if (!profileName) {
+    if (!profileName || !profileToolbar) {
       continue;
     }
 
-    const profileToolbar = profile.querySelector(".profile-toolbar") as HTMLElement;
-
-    const blacklistButtonComponent = new BlacklistButton({
+    mountTracked(BlacklistButton, {
       target: profileToolbar,
       props: {
         name: profileName[1],
       },
     });
-
-    addedComponents.push(blacklistButtonComponent);
   }
 }
 

@@ -1,92 +1,42 @@
 import { authenticityToken } from "@/globals";
-import { GM_xmlhttpRequest, type GmXhrRequest } from "vite-plugin-monkey/dist/client";
+import { gmRequest } from "./request";
 
-export function getLists() {
-  return new Promise((resolve, reject) => {
-    GM_xmlhttpRequest({
-      method: "GET",
-      url: `https://www.backlog-assassins.net/settings/lists`,
-      nocache: true,
-      responseType: "document",
-      onload: (response) => {
-        if (response.status === 200) {
-          const lists = [] as { id: string; name: string; color: string }[];
-
-          const listEntries = response.response.querySelectorAll("table.lists-table[data-rearrange] tr[data-item]") as NodeListOf<HTMLTableRowElement>;
-          for (let listEntry of listEntries) {
-            lists.push({
-              id: listEntry.getAttribute("data-item") as string,
-              name: listEntry.querySelector("td:first-child > span")?.textContent?.trim() as string,
-              color: listEntry.style.borderLeftColor,
-            });
-          }
-
-          resolve(lists);
-        } else {
-          console.error(`Failed (probably) to get lists from BLAEO. Details: ${response.responseText}`);
-          reject(response.responseText);
-        }
-      },
-      onerror: (error) => {
-        console.error(`Failed to get lists from BLAEO. Details: ${error}`);
-        reject(error);
-      },
-    });
-  });
-}
-
-export function getList(listId: string): Promise<BlaeoListJson> {
-  return new Promise((resolve, reject) => {
-    GM_xmlhttpRequest({
+export async function getList(listId: string): Promise<BlaeoListJson> {
+  try {
+    const response = await gmRequest({
       method: "GET",
       url: `https://www.backlog-assassins.net/lists/${listId}.json`,
-      nocache: true,
       responseType: "json",
-      onload: (response) => {
-        if (response.status === 200) {
-          resolve(response.response.list);
-        } else {
-          console.error(`Failed to get games from a BLAEO list. Details: ${response.responseText}`);
-          reject(response.responseText);
-        }
-      },
-      onerror: (error) => {
-        console.error(`Failed to get games from a BLAEO list. Details: ${error}`);
-        reject(error);
-      },
     });
-  });
+
+    return response.response.list;
+  } catch (error: any) {
+    console.error(`Failed to get games from BLAEO list ${listId}. Details: ${error?.responseText ?? error}`);
+    throw error;
+  }
 }
 
-export function setList(listId: string, games: string[]) {
-  let formData = new URLSearchParams();
+export async function setList(listId: string, games: string[]) {
+  const formData = new URLSearchParams();
 
   for (let game of games) {
     formData.append("games[]", game);
   }
 
-  return new Promise((resolve, reject) => {
-    GM_xmlhttpRequest({
+  try {
+    const response = await gmRequest({
       method: "POST",
       url: `https://www.backlog-assassins.net/lists/${listId}/games`,
-      nocache: true,
       responseType: "json",
       data: formData,
       headers: {
         "X-CSRF-Token": authenticityToken,
       },
-      onload: (response) => {
-        if (response.status === 200) {
-          resolve(response.response);
-        } else {
-          console.error(`Failed (probably) to rearrange list ${listId}. Status: ${response.statusText}. Details: ${response.responseText}`);
-          reject(response);
-        }
-      },
-      onerror: (error) => {
-        console.error(`Failed to rearrange list ${listId}. Status: ${error.statusText}. Response: ${error.responseText}`);
-        reject(error);
-      },
     });
-  });
+
+    return response.response;
+  } catch (error: any) {
+    console.error(`Failed to set games of BLAEO list ${listId}. Status: ${error?.statusText}. Details: ${error?.responseText ?? error}`);
+    throw error;
+  }
 }

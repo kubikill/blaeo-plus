@@ -1,7 +1,12 @@
-let gamesContainerLoaded = false;
 let gamesContainerWaitingPromise: Promise<void> | null = null;
+let gamesContainerWaitingFor: HTMLElement | null = null;
 
-export function getGamesContainer() {
+export type GamesContainer = {
+  type: "table" | "list" | "grid";
+  container: HTMLElement;
+};
+
+export function getGamesContainer(): GamesContainer | false {
   let gameContainer = document.querySelector("table#games") as HTMLElement;
 
   if (gameContainer) {
@@ -35,25 +40,29 @@ export function getGamesContainer() {
   return false;
 }
 
-export function isGamesContainerLoaded() {
-  return gamesContainerLoaded;
-}
-
 export function waitUntilGamesContainerLoaded() {
   const gamesContainer = getGamesContainer();
 
   if (!gamesContainer) {
-    return Promise.reject();
+    return Promise.reject(new Error("No games container on this page"));
   }
 
   if (!gamesContainer.container.dataset.delayedLast) {
     return Promise.resolve();
   }
 
-  if (gamesContainerWaitingPromise === null) {
+  if (gamesContainerWaitingPromise === null || gamesContainerWaitingFor !== gamesContainer.container) {
+    const container = gamesContainer.container;
+    gamesContainerWaitingFor = container;
     gamesContainerWaitingPromise = new Promise((resolve) => {
       const interval = setInterval(() => {
-        if (!gamesContainer.container.dataset.delayedLast) {
+        if (!container.isConnected) {
+          // User navigated away before the games finished loading; stop polling and leave the promise pending.
+          clearInterval(interval);
+          return;
+        }
+
+        if (!container.dataset.delayedLast) {
           clearInterval(interval);
           resolve();
         }

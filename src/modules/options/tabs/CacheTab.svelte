@@ -1,62 +1,50 @@
 <script lang="ts">
-  import { syncHltb } from "@/lib/hltbService";
-  import { syncLinux } from "@/lib/linuxService";
-  import { syncSteamspy } from "@/lib/steamspyService";
-  import { lastCacheUpdatesStore } from "@/lib/store";
+  import { cachedGameCount, refreshCachedGameData, type Dataset } from "@/lib/gameData";
+  import { syncExcludedGames } from "@/lib/hltbService";
+  import { cacheUpdates } from "@/lib/store.svelte";
 
-  let hltbUpdating = false;
-  let linuxUpdating = false;
-  let steamspyUpdating = false;
+  const datasets: { dataset: Dataset; label: string }[] = [
+    { dataset: "hltb", label: "HLTB times" },
+    { dataset: "linux", label: "ProtonDB & Steam Deck ratings" },
+    { dataset: "steamspy", label: "Steam store tags" },
+    { dataset: "steamhunters", label: "SteamHunters times" },
+    { dataset: "steamos", label: "SteamOS ratings" },
+    { dataset: "steammachine", label: "Steam Machine ratings" },
+    { dataset: "steamframe", label: "Steam Frame ratings" },
+  ];
 
-  async function updateHltb() {
-    hltbUpdating = true;
-    await syncHltb();
-    hltbUpdating = false;
+  let updating: Record<string, boolean> = $state({});
+  let counts: Record<string, number> = $state({});
+
+  async function updateCounts() {
+    for (const { dataset } of datasets) {
+      counts[dataset] = await cachedGameCount(dataset);
+    }
   }
 
-  async function updateLinux() {
-    linuxUpdating = true;
-    await syncLinux();
-    linuxUpdating = false;
-  }
+  updateCounts();
 
-  async function updateSteamspy() {
-    steamspyUpdating = true;
-    await syncSteamspy();
-    steamspyUpdating = false;
+  async function update(name: string, run: () => Promise<unknown>) {
+    updating[name] = true;
+
+    try {
+      await run();
+    } catch (error) {
+      console.error(`BLAEO+: ${name} cache update failed`, error);
+    } finally {
+      updating[name] = false;
+      updateCounts();
+    }
   }
 </script>
 
 <div>
-  <h3>HLTB</h3>
-  <p>Last update: {$lastCacheUpdatesStore.hltb}</p>
-  <button type="button" class="btn btn-primary" on:click={updateHltb} disabled={hltbUpdating}>Force update</button>
-  <h3>Linux data</h3>
-  <p>Last update: {$lastCacheUpdatesStore.linux}</p>
-  <button type="button" class="btn btn-primary" on:click={updateLinux} disabled={linuxUpdating}>Force update</button>
-  <h3>Steam store data</h3>
-  <p>Last update: {$lastCacheUpdatesStore.steamspy}</p>
-  <button type="button" class="btn btn-primary" on:click={updateSteamspy} disabled={steamspyUpdating}>Force update</button>
+  {#each datasets as { dataset, label }}
+    <h3>{label}</h3>
+    <p>Cached for {counts[dataset] ?? "…"} games</p>
+    <button type="button" class="btn btn-primary" onclick={() => update(dataset, () => refreshCachedGameData(dataset))} disabled={updating[dataset]}>Refresh</button>
+  {/each}
+  <h3>HLTB excluded games</h3>
+  <p>Last update: {cacheUpdates.excludedGames}</p>
+  <button type="button" class="btn btn-primary" onclick={() => update("excludedGames", syncExcludedGames)} disabled={updating.excludedGames}>Force update</button>
 </div>
-
-<style lang="scss">
-  .main {
-    text-align: center;
-  }
-  .main > :global(svg) {
-    height: 100px;
-    transition: transform 0.5s ease-out;
-
-    &:hover {
-      transform: rotateY(180deg);
-    }
-  }
-
-  h2 {
-    margin: 0 0 4px;
-  }
-
-  .author {
-    font-size: 16px;
-  }
-</style>

@@ -1,555 +1,204 @@
-import { hltbData } from "@/lib/hltbService";
+import { hltbData, waitUntilGameDataLoaded } from "@/lib/gameData";
 import GameFilters from "@/modules/games/GameFilters.svelte";
-import { addedComponents } from "@/globals";
-import { optionsStore } from "@/lib/store";
-import { get } from "svelte/store";
-import { getGamesContainer, waitUntilGamesContainerLoaded } from "@/lib/waitUntilGamesContainerLoaded";
+import { mountTracked } from "@/globals";
+import { options } from "@/lib/store.svelte";
+import { getGamesContainer } from "@/lib/waitUntilGamesContainerLoaded";
+import { removeAllNodesIfExist } from "@/lib/utilities";
+import { getSteamId } from "@/lib/gameTable";
+import { COMPATIBILITY_DEVICES } from "./compatibilityColumns";
+import { type FilterOption as FilterOptionFull, PROGRESSES, type Filters, type GameStats, type Progress } from "./filterTypes";
 
-let options = get(optionsStore) as Options;
-optionsStore.subscribe((value) => {
-  options = value;
-});
+type GameElement = HTMLTableRowElement | HTMLDivElement | HTMLLIElement;
+type FilterOption = Pick<FilterOptionFull, "value">;
 
-function runFilters(games: NodeListOf<HTMLTableRowElement | HTMLDivElement | HTMLLIElement>, filters: any, progresses: any, gamesContainer: HTMLElement) {
-  if (filters) {
-    let tagFilters = [];
-    let tagFilterString = "";
-    let tagFilterType = false as "not-tags" | "tags" | false;
-    let tagFilterAnd = false;
-    let modeStrict = false;
-    let modeNot = false;
-    let includeProtonDbProvisional = false;
-    let steamTagFilters = [];
-    let steamTagFilterString = "";
-    let steamTagFilterType = false as "not-tags" | "tags" | false;
-    let steamTagFilterAnd = false;
+type TagFilter = {
+  mode: "tags" | "not-tags" | null;
+  and: boolean;
+  selectors: string[];
+};
 
-    if (filters.tags.find((tag: { value: string }) => tag.value === "not-tags")) {
-      tagFilterType = "not-tags";
-    } else if (filters.tags.length > 0) {
-      tagFilterType = "tags";
-    }
+function parseTagFilter(selected: FilterOption[], notValue: string, andValue: string, toSelector: (value: string) => string): TagFilter {
+  const values = selected.map((option) => option.value);
 
-    if (filters.tags.find((tag: { value: string }) => tag.value === "and-tags")) {
-      tagFilterAnd = true;
-    }
+  return {
+    mode: values.includes(notValue) ? "not-tags" : values.length > 0 ? "tags" : null,
+    and: values.includes(andValue),
+    selectors: values.filter((value) => value !== notValue && value !== andValue).map(toSelector),
+  };
+}
 
-    if (tagFilterType) {
-      for (let tag of filters.tags) {
-        if (tag.value != "not-tags" && tag.value != "and-tags") {
-          tagFilters.push(`[href$="${tag.value}"]`);
-        }
+function matchesTagFilter(game: GameElement, filter: TagFilter, anyTagSelector: string): boolean {
+  const hasTag = (selector: string) => !!game.querySelector(selector);
+
+  switch (filter.mode) {
+    case "tags":
+      if (filter.selectors.length === 0) {
+        return true;
       }
-
-      tagFilterString = tagFilters.join(", ");
-    }
-
-    if (filters.modes.find((mode: { value: string }) => mode.value === "strict")) {
-      modeStrict = true;
-    }
-
-    if (filters.modes.find((mode: { value: string }) => mode.value === "not")) {
-      modeNot = true;
-    }
-
-    if (filters.steamTags.find((tag: { value: string }) => tag.value === "not-steam-tags")) {
-      steamTagFilterType = "not-tags";
-    } else if (filters.steamTags.length > 0) {
-      steamTagFilterType = "tags";
-    }
-
-    if (filters.steamTags.find((tag: { value: string }) => tag.value === "and-steam-tags")) {
-      steamTagFilterAnd = true;
-    }
-
-    if (steamTagFilterType) {
-      for (let tag of filters.steamTags) {
-        if (tag.value != "not-steam-tags" && tag.value != "and-steam-tags") {
-          steamTagFilters.push(`[data-steam-tag$="${tag.value}"]`);
-        }
+      return filter.and ? filter.selectors.every(hasTag) : filter.selectors.some(hasTag);
+    case "not-tags":
+      if (filter.selectors.length === 0) {
+        return !hasTag(anyTagSelector);
       }
-
-      steamTagFilterString = steamTagFilters.join(", ");
-    }
-
-    if (filters.protonDbRatings.find((rating: { value: string }) => rating.value === "provisional")) {
-      includeProtonDbProvisional = true;
-    }
-
-    gameLoop: for (let game of games) {
-      switch (tagFilterType) {
-        case "tags":
-          if (tagFilterAnd) {
-            for (let tag of tagFilters) {
-              if (!game.querySelector(tag)) {
-                game.style.display = "none";
-                continue gameLoop;
-              }
-            }
-          } else {
-            if (!game.querySelector(tagFilterString)) {
-              game.style.display = "none";
-              continue;
-            }
-          }
-
-          break;
-        case "not-tags":
-          if (tagFilterString) {
-            if (tagFilterAnd) {
-              for (let tag of tagFilters) {
-                if (!game.querySelector(tag)) {
-                  game.style.display = "";
-                  continue gameLoop;
-                }
-              }
-              game.style.display = "none";
-              continue;
-            } else {
-              if (game.querySelector(tagFilterString)) {
-                game.style.display = "none";
-                continue;
-              }
-            }
-          } else {
-            if (game.querySelector(".list-tag")) {
-              game.style.display = "none";
-              continue;
-            }
-          }
-      }
-
-      switch (steamTagFilterType) {
-        case "tags":
-          if (steamTagFilterAnd) {
-            for (let tag of steamTagFilters) {
-              if (!game.querySelector(tag)) {
-                game.style.display = "none";
-                continue gameLoop;
-              }
-            }
-          } else {
-            if (!game.querySelector(steamTagFilterString)) {
-              game.style.display = "none";
-              continue;
-            }
-          }
-
-          break;
-        case "not-tags":
-          if (steamTagFilterString) {
-            if (steamTagFilterAnd) {
-              for (let tag of steamTagFilters) {
-                if (!game.querySelector(tag)) {
-                  game.style.display = "";
-                  continue gameLoop;
-                }
-              }
-              game.style.display = "none";
-              continue;
-            } else {
-              if (game.querySelector(steamTagFilterString)) {
-                game.style.display = "none";
-                continue;
-              }
-            }
-          } else {
-            if (game.querySelector(".list-tag")) {
-              game.style.display = "none";
-              continue;
-            }
-          }
-      }
-
-      const steamStoreLink = game.querySelector('a[href*="store.steampowered.com/app/"]') as HTMLAnchorElement;
-      const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1];
-
-      if (modeStrict) {
-        if (
-          JSON.stringify(hltbData[steamId]?.type ?? []) !=
-          JSON.stringify(
-            Array.from(
-              filters.modes.filter((mode: { value: string }) => mode.value != "strict" && mode.value != "not"),
-              (mode: any) => mode.value,
-            ),
-          )
-        ) {
-          game.style.display = "none";
-          continue gameLoop;
-        }
-      } else if (modeNot) {
-        for (let mode of filters.modes) {
-          if (hltbData[steamId]?.type?.includes(mode.value)) {
-            game.style.display = "none";
-            continue gameLoop;
-          }
-        }
-      } else {
-        for (let mode of filters.modes) {
-          if (!hltbData[steamId]?.type?.includes(mode.value)) {
-            game.style.display = "none";
-            continue gameLoop;
-          }
-        }
-      }
-
-      let protonRatingFound = false;
-      let protonDbRatings = Array.from(
-        filters.protonDbRatings.filter((rating: { value: string }) => rating.value != "provisional"),
-        (rating: any) => rating.value,
-      );
-
-      if (protonDbRatings.length > 0) {
-        for (let rating of protonDbRatings) {
-          const ratingElement = game.querySelector(`.bp-protondb-rating-${rating}`);
-          if (ratingElement && (includeProtonDbProvisional || !game.querySelector(`.bp-protondb-rating-provisional`))) {
-            protonRatingFound = true;
-            break;
-          }
-        }
-        if (!protonRatingFound) {
-          game.style.display = "none";
-          continue gameLoop;
-        }
-      }
-
-      let deckVerifiedStatusFound = false;
-      let deckVerifiedStatuses = Array.from(filters.deckVerifiedStatuses, (status: any) => status.value);
-
-      if (deckVerifiedStatuses.length > 0) {
-        for (let status of deckVerifiedStatuses) {
-          const statusBadge = game.querySelector(`.bp-deckverified-${status}`);
-          if (statusBadge) {
-            deckVerifiedStatusFound = true;
-            break;
-          }
-        }
-        if (!deckVerifiedStatusFound) {
-          game.style.display = "none";
-          continue gameLoop;
-        }
-      }
-
-      game.style.display = "";
-    }
-  }
-
-  if (progresses["wont-play"]) {
-    gamesContainer.classList.remove("hide-wont-play");
-  } else {
-    gamesContainer.classList.add("hide-wont-play");
-  }
-
-  if (progresses["never-played"]) {
-    gamesContainer.classList.remove("hide-never-played");
-  } else {
-    gamesContainer.classList.add("hide-never-played");
-  }
-
-  if (progresses["unfinished"]) {
-    gamesContainer.classList.remove("hide-unfinished");
-  } else {
-    gamesContainer.classList.add("hide-unfinished");
-  }
-
-  if (progresses["beaten"]) {
-    gamesContainer.classList.remove("hide-beaten");
-  } else {
-    gamesContainer.classList.add("hide-beaten");
-  }
-
-  if (progresses["completed"]) {
-    gamesContainer.classList.remove("hide-completed");
-  } else {
-    gamesContainer.classList.add("hide-completed");
-  }
-
-  if (progresses["uncategorized"]) {
-    gamesContainer.classList.remove("hide-uncategorized");
-  } else {
-    gamesContainer.classList.add("hide-uncategorized");
+      return filter.and ? !filter.selectors.every(hasTag) : !filter.selectors.some(hasTag);
+    default:
+      return true;
   }
 }
 
+function matchesModeFilter(steamId: number, selectedModes: string[]): boolean {
+  const gameModes = hltbData[steamId]?.type;
+  const modes = selectedModes.filter((mode) => mode !== "strict" && mode !== "not");
+
+  if (selectedModes.includes("strict")) {
+    return JSON.stringify(gameModes ?? []) === JSON.stringify(modes);
+  }
+
+  if (selectedModes.includes("not")) {
+    return !modes.some((mode) => gameModes?.includes(mode as GameTypes));
+  }
+
+  return modes.every((mode) => gameModes?.includes(mode as GameTypes));
+}
+
+function matchesProtonDbFilter(game: GameElement, selectedRatings: string[]): boolean {
+  const includeProvisional = selectedRatings.includes("provisional");
+  const ratings = selectedRatings.filter((rating) => rating !== "provisional");
+
+  if (ratings.length === 0) {
+    return true;
+  }
+
+  const isProvisional = !!game.querySelector(".bp-protondb-rating-provisional");
+
+  return (includeProvisional || !isProvisional) && ratings.some((rating) => game.querySelector(`.bp-protondb-rating-${rating}`));
+}
+
+function matchesDeviceFilter(game: GameElement, classPrefix: string, selectedStatuses: string[]): boolean {
+  return selectedStatuses.length === 0 || selectedStatuses.some((status) => game.querySelector(`.${classPrefix}-${status}`));
+}
+
+function runFilters(games: NodeListOf<GameElement>, filters: Filters, progresses: Record<Progress, boolean>, gamesContainer: HTMLElement) {
+  const values = (selected: FilterOption[]) => selected.map((option) => option.value);
+  const tagFilter = parseTagFilter(filters.tags, "not-tags", "and-tags", (value) => `[href$="/lists/${CSS.escape(value)}"]`);
+  const steamTagFilter = parseTagFilter(filters.steamTags, "not-steam-tags", "and-steam-tags", (value) => `[data-steam-tags*="${CSS.escape(`|${value}|`)}"]`);
+  const modes = values(filters.modes);
+  const protonDbRatings = values(filters.protonDbRatings);
+  const deviceFilters = COMPATIBILITY_DEVICES.map((device) => ({ classPrefix: device.classPrefix, statuses: values(filters.deviceStatuses[device.id]) }));
+
+  for (let game of games) {
+    const visible =
+      matchesTagFilter(game, tagFilter, ".list-tag") &&
+      matchesTagFilter(game, steamTagFilter, '[data-steam-tags*="|"]') &&
+      matchesModeFilter(getSteamId(game), modes) &&
+      matchesProtonDbFilter(game, protonDbRatings) &&
+      deviceFilters.every(({ classPrefix, statuses }) => matchesDeviceFilter(game, classPrefix, statuses));
+
+    game.style.display = visible ? "" : "none";
+  }
+
+  for (let progress of PROGRESSES) {
+    gamesContainer.classList.toggle(`hide-${progress}`, !progresses[progress]);
+  }
+}
+
+function getGameStats(games: NodeListOf<GameElement>): GameStats {
+  const stats: Record<string, number | string> = { total: games.length };
+
+  for (let progress of PROGRESSES) {
+    const count = Array.from(games).filter((game) => game.classList.contains(`game-${progress}`)).length;
+    stats[progress] = count;
+    stats[`${progress}-percent`] = (Math.floor((count / games.length) * 10000) / 100).toFixed(2);
+  }
+
+  return stats as GameStats;
+}
+
+function getTagOptions(andValue: string, notValue: string, tags: [string, TagOption][]): Map<string, TagOption> {
+  return new Map([[andValue, { label: "AND selected tags", color: "#FFFFFF" }], [notValue, { label: "NOT selected tags", color: "#000000" }], ...tags]);
+}
+
+const modes = [
+  { label: "Strict checking", value: "strict", color: "#000000", sortValue: 1 },
+  { label: "NOT selected modes", value: "not", color: "#000000", sortValue: 2 },
+  { label: "Singleplayer", value: "sp", color: "transparent", sortValue: 3 },
+  { label: "Multiplayer", value: "mp", color: "transparent", sortValue: 4 },
+  { label: "Co-op", value: "coop", color: "transparent", sortValue: 5 },
+];
+
+const protonDbRatings = [
+  { label: "Include provisional ratings", value: "provisional", color: "#000000", sortValue: 0 },
+  { label: "Platinum", value: "platinum", color: "#b4c7dc", sortValue: 1 },
+  { label: "Gold", value: "gold", color: "#cfb53b", sortValue: 2 },
+  { label: "Silver", value: "silver", color: "#a6a6a6", sortValue: 3 },
+  { label: "Bronze", value: "bronze", color: "#cd7f32", sortValue: 4 },
+  { label: "Borked", value: "borked", color: "#ff0000", sortValue: 5 },
+  { label: "No data", value: "no-data", color: "#444444", sortValue: 6 },
+];
+
+const verifiedStatus = { label: "Verified", value: "verified", color: "#59bf40", sortValue: 1 };
+const playableStatus = { label: "Playable", value: "playable", color: "#ffc82c", sortValue: 2 };
+const compatibleStatus = { ...playableStatus, label: "Compatible", color: "#199fff" };
+const unsupportedStatus = { label: "Unsupported", value: "unsupported", color: "#8c8e8f", sortValue: 3 };
+const untestedStatus = { label: "Untested", value: "untested", color: "#8c8e8f", sortValue: 4 };
+const deviceStatuses = [verifiedStatus, playableStatus, unsupportedStatus, untestedStatus];
+
+const DEVICE_STATUS_OPTIONS: Record<CompatibilityDeviceId, FilterOptionFull[]> = {
+  deck: deviceStatuses,
+  steamos: [compatibleStatus, unsupportedStatus, untestedStatus],
+  steammachine: deviceStatuses,
+  steamframe: deviceStatuses,
+};
+
 export async function initFilter(isProgressPage: boolean) {
-  let gamesContainer = getGamesContainer();
+  const gamesContainer = getGamesContainer();
 
   if (!gamesContainer) {
     return;
   }
 
-  await waitUntilGamesContainerLoaded();
+  await waitUntilGameDataLoaded();
 
   const filterContainer = document.createElement("div");
   filterContainer.classList.add("bp-filters");
 
   if (gamesContainer.container.id === "main") {
-    const progressBar = gamesContainer.container.querySelector(".list-progress");
-    if (progressBar) {
-      progressBar.insertAdjacentElement("afterend", filterContainer);
-    }
+    gamesContainer.container.querySelector(".list-progress")?.insertAdjacentElement("afterend", filterContainer);
   } else {
     gamesContainer.container.insertAdjacentElement("beforebegin", filterContainer);
   }
 
-  const games = gamesContainer.container.querySelectorAll(".game") as NodeListOf<HTMLTableRowElement | HTMLDivElement | HTMLLIElement>;
+  const games = gamesContainer.container.querySelectorAll<GameElement>(".game");
 
-  const tags = Array.from(gamesContainer.container.querySelectorAll("a.list-tag")) as HTMLAnchorElement[];
-  const tagMap = new Map([
-    [
-      "and-tags",
-      {
-        label: "AND selected tags",
-        color: "#FFFFFF",
-      },
-    ],
-    [
-      "not-tags",
-      {
-        label: "NOT selected tags",
-        color: "#000000",
-      },
-    ],
-  ]) as Map<string, TagOption>;
+  const listTags = Array.from(gamesContainer.container.querySelectorAll<HTMLAnchorElement>("a.list-tag")).map((tag): [string, TagOption] => [
+    tag.href.slice(tag.href.indexOf("/lists") + 7),
+    { label: tag.textContent ?? "", color: tag.style.backgroundColor },
+  ]);
+  const steamTagNames = new Set(Array.from(gamesContainer.container.querySelectorAll<HTMLElement>("[data-steam-tags]")).flatMap((tags) => tags.dataset.steamTags!.split("|").filter(Boolean)));
+  const steamTags = Array.from(steamTagNames, (tag): [string, TagOption] => [tag, { label: tag, color: "#000000" }]);
 
-  for (let tag of tags) {
-    tagMap.set(tag.href.slice(tag.href.indexOf("/lists") + 7), {
-      label: tag.textContent ?? "",
-      color: tag.style.backgroundColor,
-    });
-  }
+  const filterOptionsEnabled = options.modules.games.filters;
 
-  const steamTags = Array.from(gamesContainer.container.getElementsByClassName("bp-steam-tag")) as HTMLElement[];
-
-  const steamTagMap = new Map([
-    [
-      "and-steam-tags",
-      {
-        label: "AND selected tags",
-        color: "#FFFFFF",
-      },
-    ],
-    [
-      "not-steam-tags",
-      {
-        label: "NOT selected tags",
-        color: "#000000",
-      },
-    ],
-  ]) as Map<string, TagOption>;
-
-  for (let tag of steamTags) {
-    steamTagMap.set(tag.textContent ?? "", {
-      label: tag.textContent ?? "",
-      color: "#000000",
-    });
-  }
-
-  const gameStats = {
-    "wont-play": 0,
-    "wont-play-percent": "",
-    "never-played": 0,
-    "never-played-percent": "",
-    unfinished: 0,
-    "unfinished-percent": "",
-    beaten: 0,
-    "beaten-percent": "",
-    completed: 0,
-    "completed-percent": "",
-    uncategorized: 0,
-    "uncategorized-percent": "",
-    total: 0,
-  };
-
-  for (let game of games) {
-    gameStats.total++;
-
-    if (game.classList.contains("game-wont-play")) {
-      gameStats["wont-play"]++;
-    }
-
-    if (game.classList.contains("game-never-played")) {
-      gameStats["never-played"]++;
-    }
-
-    if (game.classList.contains("game-unfinished")) {
-      gameStats.unfinished++;
-    }
-
-    if (game.classList.contains("game-beaten")) {
-      gameStats.beaten++;
-    }
-
-    if (game.classList.contains("game-completed")) {
-      gameStats.completed++;
-    }
-
-    if (game.classList.contains("game-uncategorized")) {
-      gameStats.uncategorized++;
-    }
-  }
-
-  gameStats["wont-play-percent"] = (Math.floor((gameStats["wont-play"] / gameStats["total"]) * 10000) / 100).toFixed(2);
-  gameStats["never-played-percent"] = (Math.floor((gameStats["never-played"] / gameStats["total"]) * 10000) / 100).toFixed(2);
-  gameStats["unfinished-percent"] = (Math.floor((gameStats["unfinished"] / gameStats["total"]) * 10000) / 100).toFixed(2);
-  gameStats["beaten-percent"] = (Math.floor((gameStats["beaten"] / gameStats["total"]) * 10000) / 100).toFixed(2);
-  gameStats["completed-percent"] = (Math.floor((gameStats["completed"] / gameStats["total"]) * 10000) / 100).toFixed(2);
-
-  gameStats["uncategorized-percent"] = (Math.floor((gameStats["uncategorized"] / gameStats["total"]) * 10000) / 100).toFixed(2);
-
-  const filterOptions = {
-    progresses: [] as string[],
-    modes: [],
-    availableTags: tagMap,
-    tags: [],
-    availableSteamTags: steamTagMap,
-    steamTags: [],
-    protonDbRatings: [] as string[],
-    deckVerifiedStatuses: [] as string[],
-  };
-
-  const progresses = {
-    "wont-play": true,
-    "never-played": true,
-    unfinished: true,
-    beaten: true,
-    completed: true,
-    uncategorized: true,
-  };
-
-  const modes = [
-    {
-      label: "Strict checking",
-      value: "strict",
-      color: "#000000",
-      sortValue: 1,
-    },
-    {
-      label: "NOT selected modes",
-      value: "not",
-      color: "#000000",
-      sortValue: 2,
-    },
-    {
-      label: "Singleplayer",
-      value: "sp",
-      color: "transparent",
-      sortValue: 3,
-    },
-    {
-      label: "Multiplayer",
-      value: "mp",
-      color: "transparent",
-      sortValue: 4,
-    },
-    {
-      label: "Co-op",
-      value: "coop",
-      color: "transparent",
-      sortValue: 5,
-    },
-  ];
-
-  const protonDbRatings = [
-    {
-      label: "Include provisional ratings",
-      value: "provisional",
-      color: "#000000",
-      sortValue: 0,
-    },
-    {
-      label: "Platinum",
-      value: "platinum",
-      color: "#b4c7dc",
-      sortValue: 1,
-    },
-    {
-      label: "Gold",
-      value: "gold",
-      color: "#cfb53b",
-      sortValue: 2,
-    },
-    {
-      label: "Silver",
-      value: "silver",
-      color: "#a6a6a6",
-      sortValue: 3,
-    },
-    {
-      label: "Bronze",
-      value: "bronze",
-      color: "#cd7f32",
-      sortValue: 4,
-    },
-    {
-      label: "Borked",
-      value: "borked",
-      color: "#ff0000",
-      sortValue: 5,
-    },
-    {
-      label: "No data",
-      value: "no-data",
-      color: "#444444",
-      sortValue: 6,
-    },
-  ];
-
-  const deckVerifiedStatuses = [
-    {
-      label: "Verified",
-      value: "verified",
-      color: "#59bf40",
-      sortValue: 1,
-    },
-    {
-      label: "Playable",
-      value: "playable",
-      color: "#ffc82c",
-      sortValue: 2,
-    },
-    {
-      label: "Unsupported",
-      value: "unsupported",
-      color: "#8c8e8f",
-      sortValue: 3,
-    },
-    {
-      label: "Untested",
-      value: "untested",
-      color: "#8c8e8f",
-      sortValue: 4,
-    },
-  ];
-
-  let showProgressFilter = options.modules.games.filters.progress && !document.querySelector("#main .list-progress") && !isProgressPage;
-  let showTagsFilter = options.modules.games.filters.tags && gamesContainer.type !== "grid";
-  let showModesFilter = options.modules.games.filters.modes && options.modules.games.hltbIntegration.enabled;
-  let showProtonDbFilter = options.modules.games.filters.protonDbRatings && options.modules.games.protonDbIntegration.enabled;
-  let showDeckVerifiedFilter = options.modules.games.filters.deckVerifiedStatuses && options.modules.games.deckVerifiedIntegration.enabled;
-  let showSteamTagsFilter = options.modules.games.filters.steamTags && options.modules.games.steamStoreIntegration.enabled;
-
-  const gameFilters = new GameFilters({
+  mountTracked(GameFilters, {
     target: filterContainer,
     props: {
-      filters: filterOptions,
-      gameStats: gameStats,
-      progresses: progresses,
-      modes: modes,
-      protonDbRatings: protonDbRatings,
-      deckVerifiedStatuses: deckVerifiedStatuses,
-      showProgressFilter: showProgressFilter,
-      showTagsFilter: showTagsFilter,
-      showModesFilter: showModesFilter,
-      showProtonDbFilter: showProtonDbFilter,
-      showDeckVerifiedFilter: showDeckVerifiedFilter,
-      showSteamTagsFilter: showSteamTagsFilter,
+      progresses: PROGRESSES,
+      availableTags: getTagOptions("and-tags", "not-tags", listTags),
+      availableSteamTags: getTagOptions("and-steam-tags", "not-steam-tags", steamTags),
+      gameStats: getGameStats(games),
+      modes,
+      protonDbRatings,
+      deviceFilters: COMPATIBILITY_DEVICES.filter((device) => device.enabled() && device.filterEnabled()).map((device) => ({ id: device.id, placeholder: device.filterPlaceholder, options: DEVICE_STATUS_OPTIONS[device.id] })),
+      showProgressFilter: filterOptionsEnabled.progress && !document.querySelector("#main .list-progress") && !isProgressPage,
+      showTagsFilter: filterOptionsEnabled.tags && gamesContainer.type !== "grid",
+      showModesFilter: filterOptionsEnabled.modes && options.modules.games.hltbIntegration.enabled,
+      showProtonDbFilter: filterOptionsEnabled.protonDbRatings && options.modules.games.protonDbIntegration.enabled,
+      showSteamTagsFilter: filterOptionsEnabled.steamTags && options.modules.games.steamStoreIntegration.enabled,
+      onfilterschanged: (filters: Filters, shownProgresses: Record<Progress, boolean>) => runFilters(games, filters, shownProgresses, gamesContainer.container),
     },
   });
+}
 
-  addedComponents.push(gameFilters);
-
-  gameFilters.$on("filters-changed", () => {
-    runFilters(games, filterOptions, progresses, gamesContainer.container);
-  });
+export function cleanupFilter() {
+  removeAllNodesIfExist(".bp-filters");
 }

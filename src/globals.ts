@@ -1,14 +1,30 @@
-import { GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
+import { gmRequest } from "@/lib/request";
 import { getAuthenticityToken } from "@/lib/utilities";
-import type { SvelteComponent } from "svelte";
+import { mount, unmount, type Component, type MountOptions } from "svelte";
 
-export const BP_VERSION = "1.2.7";
+export const BP_VERSION = "1.3.0-beta.1";
 export const SUPPORT_URL = "https://steamcommunity.com/groups/attackyourbacklog/discussions/1/7155698768546603592/";
 
-export const addedComponents = [] as SvelteComponent[];
+const mountedComponents: Record<string, any>[] = [];
 
-export let optionsMenuComponent = {
-  component: null as SvelteComponent | null,
+export function mountTracked<Props extends Record<string, any>, Exports extends Record<string, any>>(component: Component<Props, Exports>, options: MountOptions<Props>): Exports {
+  const instance = mount(component, options);
+  mountedComponents.push(instance);
+  return instance;
+}
+
+export function unmountAll() {
+  for (let instance of mountedComponents.splice(0)) {
+    try {
+      unmount(instance);
+    } catch (error) {
+      console.error("BLAEO+: failed to unmount component", error);
+    }
+  }
+}
+
+export const optionsMenuComponent = {
+  component: null as { open(): void } | null,
 };
 
 export let userData = {
@@ -28,26 +44,18 @@ export function getUserName() {
   }
 }
 
-export function getUserGames(name: string): Promise<BlaeoGamesJson> {
-  return new Promise((resolve, reject) => {
-    GM_xmlhttpRequest({
+export async function getUserGames(name: string): Promise<BlaeoGamesJson> {
+  try {
+    const response = await gmRequest({
       method: "GET",
       url: `https://www.backlog-assassins.net/users/${name}/games.json`,
-      nocache: true,
       responseType: "json",
-      onload: (response) => {
-        if (response.status === 200) {
-          userData.games = response.response.games;
-          resolve(response.response.games);
-        } else {
-          console.error(`Failed to fetch ${name}'s games from BLAEO. Details: ${response.responseText}`);
-          reject(response);
-        }
-      },
-      onerror: (error) => {
-        console.error(`Failed to fetch ${name}'s games from BLAEO. Details: ${error}`);
-        reject(error);
-      },
     });
-  });
+
+    userData.games = response.response.games;
+    return response.response.games;
+  } catch (error: any) {
+    console.error(`Failed to fetch ${name}'s games from BLAEO. Details: ${error?.responseText ?? error}`);
+    throw error;
+  }
 }

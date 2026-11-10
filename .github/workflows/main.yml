@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: DerYeger/yarn-setup-action@master
         with:
-          node-version: 18
+          node-version: 24
       - run: yarn build
       - name: Upload
         uses: softprops/action-gh-release@v2

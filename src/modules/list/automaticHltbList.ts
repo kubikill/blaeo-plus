@@ -1,4 +1,4 @@
-import { addedComponents } from "@/globals";
+import { mountTracked } from "@/globals";
 import AutomaticListModal from "./AutomaticHltbListModal.svelte";
 
 export default function initAutomaticList() {
@@ -12,9 +12,11 @@ export default function initAutomaticList() {
 
   const automaticListModalContainer = document.querySelector(".bp-automatic-hltb-list-element");
 
-  const automaticListModal = new AutomaticListModal({
+  if (!automaticListModalContainer) {
+    return;
+  }
+
+  mountTracked(AutomaticListModal, {
     target: automaticListModalContainer,
   });
-
-  addedComponents.push(automaticListModal);
 }

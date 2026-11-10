@@ -10,10 +10,11 @@ A userscript for Backlog Assassins Extraordinaire that adds new features and QoL
 - Filters for game library pages: filter games by their progress, tags or available modes (singleplayer/multiplayer/co-op).
 - How Long to Beat integration - see how long it takes to beat your games directly within your BLAEO library pages, or go directly to the game's HLTB page
 - ProtonDB integration - view ProtonDB ratings directly within your BLAEO library pages, or go directly to the game's ProtonDB page
-- Steam Deck Verified integration - view Steam Deck Verified status within your BLAEO library pages
+- Steam Hardware compatibility integration - view compatibility status for Steam Deck, OS, Machine and Frame within your BLAEO library pages
+- SteamHunters integration - show median time to complete for each game
 - Blacklist - hide or collapse posts and/or comments from blacklisted users
 - Quick rearrange lists by game name, playtime or HLTB time to beat
-- HLTB list maker - automatically add games to lists by HLTB time to beat, with options to handle MP-only, endless games and games without enough time to beat reports differently
+- HLTB list maker - automatically add games to lists by HLTB time to beat or SteamHunters median time to complete, with options to handle MP-only, endless games and games without enough time to beat reports differently
 - Preview comments on posts before adding them
 - Save and load post drafts, with autosaving posts on preview/leaving page
 - QoL improvements - new post shortcut in header, unread messages link is now visible on mobile without having to expand the header menu, alternative post/comment layouts on mobile
@@ -41,10 +42,16 @@ A userscript for Backlog Assassins Extraordinaire that adds new features and QoL
 
 - Opera version of Tampermonkey (breaks comment preview, quick rearrange and HLTB list maker features) - Opera users are advised to install Tampermonkey from the Chrome Web Store instead
 
-## To do
+## AI disclaimer
 
-- Add Steam store integration (show more data about games from Steam store, such as tags, review scores, available platforms, categories like Steam Achievements, Steam Trading Cards etc.)
-- Add Steam tag list maker
-- Add a random game picker
-- Add SteamHunters integration (display median 100% completion times and allow those times to be used in the HLTB list maker)
-- ...and more!
+Starting from v1.3.0-beta.1, this project uses Claude Code to assist with the development of this project.
+AI is used for:
+
+- assistance during development
+- verifying code quality
+- cleaning up and improving comments and code
+- automated testing
+- double-checking code after human review
+
+I (kubikill) take full responsibility for any work produced by AI.
+v1.2.7 is the last completely AI-free version and the BLAEO+ backend will continue to support it.

@@ -1,43 +1,47 @@
 <script lang="ts">
-  import { hltbLogo } from "@/assets/icons";
-  import { hltbData } from "@/lib/hltbService";
+  import GameInfoCells from "@/lib/GameInfoCells.svelte";
+  import { ensureGameData } from "@/lib/gameData";
   import { setList } from "@/lib/listService";
-  import { listBackupStore } from "@/lib/store";
+  import { listBackups } from "@/lib/store.svelte";
+  import { getUserGames, getUserName, userData } from "@/globals";
+  import { progressClass, reformatBlaeoGameListToSteamIdColumn } from "@/lib/utilities";
 
-  function getHltbString(game: { steam_id: string | number }, type: string | number) {
-    let gameObj = hltbData[game.steam_id];
+  let restoreErrors: Record<string, string> = $state({});
 
-    if (gameObj) {
-      let mainCompHours = Math.floor(+gameObj[type] / 3600);
-      let mainCompMinutes = Math.floor((+gameObj[type] % 3600) / 60);
-
-      let countWarning = "";
-      if (gameObj[`${type}Count`] <= 10) {
-        countWarning = "!";
-      } else if (gameObj[`${type}Count`] <= 100) {
-        countWarning = "~";
-      }
-
-      return `${countWarning}${mainCompHours}h ${mainCompMinutes}min`;
-    }
-  }
-
-  async function restoreBackup(event: MouseEvent) {
+  async function restoreBackup(event: MouseEvent, list: ListBackup) {
     const target = event.target as HTMLButtonElement;
+
+    if (target.classList.contains("confirmed")) {
+      return;
+    }
 
     if (target.classList.contains("confirm")) {
       target.classList.add("confirmed");
       target.classList.remove("confirm");
+      restoreErrors[list.dateIso + list.id] = "";
 
-      const list = $listBackupStore[+target.dataset.index!];
+      try {
+        getUserName();
+        const libraryBySteamId = reformatBlaeoGameListToSteamIdColumn(await getUserGames(userData.name));
+        const gameIds = list.games.flatMap((game) => {
+          const libraryGame = libraryBySteamId[game.steam_id];
+          return libraryGame ? [libraryGame.id] : [];
+        });
 
-      await setList(
-        list.id,
-        list.games.map((game) => game.id),
-      );
+        const skipped = list.games.length - gameIds.length;
+        if (skipped > 0) {
+          console.warn(`Restoring backup of list ${list.name}: skipping ${skipped} game(s) that are no longer in your library`);
+        }
 
-      target.classList.add("done");
-      target.classList.remove("confirmed");
+        await setList(list.id, gameIds);
+
+        target.classList.add("done");
+      } catch (error: any) {
+        console.error(`Failed to restore backup of list ${list.name}`, error);
+        restoreErrors[list.dateIso + list.id] = `Restoring failed${error?.status ? ` (${error.status} ${error.statusText ?? ""})` : ""}. Check the browser console for details.`;
+      } finally {
+        target.classList.remove("confirmed");
+      }
     } else {
       target.classList.add("confirm");
       setTimeout(() => {
@@ -46,13 +50,11 @@
     }
   }
 
-  function removeBackup(event: MouseEvent) {
+  function removeBackup(event: MouseEvent, list: ListBackup) {
     const target = event.target as HTMLButtonElement;
 
     if (target.classList.contains("confirm")) {
-      $listBackupStore.splice(+target.dataset.index!, 1);
-
-      $listBackupStore = $listBackupStore;
+      listBackups.splice(listBackups.indexOf(list), 1);
 
       target.classList.remove("confirm");
     } else {
@@ -63,13 +65,16 @@
     }
   }
 
-  let sortedList = [] as ListBackup[];
+  let gameDataVersion = $state(0);
 
-  $: {
-    sortedList = $listBackupStore.sort((a, b) => {
-      return a.dateIso > b.dateIso ? -1 : 1;
-    });
-  }
+  $effect(() => {
+    const steamIds = listBackups.flatMap((backup) => backup.games.map((game) => game.steam_id));
+    ensureGameData(steamIds, ["hltb"])
+      .catch((error) => console.error("BLAEO+: some HLTB data for list backups is unavailable", error))
+      .then(() => gameDataVersion++);
+  });
+
+  let sortedList = $derived([...listBackups].sort((a, b) => (a.dateIso > b.dateIso ? -1 : 1)));
 </script>
 
 <div>
@@ -96,68 +101,38 @@
             </tr>
           </thead>
           <tbody>
-            {#each list.games as game}
-              <tr class={`game game-${game.progress}`}>
-                <td>
-                  {game.name}
-                  <ul class="toolbar">
-                    <li>
-                      <a href="https://store.steampowered.com/app/{game.steam_id}" class="steam"><i></i></a>
-                    </li>
-                    {#if hltbData?.[game.steam_id]}
-                      <li class="bp-hltb-element" style="vertical-align: middle">
-                        <a href="https://howlongtobeat.com/game/{hltbData[game.steam_id].hltbId}" aria-label="HLTB game page" title="HLTB game page">{@html hltbLogo}</a>
-                      </li>
-                    {/if}
-                  </ul>
-                </td>
-
-                {#if hltbData?.[game.steam_id]}
-                  {#if hltbData[game.steam_id].type.includes("sp")}
-                    <td class="hltb-column">{getHltbString(game, "main")}</td>
-                    <td class="hltb-column">{getHltbString(game, "extra")}</td>
-                    <td class="hltb-column">{getHltbString(game, "everything")}</td>
-                  {:else}
-                    <td class="hltb-column" colspan="3">
-                      {#if hltbData[game.steam_id].type.includes("mp")}
-                        MP: {getHltbString(game, "mp")}
-                      {/if}
-                      {#if hltbData[game.steam_id].type.includes("coop")}
-                        Co-Op: {getHltbString(game, "coop")}
-                      {/if}
-                    </td>
-                  {/if}
-                {:else}
-                  <td class="hltb-column" colspan="3">Unknown</td>
-                {/if}
-              </tr>
-            {/each}
+            {#key gameDataVersion}
+              {#each list.games as game}
+                <tr class="game game-{progressClass(game.progress)}">
+                  <GameInfoCells {game} />
+                </tr>
+              {/each}
+            {/key}
           </tbody>
         </table>
       </details>
-      <button class="btn btn-success" type="button" data-id={list.id} on:click={restoreBackup}>
+      <button class="btn btn-success" type="button" data-id={list.id} onclick={(event) => restoreBackup(event, list)}>
         <span class="done-message">Done!</span>
         <span class="confirmed-message">Restoring...</span>
         <span class="confirm-message">Are you sure?</span>
         <span class="normal-message">Restore</span>
       </button>
-      <button class="btn btn-danger btn-delete" type="button" data-id={list.id} on:click={removeBackup}>
+      <button class="btn btn-danger btn-delete" type="button" data-id={list.id} onclick={(event) => removeBackup(event, list)}>
         <span class="confirm-message">Are you sure?</span>
         <span class="normal-message">Remove</span>
       </button>
+      {#if restoreErrors[list.dateIso + list.id]}
+        <div class="alert alert-danger">{restoreErrors[list.dateIso + list.id]}</div>
+      {/if}
     </div>
   {/each}
 
-  {#if $listBackupStore.length <= 0}
+  {#if listBackups.length <= 0}
     <p>No backups found.</p>
   {/if}
 </div>
 
 <style lang="scss">
-  h2 {
-    margin: 0 0 4px;
-  }
-
   details {
     summary {
       display: list-item;

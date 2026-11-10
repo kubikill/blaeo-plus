@@ -1,12 +1,15 @@
 <script lang="ts">
-  import { optionsStore } from "@/lib/store";
+  import { options } from "@/lib/store.svelte";
 
   function removeFromBlacklist(event: MouseEvent) {
     const target = event.target as HTMLButtonElement;
 
     if (target.classList.contains("confirm")) {
-      delete $optionsStore.blacklist[target.dataset.name];
-      $optionsStore = $optionsStore;
+      if (!target.dataset.name) {
+        return;
+      }
+
+      delete options.blacklist[target.dataset.name];
     } else {
       target.classList.add("confirm");
       setTimeout(() => {
@@ -34,14 +37,14 @@
         </tr>
       </thead>
       <tbody>
-        {#each Object.entries($optionsStore.blacklist) as [name, data]}
+        {#each Object.entries(options.blacklist) as [name, data]}
           <tr>
             <td><a href="https://www.backlog-assassins.net/users/{name}">{name}</a></td>
             <td>
-              <textarea class="form-control" bind:value={$optionsStore.blacklist[name].note} />
+              <textarea class="form-control" bind:value={options.blacklist[name].note}></textarea>
             </td>
             <td>
-              <button type="button" class="btn btn-danger" data-name={name} on:click={removeFromBlacklist}>
+              <button type="button" class="btn btn-danger" data-name={name} onclick={removeFromBlacklist}>
                 <span class="confirm-message">Are you sure?</span>
                 <span class="normal-message">Remove</span>
               </button>

@@ -3,6 +3,16 @@ export const hltbLogo = `
     <path d="M0 0h5.56v14.55h2.12V0h5.55v24.6H7.67v-4.76H5.56v4.77H0z" fill="currentcolor" />
   </svg>`;
 
+export const steamHuntersLogo = `
+  <svg class="bp-steamhunters-logo" height="13" width="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+    <rect width="16" height="16" rx="2" ry="2" fill="#1b2838" />
+    <path fill="#7bb6ff" d="M0 7h12V3.5l4 4-4 4V8H0V7z" />
+    <path
+      fill="#fff"
+      d="M8 9h2v5H8zm0-7h2v4H8zm4 11v1h2v-3.02L13 12l-1 1zm2-8.98V2h-2l1 1 1 1.02zM3 5a1.24 1.24 0 0 1 1-1 1.33 1.33 0 0 1 1 1h2a3.23 3.23 0 0 0-3-3 3.18 3.18 0 0 0-3 3 2.42 2.42 0 0 0 .18 1h2.57C3.31 5.66 3 5.34 3 5zm2 5.09a2.36 2.36 0 0 1-.58 1.63A.73.73 0 0 1 4 12c-.31 0-1-.6-1-1H1a2.9 2.9 0 0 0 .93 2A3.09 3.09 0 0 0 4 14a2.61 2.61 0 0 0 1.89-.93A4.35 4.35 0 0 0 7 9.91 3.22 3.22 0 0 0 6.77 9H4.38A1.74 1.74 0 0 1 5 10.09z"
+    />
+  </svg>`;
+
 export const blaeoPlusLogo = `
   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 256 256">
     <defs>
@@ -37,6 +47,8 @@ export const deckVerified = `
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" clip-rule="evenodd" d="M10 19C14.9706 19 19 14.9706 19 10C19 5.02944 14.9706 1 10 1C5.02944 1 1 5.02944 1 10C1 14.9706 5.02944 19 10 19ZM8.33342 11.9222L14.4945 5.76667L16.4556 7.72779L8.33342 15.8556L3.26675 10.7833L5.22786 8.82223L8.33342 11.9222Z" fill="#59BF40"/>
   </svg>`;
+
+export const steamOsCompatible = deckVerified.replace("#59BF40", "#199fff");
 
 export const deckPlayable = `
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

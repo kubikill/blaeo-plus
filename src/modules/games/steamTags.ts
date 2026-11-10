@@ -1,52 +1,48 @@
-import { optionsStore } from "@/lib/store";
-import { steamspyData } from "@/lib/steamspyService";
-import { removeAllNodesIfExist } from "@/lib/utilities";
-import { get } from "svelte/store";
-import { getGamesContainer, waitUntilGamesContainerLoaded } from "@/lib/waitUntilGamesContainerLoaded";
+import { steamspyData, waitUntilGameDataLoaded } from "@/lib/gameData";
+import { escapeHtml, removeAllNodesIfExist } from "@/lib/utilities";
+import { getGamesContainer } from "@/lib/waitUntilGamesContainerLoaded";
+import { getSteamId, hasLeadingIndexColumn, insertInListBody } from "@/lib/gameTable";
+import { options } from "@/lib/store.svelte";
+import { PROGRESSES } from "./filterTypes";
 
-let options = get(optionsStore) as Options;
-optionsStore.subscribe((value) => {
-  options = value;
-});
+function shouldHideTags(game: HTMLElement): boolean {
+  return PROGRESSES.some((progress) => options.modules.games.steamStoreIntegration.hideTagsForProgress[progress] && game.classList.contains(`game-${progress}`));
+}
 
-function getGameSteamTagsHtml(steamId: number): string {
-  let html = "<ul class='bp-steam-tags'><li>🏷️</li>";
+function getSteamTags(steamId: number): string[] | null {
+  const rawTags = steamspyData[steamId]?.tags;
 
-  if (steamspyData[steamId]) {
-    const steamspy = steamspyData[steamId];
-    let tags = steamspy.tags;
-
-    try {
-      tags = JSON.parse(tags);
-      tags = Object.keys(tags);
-    } catch {
-      tags = tags.split(";");
-    }
-
-    if (tags && tags.length > 0) {
-      tags.forEach((tag) => {
-        if (tag === "+") {
-          return;
-        }
-
-        html += `<li class="badge badge-secondary bp-steam-tag" data-steam-tag="${tag}">${tag}</li>`;
-      });
-    } else {
-      html += "<li>No tags</li>";
-    }
-  } else {
-    html += "<li>No tag data available</li>";
+  if (rawTags === undefined) {
+    return null;
   }
 
-  html += "</ul>";
+  let tags: string[];
 
-  return html;
+  if (Array.isArray(rawTags)) {
+    tags = rawTags;
+  } else {
+    try {
+      tags = Object.keys(JSON.parse(rawTags));
+    } catch {
+      tags = rawTags.split(";");
+    }
+  }
+
+  return tags.filter((tag) => tag && tag !== "+");
+}
+
+function getGameSteamTagsHtml(steamId: number, hidden = false): string {
+  const tags = getSteamTags(steamId);
+  const text = tags === null ? "No tag data available" : tags.length > 0 ? tags.join(", ") : "No tags";
+  const data = tags?.length ? `|${tags.join("|")}|` : "";
+
+  return `<div class="bp-steam-tags" data-steam-tags="${escapeHtml(data)}"${hidden ? " hidden" : ""}>🏷️ ${escapeHtml(text)}</div>`;
 }
 
 export async function initSteamTags() {
-  let gameContainer = getGamesContainer();
+  const gameContainer = getGamesContainer();
 
-  if (!gameContainer || gameContainer.type === "grid") {
+  if (!gameContainer) {
     return;
   }
 
@@ -54,38 +50,29 @@ export async function initSteamTags() {
     gameContainer.container.classList.add("bp-game-list");
   }
 
-  await waitUntilGamesContainerLoaded();
+  await waitUntilGameDataLoaded();
 
-  const gameTableHeader = gameContainer.container.querySelector("tr > th:nth-child(3)") as HTMLTableCellElement;
-  const gameTableFullHeader = gameContainer.container.querySelector("tr") as HTMLTableRowElement;
-  const games = gameContainer.container.querySelectorAll(".game") as NodeListOf<HTMLElement>;
+  const games = gameContainer.container.querySelectorAll<HTMLElement>(".game");
+  const nameColumn = hasLeadingIndexColumn(gameContainer.container.querySelector("tr")) ? 2 : 1;
 
   games.forEach((game) => {
-    const steamStoreLink = game.querySelector('a[href*="store.steampowered.com/app/"]') as HTMLAnchorElement;
-    const steamId = +steamStoreLink!.href!.match(/app\/(\d+)/)![1];
+    const steamId = getSteamId(game);
+
+    if (gameContainer.type === "grid") {
+      game.insertAdjacentHTML("beforeend", getGameSteamTagsHtml(steamId, true));
+      return;
+    }
+
+    const tagsHtml = getGameSteamTagsHtml(steamId, shouldHideTags(game));
 
     if (gameContainer.type === "table") {
-      let nameCell;
-      if (gameTableFullHeader!.firstElementChild!.textContent!.trim() === "#" || gameTableFullHeader!.firstElementChild!.textContent!.trim() === "Date Won") {
-        nameCell = game.querySelector("td:nth-child(2)");
-      } else {
-        nameCell = game.querySelector("td:nth-child(1)");
-      }
-      nameCell!.insertAdjacentHTML("beforeend", getGameSteamTagsHtml(steamId));
-    } else if (gameContainer.type === "list") {
-      const hltbCell = game.querySelector(".bp-list-hltb-info");
-
-      if (hltbCell) {
-        hltbCell.insertAdjacentHTML("beforebegin", getGameSteamTagsHtml(steamId));
-      } else {
-        const mediaBody = game.querySelector(".media-body");
-
-        mediaBody!.insertAdjacentHTML("beforeend", getGameSteamTagsHtml(steamId));
-      }
+      game.querySelector(`td:nth-child(${nameColumn})`)?.insertAdjacentHTML("beforeend", tagsHtml);
+    } else {
+      insertInListBody(game, tagsHtml);
     }
   });
 }
 
 export function cleanupSteamTags() {
-  removeAllNodesIfExist(".bp-protondb-element, .bp-linux-media, .bp-linux-grid");
+  removeAllNodesIfExist(".bp-steam-tags");
 }

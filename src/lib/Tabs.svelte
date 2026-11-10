@@ -1,21 +1,29 @@
 <script lang="ts">
+  import type { Component } from "svelte";
   import slugify from "slugify";
 
-  export let tabs = [] as any[];
-  export let activeTab = 0;
+  type Tab = { name: string; content: Component<any> | string; props?: Record<string, any> } | null;
 
-  $: {
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i]) {
-        activeTab = i;
-        tabs[i].rendered = true;
-        break;
-      }
-    }
+  interface Props {
+    tabs?: Tab[];
+    activeTab?: number;
   }
 
+  let { tabs = [], activeTab = $bindable(0) }: Props = $props();
+
+  let renderedTabs: boolean[] = $state([]);
+
+  $effect.pre(() => {
+    const firstTab = tabs.findIndex(Boolean);
+
+    if (firstTab !== -1) {
+      activeTab = firstTab;
+      renderedTabs[firstTab] = true;
+    }
+  });
+
   function switchTab(id: number) {
-    tabs[id].rendered = true;
+    renderedTabs[id] = true;
     requestAnimationFrame(() => {
       activeTab = id;
     });
@@ -26,7 +34,7 @@
   {#each tabs as tab, idx}
     {#if tab}
       <li role="presentation" class:active={idx === activeTab}>
-        <button class="tab" on:click={() => switchTab(idx)} role="tab" aria-controls={slugify(`options-${tab.name}`)}>
+        <button class="tab" onclick={() => switchTab(idx)} role="tab" aria-controls={slugify(`options-${tab.name}`)}>
           {tab.name}
         </button>
       </li>
@@ -38,9 +46,9 @@
   {#each tabs as tab, idx}
     {#if tab}
       <div role="tabpanel" hidden={idx != activeTab} id={slugify(`options-${tab.name}`)}>
-        {#if tab.rendered}
+        {#if renderedTabs[idx]}
           {#if typeof tab.content === "function"}
-            <svelte:component this={tab.content} {...tab.props} />
+            <tab.content {...tab.props ?? {}} />
           {:else}
             {tab.content}
           {/if}

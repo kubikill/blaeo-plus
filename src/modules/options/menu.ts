@@ -1,44 +1,24 @@
-import { addedComponents, optionsMenuComponent } from "@/globals";
+import { mountTracked, optionsMenuComponent } from "@/globals";
 import OptionsMenu from "./OptionsMenu.svelte";
 import { removeNodeIfExists } from "@/lib/utilities";
-import type { SvelteComponent } from "svelte";
-import { optionsStore } from "@/lib/store";
-import { get } from "svelte/store";
-
-let options = get(optionsStore) as Options;
-optionsStore.subscribe((value) => {
-  options = value;
-});
 
 export function initOptionsMenu() {
-  const headerDropdown = document.querySelector("#navbar .navbar-right > .btn-group > .dropdown-menu") as HTMLElement;
-  if (!headerDropdown) {
+  const headerDropdown = document.querySelector<HTMLElement>("#navbar .navbar-right > .btn-group > .dropdown-menu");
+  const headerDropdownSettingsLink = headerDropdown?.querySelector('[href="/settings"]')?.parentElement;
+
+  if (!headerDropdownSettingsLink) {
     return;
   }
 
-  // Render options menu
-  const optionsMenu = new OptionsMenu({
-    target: document.body,
-    props: {
-      showOptions: false,
-      options: options,
-    },
-  }) as SvelteComponent;
-
-  addedComponents.push(optionsMenu);
-
+  const optionsMenu = mountTracked(OptionsMenu, { target: document.body, props: {} });
   optionsMenuComponent.component = optionsMenu;
 
-  const headerDropdownSettingsLink = headerDropdown!.querySelector('[href="/settings"]')!.parentElement;
+  const optionsButtonTemplate = document.createElement("template");
+  optionsButtonTemplate.innerHTML = '<li><button type="button" class="bp-options-button">BLAEO+ settings</button></li>';
+  const optionsButtonItem = optionsButtonTemplate.content.firstElementChild as HTMLLIElement;
+  optionsButtonItem.querySelector("button")?.addEventListener("click", () => optionsMenu.open());
 
-  let optionsButtonTemplate = document.createElement("template");
-  optionsButtonTemplate.innerHTML = '<li><button type="button" class="bp-options-button">BLAEO+ settings</button></li>'.trim();
-  let optionsButton = optionsButtonTemplate.content.firstElementChild as HTMLButtonElement;
-  optionsButton!.addEventListener("click", () => {
-    optionsMenu.$set({ showOptions: true });
-  });
-
-  headerDropdownSettingsLink!.insertAdjacentElement("afterend", optionsButton);
+  headerDropdownSettingsLink.insertAdjacentElement("afterend", optionsButtonItem);
 }
 
 export function cleanupOptionsMenu() {

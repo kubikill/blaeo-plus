@@ -1,4 +1,67 @@
 <div class="main">
+  <h3>v1.3.0-beta.1 - November 9th, 2026</h3>
+  <ul>
+    <li>
+      Added SteamHunters integration
+      <ul>
+        <li>Game lists can now show SH median time to complete</li>
+        <li>Added links to view the game on SteamHunters</li>
+        <li>HLTB list maker can use SH "median time to complete" to make lists instead of the HLTB times</li>
+        <li>HLTB list maker can use SH "median time to complete" as a fallback in case HLTB times aren't available (and vice versa)</li>
+        <li>Quick rearrange can use SH "median time to complete" to sort games</li>
+      </ul>
+    </li>
+    <li>
+      HLTB list maker: added filtering games by lists
+      <ul>
+        <li>Lists can be whitelisted: only games on those lists will be used by the list maker</li>
+        <li>Lists can be blacklisted: games on those lists will be ignored by the list maker</li>
+        <li>If a game is on both a whitelist and blacklist, there is an option to decide which takes priority</li>
+      </ul>
+    </li>
+    <li>
+      Added game report feature
+      <ul>
+        <li>Can now report games that are linked to the wrong game on HLTB, or games marked as "not on HLTB" even though they actually are on HLTB</li>
+        <li>Can now report games that aren't actually games (software, movies etc.) or demos/playtests</li>
+      </ul>
+    </li>
+    <li>Added buttons to quickly add and remove games when rearranging a list</li>
+    <li>Added option to ignore "A" and "The" in titles when using "Quick rearrange" in lists</li>
+    <li>Added compatibility icons for SteamOS, Steam Machine and Steam Frame, as well as options to filter by their compatibility</li>
+    <li>Added option to hide Steam tags for selected game progresses (completed, beaten etc.)</li>
+    <li>Added filtering by Steam tags in grid view on lists</li>
+    <li>Added option to select a range of games in bulk remove by shift-clicking the checkboxes</li>
+    <li>Added cog icons in the settings menu next to options that have additional settings</li>
+    <li>Changed the appearance of Steam tags on game pages to be more compact</li>
+    <li>Updated the wording for Steam Deck compatibility strings (and fixed 4 missing)</li>
+    <li>Fixed filtering RPG Steam tags - it no longer shows games with JRPG tags as well</li>
+    <li>Fixed integration syncs running WAAAAY too often (embarrassingly, they used to run every 86 seconds this whole time... now they run once every 24 hours, as they should)</li>
+    <li>Fixed sorting by Steam Deck status on game lists</li>
+    <li>Fixed Steam tags duplicating after going back to a games page using the browser's back button</li>
+    <li>Fixed several crashes across the whole script</li>
+    <li>Removed "add links to ProtonDB pages" toggle in the options, as there's no real reason to toggle it off since it doesn't cost any space (the toggle was broken and didn't work anyway. kubi wtf)</li>
+    <li>Significant code rewrite to simplify the codebase</li>
+    <li>
+      Performance improvements
+      <ul>
+        <li>Slightly faster loading of game lists</li>
+        <li>Integration data is now downloaded on demand for games on current list, instead of downloading the whole database</li>
+      </ul>
+    </li>
+    <li>Updated dependencies</li>
+  </ul>
+  <h4>AI disclaimer</h4>
+  <p>Starting from v1.3.0-beta.1, this project uses Claude Code during the development of it.<br />AI is used for:</p>
+  <ul>
+    <li>assistance during development</li>
+    <li>verifying code quality</li>
+    <li>cleaning up and improving human-made comments and code</li>
+    <li>automated testing</li>
+    <li>double-checking code after human review</li>
+  </ul>
+  <p>I (kubikill) take full responsibility for any work produced by AI.</p>
+  <p>v1.2.7 is the last completely AI-free version and the BLAEO+ backend will continue to support it.</p>
   <h3>v1.2.7 - November 10th, 2025</h3>
   <ul>
     <li>Fix regression from last update that caused the HLTB list maker to break</li>

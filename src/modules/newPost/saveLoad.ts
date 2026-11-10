@@ -1,4 +1,4 @@
-import { addedComponents } from "@/globals";
+import { mountTracked } from "@/globals";
 import SaveLoad from "./SaveLoad.svelte";
 
 export function initSaveLoad() {
@@ -9,12 +9,14 @@ export function initSaveLoad() {
   }
 
   const buttonGroup = newPostForm.querySelector("div:last-child");
-  const previewButton = buttonGroup!.querySelector("#get-preview")!.nextElementSibling;
+  const previewButton = buttonGroup?.querySelector("#get-preview")?.nextElementSibling;
 
-  const saveLoadComponent = new SaveLoad({
+  if (!buttonGroup || !previewButton) {
+    return;
+  }
+
+  mountTracked(SaveLoad, {
     target: buttonGroup,
     anchor: previewButton,
   });
-
-  addedComponents.push(saveLoadComponent);
 }

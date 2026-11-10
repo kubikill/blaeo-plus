@@ -1,24 +1,17 @@
-import { BP_VERSION, addedComponents, optionsMenuComponent } from "@/globals";
+import { BP_VERSION, mountTracked, optionsMenuComponent } from "@/globals";
 import UpdateNotifier from "./UpdateNotifier.svelte";
-import type { SvelteComponent } from "svelte";
 import { compare } from "compare-versions/lib/esm/compare";
-import { get } from "svelte/store";
-import { lastVersionStore } from "@/lib/store";
+import { lastChangelogVersion } from "@/lib/store.svelte";
 
 export default function initUpdateNotifier() {
-  if (compare(BP_VERSION, get(lastVersionStore), ">")) {
-    const updateNotifierComponent = new UpdateNotifier({
+  if (compare(BP_VERSION, lastChangelogVersion.value, ">")) {
+    const updateNotifier = mountTracked(UpdateNotifier, {
       target: document.body,
       props: {
-        showModal: false,
         optionsMenu: optionsMenuComponent.component,
       },
-    }) as SvelteComponent;
+    });
 
-    addedComponents.push(updateNotifierComponent);
-
-    setTimeout(() => {
-      updateNotifierComponent.$set({ showModal: true });
-    }, 100);
+    setTimeout(() => updateNotifier.open(), 100);
   }
 }

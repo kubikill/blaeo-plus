@@ -5,7 +5,7 @@
   background-color: transparent;
   padding: 5px 15px 5px 25px;
   width: 100%;
-  color: #777;
+  color: #555;
   text-align: left;
 
   @media (min-width: 768px) {
@@ -116,9 +116,21 @@ body.bp-mobile-comment-layout {
   }
 }
 
-.game-media .bp-hltb-logo {
+.game-media .bp-hltb-logo,
+.game-media .bp-steamhunters-logo {
   margin-left: 4px;
   height: 16px;
+}
+
+.toolbar .bp-steamhunters-logo {
+  opacity: 0.55;
+  filter: grayscale(1);
+}
+
+.toolbar a:hover .bp-steamhunters-logo,
+.toolbar a:focus-visible .bp-steamhunters-logo {
+  opacity: 1;
+  filter: none;
 }
 
 .bp-protondb-rating {
@@ -186,9 +198,21 @@ body.bp-mobile-comment-layout {
     width: 100px;
     margin-top: 0;
 
-    .bp-deckverified-element {
+    .bp-compatibility-element {
       margin-top: 4px;
     }
+  }
+}
+
+.bp-compatibility-labelled {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+
+  .bp-compatibility-badge {
+    width: auto;
   }
 }
 
@@ -249,6 +273,7 @@ body.bp-mobile-comment-layout {
 
 .bp-linux-grid {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
   margin-top: 2px;
@@ -277,17 +302,188 @@ body.bp-mobile-comment-layout {
 }
 
 .bp-steam-tags {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 3px;
   width: 100%;
-  padding-left: 0;
-  list-style: none;
-  font-size: 75%;
+  margin-top: 4px;
+  color: #555;
+  font-size: 85%;
+  line-height: 1.4;
+
+  &[hidden] {
+    display: none;
+  }
 }
 
-.bp-steam-tag {
-  font-size: inherit;
-  padding: 4px;
+.bp-modal {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+  opacity: 0;
+  z-index: 2000;
+  transition-duration: 0.2s;
+  transition-property: visibility, opacity;
+  transition-timing-function: ease;
+  background-color: #00000080;
+  padding: 16px;
+  width: 100%;
+  height: 100%;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.42857;
+  font-family: Arimo, Arial, sans-serif;
+
+  @media (min-width: 768px) {
+    padding: 64px;
+  }
+
+  &.visible {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  &.bp-modal-top {
+    align-items: flex-start;
+  }
+
+  .modal-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 100%;
+  }
+
+  .modal-header {
+    display: flex;
+
+    > button {
+      align-self: flex-start;
+      margin-left: auto;
+    }
+
+    > h2 {
+      margin: 0;
+    }
+
+    .modal-header-heading {
+      display: flex;
+    }
+
+    svg {
+      flex-shrink: 0;
+      margin-right: 8px;
+      height: 39px;
+    }
+  }
+
+  .modal-body {
+    overflow: auto;
+
+    h3:first-child {
+      margin-top: 0;
+    }
+  }
+}
+
+div.multiselect > ul.selected,
+div.multiselect > ul.options {
+  margin: 0;
+}
+
+.bp-compatibility-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  appearance: none;
+  margin: 0;
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bp-hltb-report {
+  appearance: none;
+  vertical-align: baseline;
+  opacity: 0.45;
+  margin-left: 4px;
+  border: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 640'%3E%3Cpath fill='%23555' d='M160 96C160 78.3 145.7 64 128 64C110.3 64 96 78.3 96 96L96 544C96 561.7 110.3 576 128 576C145.7 576 160 561.7 160 544L160 422.4L222.7 403.6C264.6 391 309.8 394.9 348.9 414.5C391.6 435.9 441.4 438.5 486.1 421.7L523.2 407.8C535.7 403.1 544 391.2 544 377.8L544 130.1C544 107.1 519.8 92.1 499.2 102.4L487.4 108.3C442.5 130.8 389.6 130.8 344.6 108.3C308.2 90.1 266.3 86.5 227.4 98.2L160 118.4L160 96z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  padding: 0;
+  width: 14px;
+  height: 14px;
+
+  .game-media & {
+    vertical-align: 1px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+  }
+}
+
+.bp-rearrange-button {
+  display: flex;
+  z-index: 2;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+
+  &-remove:hover,
+  &-remove:focus {
+    background-color: #d9534f;
+  }
+
+  &-add:hover,
+  &-add:focus {
+    background-color: #5cb85c;
+  }
+
+  &:disabled {
+    background-color: rgba(0, 0, 0, 0.3);
+    cursor: not-allowed;
+  }
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+
+  .svelte-toggle {
+    margin-right: 8px;
+  }
+
+  .svelte-toggle.svelte-toggle--checked .svelte-toggle--track {
+    background-color: #7a87ba;
+  }
+
+  .svelte-toggle.svelte-toggle--checked:hover .svelte-toggle--track {
+    background-color: #4c5a83 !important;
+  }
+
+  .svelte-toggle .svelte-toggle--thumb {
+    border-color: #4c5a83 !important;
+  }
+}
+
+.hltb-column {
+  text-align: center;
 }

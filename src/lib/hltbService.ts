@@ -1,144 +1,104 @@
-import { GM_getValue, GM_setValue, GM_xmlhttpRequest } from "vite-plugin-monkey/dist/client";
-import { splitArrayIntoChunks, tryJsonParse } from "./utilities";
-import { getUserGames, userData } from "@/globals";
-import { lastCacheUpdatesStore } from "./store";
+import { GM_getValue, GM_setValue } from "vite-plugin-monkey/dist/client";
+import { formatDuration, splitArrayIntoChunks, tryJsonParse } from "./utilities";
+import { markCacheUpdated } from "./store.svelte";
+import { BACKEND_URL, fetchBackendJson, gmRequest } from "./request";
+import { hltbData } from "./gameData";
 
-export let hltbExcludedGames = tryJsonParse(GM_getValue("hltb-excluded-games", "[]") || "[]", []);
-export let hltbData = tryJsonParse(GM_getValue("hltb-data", "{}") || "{}", {}) as GameInfo;
+export let hltbExcludedGames = tryJsonParse<number[]>(GM_getValue("hltb-excluded-games", "[]") || "[]", []);
 
-export function syncHltbGames() {
-  return new Promise((resolve, reject) => {
-    GM_xmlhttpRequest({
-      method: "GET",
-      url: "https://blaeoplus.kubikill.dev/hltb/game-list",
-      nocache: true,
-      responseType: "json",
-      anonymous: true,
-      onload: (response) => {
-        if (response.status === 200) {
-          hltbData = response.response;
-          GM_setValue("hltb-data", response.responseText);
+export async function syncExcludedGames() {
+  const excludedGames = await fetchBackendJson<number[]>("excluded-games");
 
-          resolve(response.responseText);
-        } else {
-          reject(`Failed to fetch HLTB info from backend. Details: ${response.responseText}`);
-        }
-      },
-      onerror: (error) => {
-        reject(error);
-      },
-    });
-  });
-}
+  if (!Array.isArray(excludedGames)) {
+    throw new Error("The BLAEO+ server sent an invalid excluded games list");
+  }
 
-export function syncHltbExcludedGames() {
-  return new Promise((resolve, reject) => {
-    GM_xmlhttpRequest({
-      method: "GET",
-      url: "https://blaeoplus.kubikill.dev/hltb/excluded-games",
-      nocache: true,
-      responseType: "json",
-      anonymous: true,
-      onload: (response) => {
-        if (response.status === 200) {
-          GM_setValue("hltb-excluded-games", response.responseText);
-          hltbExcludedGames = response.response;
-          resolve(response.responseText);
-        } else {
-          reject(`Failed to fetch HLTB excluded games from backend. Details: ${response.responseText}`);
-        }
-      },
-      onerror: (error) => {
-        reject(error);
-      },
-    });
-  });
-}
-
-export async function syncHltb() {
-  let hltbGames = syncHltbGames();
-  let hltbExcludedGames = syncHltbExcludedGames();
-
-  await hltbGames;
-  await hltbExcludedGames;
-
-  lastCacheUpdatesStore.update((updates) => {
-    updates.hltb = new Date();
-    return updates;
-  });
+  hltbExcludedGames = excludedGames;
+  GM_setValue("hltb-excluded-games", JSON.stringify(excludedGames));
+  markCacheUpdated("excludedGames");
 
   return true;
 }
 
-export function enqueueHltbData(games: Array<any>) {
-  let libraryChunks = splitArrayIntoChunks(games, 100);
+const enqueuedGames = new Set<number>();
 
-  for (let chunk of libraryChunks) {
-    GM_xmlhttpRequest({
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+export function isExcludedGame(steamId: number): boolean {
+  return hltbExcludedGames.includes(steamId);
+}
+
+export function enqueueGames(games: QueryGame[]) {
+  const toEnqueue = games.filter((game) => !enqueuedGames.has(game.steamId));
+
+  toEnqueue.forEach((game) => enqueuedGames.add(game.steamId));
+
+  for (let chunk of splitArrayIntoChunks(toEnqueue, 100)) {
+    gmRequest(
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        url: `${BACKEND_URL}/enqueue-games`,
+        responseType: "json",
+        anonymous: true,
+        overrideMimeType: "application/json",
+        data: JSON.stringify({ games: chunk }),
       },
-      url: "https://blaeoplus.kubikill.dev/hltb/enqueue-games",
-      nocache: true,
-      responseType: "json",
-      anonymous: true,
-      overrideMimeType: "application/json",
-      data: JSON.stringify({
-        games: chunk,
-      }),
-      onload: (response) => {
-        if (response.status === 201) {
-          console.log(`Successfully enqueued games. Games in HLTB queue: ${response.response.gamesInHltbQueue}`);
-        } else {
-          console.error(`Failed to enqueue library chunk. Details: ${response.responseText}`);
-        }
-      },
-      onerror: (error) => {},
-    });
+      201,
+    )
+      .then((response) => console.log(`Successfully enqueued games. Games in HLTB queue: ${response.response.gamesInHltbQueue}`))
+      .catch((error) => {
+        chunk.forEach((game) => enqueuedGames.delete(game.steamId));
+        console.error(`Failed to enqueue library chunk. Details: ${error?.responseText ?? error}`);
+      });
   }
 }
 
-export function enqueueEntireLibrary() {
-  if (userData.name) {
-    getUserGames(userData.name);
-  } else {
-    return;
+export function getHltbGame(steamId: number): GameInfo[number] | null {
+  const game = hltbData[steamId];
+
+  return !isExcludedGame(steamId) && game && game.hltbId != -1 ? game : null;
+}
+
+export function getHltbStatus(steamId: number): string {
+  return isExcludedGame(steamId) ? "N/A" : hltbData[steamId] ? "Not on HLTB" : "Unknown";
+}
+
+const HLTB_MODES = [
+  { field: "mp", label: "MP" },
+  { field: "coop", label: "Co-op" },
+] as const;
+
+export function getHltbModes(game: GameInfo[number]) {
+  return HLTB_MODES.filter((mode) => game.type.includes(mode.field));
+}
+
+export function isMpOnly(game: GameInfo[number] | undefined): game is GameInfo[number] {
+  return !!game && !game.type?.includes("sp") && !!(game.type?.includes("mp") || game.type?.includes("coop"));
+}
+
+export function formatHltbTime(steamId: number, type: HltbTimeField): string {
+  const gameObj = hltbData[steamId];
+
+  if (!gameObj) {
+    return "Unknown";
   }
 
-  let libraryChunks = splitArrayIntoChunks(userData.games, 100);
+  const time = gameObj[type];
 
-  for (let chunk of libraryChunks) {
-    let gameList = [];
-
-    for (let game of chunk) {
-      gameList.push({
-        name: game.name,
-        steamId: game.steam_id,
-      });
-    }
-
-    GM_xmlhttpRequest({
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      url: "https://blaeoplus.kubikill.dev/hltb/enqueue-games",
-      nocache: true,
-      responseType: "json",
-      anonymous: true,
-      overrideMimeType: "application/json",
-      data: JSON.stringify({
-        games: gameList,
-      }),
-      onload: (response) => {
-        if (response.status === 201) {
-          console.log("Successfully enqueued library chunk");
-        } else {
-          console.error(`Failed to enqueue library chunk. Details: ${response.responseText}`);
-        }
-      },
-      onerror: (error) => {},
-    });
+  if (!time) {
+    return "No data";
   }
+
+  return formatDuration(time, gameObj[`${type}Count`] ?? 0);
+}
+
+function postReport(path: string, body: object) {
+  return gmRequest({ method: "POST", url: `${BACKEND_URL}/${path}`, headers: { "Content-Type": "application/json" }, data: JSON.stringify(body), responseType: "json", anonymous: true }, 201);
+}
+
+export async function reportHltbId(steamId: number, hltbId: number) {
+  await postReport("report-hltb-id-correction", { steamId, hltbId });
+}
+
+export async function reportNotAGame(steamId: number) {
+  await postReport("report-not-a-game", { steamId });
 }
