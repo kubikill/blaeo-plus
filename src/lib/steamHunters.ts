@@ -40,5 +40,8 @@ export function steamHuntersTitle(steamId: number, noAchievements = false): stri
 }
 
 export function enqueueUnknownSteamHuntersGames(games: QueryGame[]) {
-  enqueueGames(games.filter((game) => isUnknownToBackend("steamhunters", game.steamId)));
+  enqueueGames(
+    games.filter((game) => isUnknownToBackend("steamhunters", game.steamId)),
+    ["steamhunters"],
+  );
 }

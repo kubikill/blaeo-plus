@@ -81,7 +81,7 @@ export async function initSteamHuntersTimes() {
       }
     }
 
-    if (name) {
+    if (name && !noAchievements) {
       queryList.push({ name, steamId });
     }
   });

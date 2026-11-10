@@ -1,4 +1,9 @@
 <div class="main">
+  <h3>v1.3.0-beta.3 - November 10th, 2026</h3>
+  <ul>
+    <li>Optimized enqueueing games to the backend for fetching data</li>
+    <li>Fixed games without achievements being constantly enqueued for SteamHunters data refresh</li>
+  </ul>
   <h3>v1.3.0-beta.2 - November 10th, 2026</h3>
   <ul>
     <li>Fixed filters and list pickers having broken styling on Firefox</li>

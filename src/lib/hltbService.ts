@@ -1,6 +1,6 @@
 import { GM_getValue, GM_setValue } from "vite-plugin-monkey/dist/client";
 import { formatDuration, splitArrayIntoChunks, tryJsonParse } from "./utilities";
-import { markCacheUpdated } from "./store.svelte";
+import { markCacheUpdated, options } from "./store.svelte";
 import { BACKEND_URL, fetchBackendJson, gmRequest } from "./request";
 import { hltbData } from "./gameData";
 
@@ -20,16 +20,35 @@ export async function syncExcludedGames() {
   return true;
 }
 
-const enqueuedGames = new Set<number>();
+export type BackendSource = "hltb" | "protondb" | "deckverified" | "steamstore" | "steamhunters";
+
+const enqueuedGames: Record<BackendSource, Set<number>> = { hltb: new Set(), protondb: new Set(), deckverified: new Set(), steamstore: new Set(), steamhunters: new Set() };
+
+function enabledSources(): BackendSource[] {
+  const games = options.modules.games;
+  const sources: BackendSource[] = [];
+
+  if (games.hltbIntegration.enabled) sources.push("hltb");
+  if (games.protonDbIntegration.enabled) sources.push("protondb");
+  if (games.deckVerifiedIntegration.enabled || games.steamOsIntegration.enabled || games.steamMachineIntegration.enabled || games.steamFrameIntegration.enabled) sources.push("deckverified");
+  if (games.steamStoreIntegration.enabled) sources.push("steamstore");
+  if (games.steamHuntersIntegration.enabled) sources.push("steamhunters");
+
+  return sources;
+}
 
 export function isExcludedGame(steamId: number): boolean {
   return hltbExcludedGames.includes(steamId);
 }
 
-export function enqueueGames(games: QueryGame[]) {
-  const toEnqueue = games.filter((game) => !enqueuedGames.has(game.steamId));
+export function enqueueGames(games: QueryGame[], sources: BackendSource[] = enabledSources()) {
+  if (sources.length === 0) {
+    return;
+  }
 
-  toEnqueue.forEach((game) => enqueuedGames.add(game.steamId));
+  const toEnqueue = games.filter((game) => sources.some((source) => !enqueuedGames[source].has(game.steamId)));
+
+  toEnqueue.forEach((game) => sources.forEach((source) => enqueuedGames[source].add(game.steamId)));
 
   for (let chunk of splitArrayIntoChunks(toEnqueue, 100)) {
     gmRequest(
@@ -40,13 +59,13 @@ export function enqueueGames(games: QueryGame[]) {
         responseType: "json",
         anonymous: true,
         overrideMimeType: "application/json",
-        data: JSON.stringify({ games: chunk }),
+        data: JSON.stringify({ games: chunk, sources }),
       },
       201,
     )
-      .then((response) => console.log(`Successfully enqueued games. Games in HLTB queue: ${response.response.gamesInHltbQueue}`))
+      .then(() => console.log(`Successfully enqueued ${chunk.length} game(s) for ${sources.join(", ")}`))
       .catch((error) => {
-        chunk.forEach((game) => enqueuedGames.delete(game.steamId));
+        chunk.forEach((game) => sources.forEach((source) => enqueuedGames[source].delete(game.steamId)));
         console.error(`Failed to enqueue library chunk. Details: ${error?.responseText ?? error}`);
       });
   }
