@@ -1,4 +1,5 @@
-import { hltbData, waitUntilGameDataLoaded } from "@/lib/gameData";
+import { hltbData } from "@/lib/gameData";
+import { whenGamesDecorated } from "@/lib/gameRows";
 import GameFilters from "@/modules/games/GameFilters.svelte";
 import { mountTracked } from "@/globals";
 import { options } from "@/lib/store.svelte";
@@ -157,7 +158,7 @@ export async function initFilter(isProgressPage: boolean) {
     return;
   }
 
-  await waitUntilGameDataLoaded();
+  await whenGamesDecorated();
 
   const filterContainer = document.createElement("div");
   filterContainer.classList.add("bp-filters");

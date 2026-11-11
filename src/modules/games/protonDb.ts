@@ -1,10 +1,7 @@
-import { provisionalIcon } from "@/assets/icons";
-import { linuxData, waitUntilGameDataLoaded } from "@/lib/gameData";
+import { linuxData } from "@/lib/gameData";
+import { registerGameDecorator, type GameView } from "@/lib/gameRows";
 import { removeAllNodesIfExist } from "@/lib/utilities";
-import { getGamesContainer } from "@/lib/waitUntilGamesContainerLoaded";
-import { addLinuxColumn, getSteamId, insertInListBody } from "@/lib/gameTable";
-
-type GameView = "table" | "list" | "grid";
+import { addLinuxColumn } from "@/lib/gameTable";
 
 const protonDbRatingScore = {
   unknown: -1,
@@ -36,9 +33,7 @@ function getRatingBadgeHtml(steamId: number, view: GameView): string {
   }
 
   if (data && data.protonDbProvRating != "unknown") {
-    return `<a${href} class="${classes} bp-protondb-rating-${data.protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${data.protonDbReports ?? 0} report(s)">${provisionalIcon} ${
-      data.protonDbProvRating
-    }</a>`;
+    return `<a${href} class="${classes} bp-protondb-rating-${data.protonDbProvRating} bp-protondb-rating-provisional" title="provisional rating based on ${data.protonDbReports ?? 0} report(s)">${data.protonDbProvRating}</a>`;
   }
 
   if (data && view === "table") {
@@ -52,42 +47,21 @@ function getProtonDbHtml(steamId: number, view: GameView): string {
   const badge = getRatingBadgeHtml(steamId, view);
   const data = linuxData[steamId];
 
-  switch (view) {
-    case "table":
-      return `<td class="text-right bp-protondb-element" data-value="${data ? getProtonDbScore(data) : "unknown"}">${badge}</td>`;
-    case "list":
-      return `<div class="bp-linux-media">${badge}</div>`;
-    case "grid":
-      return `<div class="bp-linux-grid">${badge}</div>`;
-  }
+  return view === "table" ? `<td class="text-right bp-protondb-element" data-value="${data ? getProtonDbScore(data) : "unknown"}">${badge}</td>` : badge;
 }
 
-export async function initProtonDb() {
-  const gameContainer = getGamesContainer();
+export function initProtonDb() {
+  registerGameDecorator({
+    setup: ({ type, container }) => {
+      if (type === "grid") {
+        container.classList.add("bp-game-list");
+      }
 
-  if (!gameContainer) {
-    return;
-  }
-
-  if (gameContainer.type === "grid") {
-    gameContainer.container.classList.add("bp-game-list");
-  }
-
-  await waitUntilGameDataLoaded();
-
-  const games = gameContainer.container.querySelectorAll<HTMLElement>(".game");
-  const anchorColumn = addLinuxColumn(gameContainer.container, "bp-protondb-element", "ProtonDB rating", 100);
-
-  games.forEach((game) => {
-    const steamId = getSteamId(game);
-
-    if (gameContainer.type === "table") {
-      game.querySelector(`td:nth-child(${anchorColumn})`)?.insertAdjacentHTML("afterend", getProtonDbHtml(steamId, "table"));
-    } else if (gameContainer.type === "list") {
-      insertInListBody(game, getProtonDbHtml(steamId, "list"));
-    } else {
-      game.querySelector(".caption")?.insertAdjacentHTML("beforeend", getProtonDbHtml(steamId, "grid"));
-    }
+      if (type === "table") {
+        addLinuxColumn(container, "bp-protondb-element", "ProtonDB rating", 100);
+      }
+    },
+    render: (_game, steamId, view) => ({ linux: getProtonDbHtml(steamId, view) }),
   });
 }
 

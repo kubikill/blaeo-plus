@@ -57,15 +57,13 @@ export function hasExtraPlaytimeColumn(headerRow: HTMLTableRowElement | null): b
   return thirdHeader === "Playtime This Month" || thirdHeader.startsWith("Playtime In");
 }
 
-function getLinuxColumnAnchor(headerRow: HTMLTableRowElement | null): number {
-  const firstLinuxColumn = hasLeadingIndexColumn(headerRow) || hasExtraPlaytimeColumn(headerRow) ? 4 : 3;
-
-  return firstLinuxColumn + (headerRow?.querySelectorAll(`th.${LINUX_COLUMN_CLASS}`).length ?? 0);
+export function getLinuxAnchorColumn(headerRow: HTMLTableRowElement | null): number {
+  return hasLeadingIndexColumn(headerRow) || hasExtraPlaytimeColumn(headerRow) ? 4 : 3;
 }
 
-export function addLinuxColumn(table: HTMLElement, className: string, label: string, width: number): number {
+export function addLinuxColumn(table: HTMLElement, className: string, label: string, width: number) {
   const headerRow = table.querySelector("tr");
-  const anchorColumn = getLinuxColumnAnchor(headerRow);
+  const anchorColumn = getLinuxAnchorColumn(headerRow) + (headerRow?.querySelectorAll(`th.${LINUX_COLUMN_CLASS}`).length ?? 0);
   const anchorHeader = headerRow?.querySelector(`th:nth-child(${anchorColumn})`);
 
   if (anchorHeader) {
@@ -73,16 +71,4 @@ export function addLinuxColumn(table: HTMLElement, className: string, label: str
   }
 
   table.querySelector(`colgroup > col:nth-child(${anchorColumn})`)?.insertAdjacentHTML("afterend", `<col class="${className}" style="width: ${width}px">`);
-
-  return anchorColumn;
-}
-
-export function insertInListBody(game: Element, html: string) {
-  const hltbInfo = game.querySelector(".bp-list-hltb-info");
-
-  if (hltbInfo) {
-    hltbInfo.insertAdjacentHTML("beforebegin", html);
-  } else {
-    game.querySelector(".media-body")?.insertAdjacentHTML("beforeend", html);
-  }
 }

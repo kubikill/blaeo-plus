@@ -22,7 +22,29 @@ export async function syncExcludedGames() {
 
 export type BackendSource = "hltb" | "protondb" | "deckverified" | "steamstore" | "steamhunters";
 
+type EnqueuedBatch = { sentAt: number; sources: BackendSource[]; steamIds: number[] };
+
+const ENQUEUED_KEY = "bp-enqueued-games";
+const REMEMBER_ENQUEUED_MS = 24 * 60 * 60 * 1000;
+const SAVE_ENQUEUED_DELAY_MS = 2000;
+
 const enqueuedGames: Record<BackendSource, Set<number>> = { hltb: new Set(), protondb: new Set(), deckverified: new Set(), steamstore: new Set(), steamhunters: new Set() };
+let enqueuedBatches = tryJsonParse<EnqueuedBatch[]>(GM_getValue(ENQUEUED_KEY, "[]") || "[]", []).filter((batch) => batch.sentAt > Date.now() - REMEMBER_ENQUEUED_MS);
+let saveEnqueuedTimer: ReturnType<typeof setTimeout> | undefined;
+
+for (const { sources, steamIds } of enqueuedBatches) {
+  for (const source of sources) {
+    steamIds.forEach((steamId) => enqueuedGames[source]?.add(steamId));
+  }
+}
+
+function rememberEnqueued(sources: BackendSource[], steamIds: number[]) {
+  enqueuedBatches = enqueuedBatches.filter((batch) => batch.sentAt > Date.now() - REMEMBER_ENQUEUED_MS);
+  enqueuedBatches.push({ sentAt: Date.now(), sources, steamIds });
+
+  clearTimeout(saveEnqueuedTimer);
+  saveEnqueuedTimer = setTimeout(() => GM_setValue(ENQUEUED_KEY, JSON.stringify(enqueuedBatches)), SAVE_ENQUEUED_DELAY_MS);
+}
 
 function enabledSources(): BackendSource[] {
   const games = options.modules.games;
@@ -63,7 +85,13 @@ export function enqueueGames(games: QueryGame[], sources: BackendSource[] = enab
       },
       201,
     )
-      .then(() => console.log(`Successfully enqueued ${chunk.length} game(s) for ${sources.join(", ")}`))
+      .then(() => {
+        rememberEnqueued(
+          sources,
+          chunk.map((game) => game.steamId),
+        );
+        console.log(`Successfully enqueued ${chunk.length} game(s) for ${sources.join(", ")}`);
+      })
       .catch((error) => {
         chunk.forEach((game) => sources.forEach((source) => enqueuedGames[source].delete(game.steamId)));
         console.error(`Failed to enqueue library chunk. Details: ${error?.responseText ?? error}`);

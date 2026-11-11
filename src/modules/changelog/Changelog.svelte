@@ -1,4 +1,8 @@
 <div class="main">
+  <h3>v1.3.0-beta.4 - November 11th, 2026</h3>
+  <ul>
+    <li>Optimize rendering game lists and enqueueing</li>
+  </ul>
   <h3>v1.3.0-beta.3 - November 10th, 2026</h3>
   <ul>
     <li>Optimized enqueueing games to the backend for fetching data</li>

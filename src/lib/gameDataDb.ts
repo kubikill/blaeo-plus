@@ -93,8 +93,7 @@ async function withStore<T>(name: GameDataStore, mode: IDBTransactionMode, fallb
 export function readRecords(name: GameDataStore, steamIds: number[]): Promise<StoredGameRecord[] | null> {
   return withStore<StoredGameRecord[] | null>(name, "readonly", null, async (store) => {
     if (steamIds.length > BULK_READ_THRESHOLD) {
-      const wanted = new Set(steamIds);
-      return (await requestResult<StoredGameRecord[]>(store.getAll())).filter((record) => wanted.has(record.steamId));
+      return requestResult<StoredGameRecord[]>(store.getAll());
     }
 
     const records = await Promise.all(steamIds.map((id) => requestResult<StoredGameRecord | undefined>(store.get(id))));

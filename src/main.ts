@@ -27,6 +27,8 @@ import { migrateListMakerPresets } from "./upgrades/migrateListMakerPresets";
 import { initBulkRemoveGames } from "./modules/games/bulkRemoveGames/bulkRemoveGames";
 import { initFullWidthTable } from "./modules/games/fullWidthTable";
 import { cleanupSteamTags, initSteamTags } from "./modules/games/steamTags";
+import { startGameRows, stopGameRows } from "./lib/gameRows";
+import { ensureIcons } from "./assets/icons";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -95,6 +97,7 @@ const PAGE_MODULES: PageModule[] = [
 
 function cleanup(): void {
   runModule("component cleanup", unmountAll);
+  runModule("gameRows cleanup", stopGameRows);
 
   for (const { name, cleanup: cleanupModule } of PAGE_MODULES) {
     if (cleanupModule) {
@@ -126,12 +129,15 @@ function initEachPage(): void {
   document.body.dataset.blaeoPlusInitialized = "true";
 
   cleanup();
+  runModule("icons", ensureIcons);
 
   for (const { name, enabled, init: initModule } of PAGE_MODULES) {
     if (!enabled || enabled()) {
       runModule(name, initModule);
     }
   }
+
+  runModule("gameRows", startGameRows);
 }
 
 initUpgrade();

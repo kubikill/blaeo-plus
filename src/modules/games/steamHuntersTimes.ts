@@ -1,10 +1,10 @@
-import { steamHuntersLogo } from "@/assets/icons";
-import { steamHuntersData, waitUntilGameDataLoaded } from "@/lib/gameData";
-import { getGameName, getSteamId, hasNoAchievements, insertSortableHeader } from "@/lib/gameTable";
+import { steamHuntersLogoClass } from "@/assets/icons";
+import { steamHuntersData } from "@/lib/gameData";
+import { registerGameDecorator } from "@/lib/gameRows";
+import { getGameName, hasNoAchievements, insertSortableHeader } from "@/lib/gameTable";
 import { enqueueUnknownSteamHuntersGames, formatSteamHuntersTime, getSteamHuntersUrl, steamHuntersTitle } from "@/lib/steamHunters";
 import { options } from "@/lib/store.svelte";
 import { removeAllNodesIfExist } from "@/lib/utilities";
-import { getGamesContainer } from "@/lib/waitUntilGamesContainerLoaded";
 
 /** Sort value: the median in minutes, -1 without a completion time, -2 when the backend hasn't looked the game up yet, -3 for games without achievements. */
 function getSortValue(steamId: number, noAchievements: boolean): number {
@@ -18,75 +18,47 @@ function getSortValue(steamId: number, noAchievements: boolean): number {
 }
 
 function getLinkHtml(steamId: number, extraClass = ""): string {
-  return `<a href="${getSteamHuntersUrl(steamId)}" class="${extraClass}" aria-label="SteamHunters game page" title="SteamHunters game page">${steamHuntersLogo}</a>`;
+  return `<a href="${getSteamHuntersUrl(steamId)}" class="${steamHuntersLogoClass} ${extraClass}" aria-label="SteamHunters game page" title="SteamHunters game page"></a>`;
 }
 
-function insertLink(container: Element, html: string) {
-  const reportButton = container.querySelector(".bp-hltb-report");
-  const before = reportButton?.closest("li") ?? reportButton;
-
-  if (before && container.contains(before)) {
-    before.insertAdjacentHTML("beforebegin", html);
-  } else {
-    container.insertAdjacentHTML("beforeend", html);
-  }
-}
-
-export async function initSteamHuntersTimes() {
-  const gameContainer = getGamesContainer();
-
-  if (!gameContainer || gameContainer.type === "grid") {
-    return;
-  }
-
-  await waitUntilGameDataLoaded();
-
-  const table = gameContainer.container;
-  const headerRow = table.querySelector("tr");
+export function initSteamHuntersTimes() {
   const addLinks = options.modules.games.steamHuntersIntegration.addSteamHuntersLinks;
   const queryList: QueryGame[] = [];
 
-  if (gameContainer.type === "table" && headerRow) {
-    insertSortableHeader(table, headerRow, "beforeend", "bp-steamhunters-element", "SH median");
-    table.querySelector("colgroup")?.insertAdjacentHTML("beforeend", `<col class="bp-steamhunters-element" style="width: 110px">`);
-  }
+  registerGameDecorator({
+    views: ["table", "list"],
+    setup: ({ type, container }) => {
+      const headerRow = container.querySelector("tr");
 
-  table.querySelectorAll<HTMLElement>(".game").forEach((game) => {
-    const steamId = getSteamId(game);
-    const noAchievements = hasNoAchievements(game);
-    const time = `<span title="${steamHuntersTitle(steamId, noAchievements)}">${formatSteamHuntersTime(steamId, noAchievements)}</span>`;
-    const name = getGameName(game);
-
-    if (gameContainer.type === "table") {
-      game.insertAdjacentHTML("beforeend", `<td class="text-right bp-steamhunters-element" data-value="${getSortValue(steamId, noAchievements)}">${time}</td>`);
-
-      const toolbar = game.querySelector(".toolbar");
-
-      if (addLinks && toolbar) {
-        insertLink(toolbar, `<li class="bp-steamhunters-element" style="vertical-align: middle">${getLinkHtml(steamId)}</li>`);
+      if (type === "table" && headerRow) {
+        insertSortableHeader(container, headerRow, "beforeend", "bp-steamhunters-element", "SH median");
+        container.querySelector("colgroup")?.insertAdjacentHTML("beforeend", `<col class="bp-steamhunters-element" style="width: 110px">`);
       }
-    } else {
-      const heading = game.querySelector(".media-heading");
-      const hltbInfo = game.querySelector(".bp-list-hltb-info");
-      const line = `SH: ${time}`;
+    },
+    render: (game, steamId, view) => {
+      const noAchievements = hasNoAchievements(game);
+      const title = steamHuntersTitle(steamId, noAchievements);
+      const time = formatSteamHuntersTime(steamId, noAchievements);
+      const name = getGameName(game);
 
-      if (hltbInfo) {
-        hltbInfo.insertAdjacentHTML("beforeend", `<div class="bp-steamhunters-element">${line}</div>`);
-      } else {
-        game.insertAdjacentHTML("beforeend", `<div class="bp-list-hltb-info bp-steamhunters-element">${line}</div>`);
+      if (name && !noAchievements) {
+        queryList.push({ name, steamId });
       }
 
-      if (addLinks && heading) {
-        insertLink(heading, getLinkHtml(steamId, "bp-steamhunters-element"));
+      if (view === "table") {
+        return {
+          times: `<td class="text-right bp-steamhunters-element" data-value="${getSortValue(steamId, noAchievements)}" title="${title}">${time}</td>`,
+          links: addLinks ? `<li class="bp-steamhunters-element" style="vertical-align: middle">${getLinkHtml(steamId)}</li>` : "",
+        };
       }
-    }
 
-    if (name && !noAchievements) {
-      queryList.push({ name, steamId });
-    }
+      return {
+        times: `<div class="bp-steamhunters-element" title="${title}">SH: ${time}</div>`,
+        links: addLinks ? getLinkHtml(steamId, "bp-steamhunters-element") : "",
+      };
+    },
+    finish: () => enqueueUnknownSteamHuntersGames(queryList),
   });
-
-  enqueueUnknownSteamHuntersGames(queryList);
 }
 
 export function cleanupSteamHuntersTimes() {

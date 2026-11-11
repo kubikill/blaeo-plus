@@ -1,7 +1,6 @@
-import { steamspyData, waitUntilGameDataLoaded } from "@/lib/gameData";
+import { steamspyData } from "@/lib/gameData";
+import { registerGameDecorator } from "@/lib/gameRows";
 import { escapeHtml, removeAllNodesIfExist } from "@/lib/utilities";
-import { getGamesContainer } from "@/lib/waitUntilGamesContainerLoaded";
-import { getSteamId, hasLeadingIndexColumn, insertInListBody } from "@/lib/gameTable";
 import { options } from "@/lib/store.svelte";
 import { PROGRESSES } from "./filterTypes";
 
@@ -39,37 +38,14 @@ function getGameSteamTagsHtml(steamId: number, hidden = false): string {
   return `<div class="bp-steam-tags" data-steam-tags="${escapeHtml(data)}"${hidden ? " hidden" : ""}>🏷️ ${escapeHtml(text)}</div>`;
 }
 
-export async function initSteamTags() {
-  const gameContainer = getGamesContainer();
-
-  if (!gameContainer) {
-    return;
-  }
-
-  if (gameContainer.type === "list") {
-    gameContainer.container.classList.add("bp-game-list");
-  }
-
-  await waitUntilGameDataLoaded();
-
-  const games = gameContainer.container.querySelectorAll<HTMLElement>(".game");
-  const nameColumn = hasLeadingIndexColumn(gameContainer.container.querySelector("tr")) ? 2 : 1;
-
-  games.forEach((game) => {
-    const steamId = getSteamId(game);
-
-    if (gameContainer.type === "grid") {
-      game.insertAdjacentHTML("beforeend", getGameSteamTagsHtml(steamId, true));
-      return;
-    }
-
-    const tagsHtml = getGameSteamTagsHtml(steamId, shouldHideTags(game));
-
-    if (gameContainer.type === "table") {
-      game.querySelector(`td:nth-child(${nameColumn})`)?.insertAdjacentHTML("beforeend", tagsHtml);
-    } else {
-      insertInListBody(game, tagsHtml);
-    }
+export function initSteamTags() {
+  registerGameDecorator({
+    setup: ({ type, container }) => {
+      if (type === "list") {
+        container.classList.add("bp-game-list");
+      }
+    },
+    render: (game, steamId, view) => ({ tags: getGameSteamTagsHtml(steamId, view === "grid" || shouldHideTags(game)) }),
   });
 }
 

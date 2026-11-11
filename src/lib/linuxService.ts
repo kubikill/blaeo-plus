@@ -1,4 +1,4 @@
-import { deckPlayable, deckUnsupported, deckUntested, deckVerified, steamOsCompatible } from "@/assets/icons";
+import { deckPlayable, deckPlayableClass, deckUnsupported, deckUnsupportedClass, deckUntested, deckUntestedClass, deckVerified, deckVerifiedClass, steamOsCompatible, steamOsCompatibleClass } from "@/assets/icons";
 
 const RATING_BADGES: Record<CompatibilityRating, string> = {
   unknown: "",
@@ -6,6 +6,14 @@ const RATING_BADGES: Record<CompatibilityRating, string> = {
   unsupported: deckUnsupported,
   playable: deckPlayable,
   verified: deckVerified,
+};
+
+const RATING_ICON_CLASSES: Record<CompatibilityRating, string> = {
+  unknown: "",
+  untested: deckUntestedClass,
+  unsupported: deckUnsupportedClass,
+  playable: deckPlayableClass,
+  verified: deckVerifiedClass,
 };
 
 const DEVICE_WORDING: Record<CompatibilityDeviceId, Record<"name" | "device" | "controller", string>> = {
@@ -118,4 +126,8 @@ export function compatibilityCheckmark(deviceId: CompatibilityDeviceId): string 
 
 export function compatibilityRatingBadge(deviceId: CompatibilityDeviceId, rating: CompatibilityRating): string {
   return deviceId === "steamos" && rating === "playable" ? steamOsCompatible : RATING_BADGES[rating];
+}
+
+export function compatibilityRatingIconClass(deviceId: CompatibilityDeviceId, rating: CompatibilityRating): string {
+  return deviceId === "steamos" && rating === "playable" ? steamOsCompatibleClass : RATING_ICON_CLASSES[rating];
 }

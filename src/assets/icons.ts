@@ -1,9 +1,55 @@
-export const hltbLogo = `
+const spriteIcons: string[] = [];
+const iconStyles: string[] = [];
+
+function sprite(id: string, svg: string): string {
+  const [, attributes, content] = svg.trim().match(/^<svg([^>]*)>([\s\S]*)<\/svg>$/) as RegExpMatchArray;
+
+  spriteIcons.push(`<g id="bp-icon-${id}">${content}</g>`);
+
+  return `<svg${attributes}><use href="#bp-icon-${id}"/></svg>`;
+}
+
+type CssIconOptions = {
+  /** Draws the icon in the text color (for icons that use currentcolor) instead of in its own colors */
+  mask?: boolean;
+  /** background-size / mask-size, "contain" by default */
+  size?: string;
+  /** The rule's selector, the returned class by default */
+  selector?: string;
+};
+
+/**
+ * Registers the icon as a CSS class that draws it as a background, so a game row doesn't need an <svg> and a <use>
+ * element for each one. Returns the class name.
+ */
+function cssIcon(name: string, svg: string, { mask = false, size = "contain", selector }: CssIconOptions = {}): string {
+  const className = `bp-icon-${name}`;
+  const uri = `url("data:image/svg+xml,${encodeURIComponent(svg.replace(/\s+/g, " ").trim())}")`;
+  const picture = `center / ${size} no-repeat`;
+
+  iconStyles.push(`${selector ?? `.${className}`}{${mask ? `background-color:currentcolor;-webkit-mask:${uri} ${picture};mask:${uri} ${picture}` : `background:${uri} ${picture}`}}`);
+
+  return className;
+}
+
+export function ensureIcons() {
+  if (!document.getElementById("bp-icons")) {
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<style id="bp-icon-styles">${iconStyles.join("")}</style><svg id="bp-icons" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden"><defs>${spriteIcons.join("")}</defs></svg>`,
+    );
+  }
+}
+
+const hltbLogoSvg = `
   <svg class="bp-hltb-logo" height="13" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 13.23 24.61">
     <path d="M0 0h5.56v14.55h2.12V0h5.55v24.6H7.67v-4.76H5.56v4.77H0z" fill="currentcolor" />
   </svg>`;
 
-export const steamHuntersLogo = `
+export const hltbLogo = sprite("hltb", hltbLogoSvg);
+export const hltbLogoClass = cssIcon("hltb", hltbLogoSvg, { mask: true });
+
+const steamHuntersLogoSvg = `
   <svg class="bp-steamhunters-logo" height="13" width="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
     <rect width="16" height="16" rx="2" ry="2" fill="#1b2838" />
     <path fill="#7bb6ff" d="M0 7h12V3.5l4 4-4 4V8H0V7z" />
@@ -12,6 +58,9 @@ export const steamHuntersLogo = `
       d="M8 9h2v5H8zm0-7h2v4H8zm4 11v1h2v-3.02L13 12l-1 1zm2-8.98V2h-2l1 1 1 1.02zM3 5a1.24 1.24 0 0 1 1-1 1.33 1.33 0 0 1 1 1h2a3.23 3.23 0 0 0-3-3 3.18 3.18 0 0 0-3 3 2.42 2.42 0 0 0 .18 1h2.57C3.31 5.66 3 5.34 3 5zm2 5.09a2.36 2.36 0 0 1-.58 1.63A.73.73 0 0 1 4 12c-.31 0-1-.6-1-1H1a2.9 2.9 0 0 0 .93 2A3.09 3.09 0 0 0 4 14a2.61 2.61 0 0 0 1.89-.93A4.35 4.35 0 0 0 7 9.91 3.22 3.22 0 0 0 6.77 9H4.38A1.74 1.74 0 0 1 5 10.09z"
     />
   </svg>`;
+
+export const steamHuntersLogo = sprite("steamhunters", steamHuntersLogoSvg);
+export const steamHuntersLogoClass = cssIcon("steamhunters", steamHuntersLogoSvg);
 
 export const blaeoPlusLogo = `
   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 256 256">
@@ -38,32 +87,51 @@ export const protonDbLogo = `
     </g>
   </svg>`;
 
-export const provisionalIcon = `
+cssIcon(
+  "provisional",
+  `
   <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="16" viewBox="0 0 24 24">
     <path d="M16.24 7.76C15.07 6.59 13.54 6 12 6v6l-4.24 4.24c2.34 2.34 6.14 2.34 8.49 0 2.34-2.34 2.34-6.14-.01-8.48zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"></path>
-  </svg>`;
+  </svg>`,
+  { mask: true, selector: ".bp-protondb-rating-provisional::before" },
+);
 
-export const deckVerified = `
+const deckVerifiedSvg = `
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" clip-rule="evenodd" d="M10 19C14.9706 19 19 14.9706 19 10C19 5.02944 14.9706 1 10 1C5.02944 1 1 5.02944 1 10C1 14.9706 5.02944 19 10 19ZM8.33342 11.9222L14.4945 5.76667L16.4556 7.72779L8.33342 15.8556L3.26675 10.7833L5.22786 8.82223L8.33342 11.9222Z" fill="#59BF40"/>
   </svg>`;
 
-export const steamOsCompatible = deckVerified.replace("#59BF40", "#199fff");
+const steamOsCompatibleSvg = deckVerifiedSvg.replace("#59BF40", "#199fff");
 
-export const deckPlayable = `
+export const deckVerified = sprite("deck-verified", deckVerifiedSvg);
+export const deckVerifiedClass = cssIcon("deck-verified", deckVerifiedSvg, { size: "20px 20px" });
+
+export const steamOsCompatible = sprite("steamos-compatible", steamOsCompatibleSvg);
+export const steamOsCompatibleClass = cssIcon("steamos-compatible", steamOsCompatibleSvg, { size: "20px 20px" });
+
+const deckPlayableSvg = `
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" clip-rule="evenodd" d="M10 19C14.9706 19 19 14.9706 19 10C19 5.02944 14.9706 1 10 1C5.02944 1 1 5.02944 1 10C1 14.9706 5.02944 19 10 19ZM8.61079 9.44444V15H11.3886V9.44444H8.61079ZM9.07372 8.05245C9.34781 8.23558 9.67004 8.33333 9.99967 8.33333C10.4417 8.33333 10.8656 8.15774 11.1782 7.84518C11.4907 7.53262 11.6663 7.10869 11.6663 6.66667C11.6663 6.33703 11.5686 6.0148 11.3855 5.74072C11.2023 5.46663 10.942 5.25301 10.6375 5.12687C10.3329 5.00072 9.99783 4.96771 9.67452 5.03202C9.35122 5.09633 9.05425 5.25507 8.82116 5.48815C8.58808 5.72124 8.42934 6.01821 8.36503 6.34152C8.30072 6.66482 8.33373 6.99993 8.45988 7.30447C8.58602 7.60902 8.79964 7.86931 9.07372 8.05245Z" fill="#FFC82C"/>
     </svg>`;
 
-export const deckUnsupported = `
+export const deckPlayable = sprite("deck-playable", deckPlayableSvg);
+export const deckPlayableClass = cssIcon("deck-playable", deckPlayableSvg, { size: "20px 20px" });
+
+const deckUnsupportedSvg = `
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" clip-rule="evenodd" d="M14.1931 15.6064C13.0246 16.4816 11.5733 17 10.001 17C6.13498 17 3.00098 13.866 3.00098 10C3.00098 8.42766 3.51938 6.97641 4.39459 5.80783L14.1931 15.6064ZM15.6074 14.1922C16.4826 13.0236 17.001 11.5723 17.001 10C17.001 6.13401 13.867 3 10.001 3C8.42864 3 6.97739 3.5184 5.80881 4.39362L15.6074 14.1922ZM19.001 10C19.001 14.9706 14.9715 19 10.001 19C5.03041 19 1.00098 14.9706 1.00098 10C1.00098 5.02944 5.03041 1 10.001 1C14.9715 1 19.001 5.02944 19.001 10Z" fill="#8C8E8F"/>
   </svg>`;
 
-export const deckUntested = `
+export const deckUnsupported = sprite("deck-unsupported", deckUnsupportedSvg);
+export const deckUnsupportedClass = cssIcon("deck-unsupported", deckUnsupportedSvg, { size: "20px 20px" });
+
+const deckUntestedSvg = `
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path fill-rule="evenodd" clip-rule="evenodd" d="M17.3972 11.2461L18.8767 11.4932C18.9578 11.0075 19 10.5087 19 10C19 9.49131 18.9578 8.99248 18.8767 8.50682L17.3972 8.75386C17.4647 9.15821 17.5 9.57442 17.5 10C17.5 10.4256 17.4647 10.8418 17.3972 11.2461ZM17.0295 7.3783L18.4348 6.8539C18.0814 5.90668 17.5729 5.03501 16.9403 4.26971L15.7842 5.22538C16.3119 5.86387 16.7354 6.59021 17.0295 7.3783ZM14.7746 4.21582L15.7303 3.05967C14.965 2.42708 14.0933 1.91864 13.1461 1.56519L12.6217 2.97054C13.4098 3.26461 14.1361 3.68805 14.7746 4.21582ZM11.2461 2.60281L11.4932 1.1233C11.0075 1.0422 10.5087 1 10 1C9.49131 1 8.99248 1.0422 8.50682 1.1233L8.75386 2.60281C9.15821 2.5353 9.57442 2.5 10 2.5C10.4256 2.5 10.8418 2.5353 11.2461 2.60281ZM7.3783 2.97054L6.8539 1.56519C5.90668 1.91864 5.03501 2.42708 4.26971 3.05967L5.22538 4.21582C5.86387 3.68805 6.59021 3.26461 7.3783 2.97054ZM4.21582 5.22538L3.05967 4.26971C2.42708 5.03501 1.91864 5.90668 1.56519 6.8539L2.97054 7.3783C3.26461 6.59022 3.68805 5.86387 4.21582 5.22538ZM1 10C1 9.49131 1.0422 8.99248 1.1233 8.50682L2.60281 8.75386C2.5353 9.15821 2.5 9.57442 2.5 10C2.5 10.4256 2.5353 10.8418 2.60281 11.2461L1.1233 11.4932C1.0422 11.0075 1 10.5087 1 10ZM2.97054 12.6217L1.56519 13.1461C1.91864 14.0933 2.42708 14.965 3.05967 15.7303L4.21582 14.7746C3.68805 14.1361 3.26461 13.4098 2.97054 12.6217ZM5.22538 15.7842L4.26971 16.9403C5.03501 17.5729 5.90668 18.0814 6.8539 18.4348L7.3783 17.0295C6.59022 16.7354 5.86387 16.3119 5.22538 15.7842ZM8.75386 17.3972L8.50682 18.8767C8.99248 18.9578 9.49131 19 10 19C10.5087 19 11.0075 18.9578 11.4932 18.8767L11.2461 17.3972C10.8418 17.4647 10.4256 17.5 10 17.5C9.57442 17.5 9.15821 17.4647 8.75386 17.3972ZM12.6217 17.0295L13.1461 18.4348C14.0933 18.0814 14.965 17.5729 15.7303 16.9403L14.7746 15.7842C14.1361 16.3119 13.4098 16.7354 12.6217 17.0295ZM15.7842 14.7746L16.9403 15.7303C17.5729 14.965 18.0814 14.0933 18.4348 13.1461L17.0295 12.6217C16.7354 13.4098 16.3119 14.1361 15.7842 14.7746ZM9.2425 14.7702C9.46679 14.92 9.73048 15 10.0002 15C10.362 15 10.7089 14.8563 10.9646 14.6006C11.2204 14.3448 11.3641 13.998 11.3641 13.6363C11.3641 13.3666 11.2841 13.1029 11.1343 12.8787C10.9844 12.6544 10.7714 12.4796 10.5222 12.3764C10.2729 12.2732 9.99872 12.2462 9.73415 12.2988C9.46958 12.3514 9.22656 12.4813 9.03582 12.672C8.84508 12.8628 8.71518 13.1057 8.66255 13.3703C8.60993 13.6348 8.63694 13.909 8.74016 14.1582C8.84339 14.4074 9.01821 14.6203 9.2425 14.7702ZM11.0981 10.3552C11.1722 10.2348 11.2765 10.1358 11.4005 10.068C11.8099 9.82315 12.1479 9.47526 12.3808 9.05903C12.6137 8.64279 12.7333 8.17276 12.7278 7.69584C12.7223 7.21892 12.5918 6.75179 12.3493 6.34105C12.1069 5.93031 11.7609 5.59033 11.346 5.35502C10.9311 5.11972 10.4617 4.99732 9.98466 5.00004C9.50764 5.00277 9.03969 5.13052 8.62748 5.37054C8.21527 5.61057 7.87321 5.95448 7.63545 6.36796C7.39769 6.78144 7.27253 7.25004 7.27246 7.72699H9.23191C9.23191 7.6261 9.25178 7.52621 9.29039 7.43301C9.32901 7.3398 9.3856 7.25511 9.45694 7.18378C9.52829 7.11244 9.61299 7.05586 9.70621 7.01725C9.79942 6.97865 9.89933 6.95878 10.0002 6.95878C10.1659 6.96387 10.3255 7.02207 10.4556 7.12479C10.5856 7.22751 10.6792 7.3693 10.7225 7.52925C10.7658 7.6892 10.7565 7.85883 10.6961 8.01311C10.6356 8.16739 10.5271 8.29816 10.3867 8.3861C9.97322 8.62846 9.63003 8.97429 9.39088 9.38955C9.15173 9.80482 9.02487 10.2752 9.02278 10.7544V11.3635H10.9777V10.7544C10.9825 10.6131 11.024 10.4755 11.0981 10.3552Z" fill="#8C8E8F"/>
   </svg>`;
+
+export const deckUntested = sprite("deck-untested", deckUntestedSvg);
+export const deckUntestedClass = cssIcon("deck-untested", deckUntestedSvg, { size: "20px 20px" });
 
 export const blacklistIcon = `
   <svg xmlns="http://www.w3.org/2000/svg" height="14" width="14" viewBox="0 0 512 512">
@@ -71,7 +139,10 @@ export const blacklistIcon = `
   </svg>`;
 
 // Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.
-export const infinityIcon = `
+export const infinityIcon = sprite(
+  "infinity",
+  `
   <svg xmlns="http://www.w3.org/2000/svg" height="16" width="20" viewBox="0 0 640 512" aria-label="Endless game" title="Endless game">
     <path opacity="1" fill="#1E3050" d="M0 241.1C0 161 65 96 145.1 96c38.5 0 75.4 15.3 102.6 42.5L320 210.7l72.2-72.2C419.5 111.3 456.4 96 494.9 96C575 96 640 161 640 241.1v29.7C640 351 575 416 494.9 416c-38.5 0-75.4-15.3-102.6-42.5L320 301.3l-72.2 72.2C220.5 400.7 183.6 416 145.1 416C65 416 0 351 0 270.9V241.1zM274.7 256l-72.2-72.2c-15.2-15.2-35.9-23.8-57.4-23.8C100.3 160 64 196.3 64 241.1v29.7c0 44.8 36.3 81.1 81.1 81.1c21.5 0 42.2-8.5 57.4-23.8L274.7 256zm90.5 0l72.2 72.2c15.2 15.2 35.9 23.8 57.4 23.8c44.8 0 81.1-36.3 81.1-81.1V241.1c0-44.8-36.3-81.1-81.1-81.1c-21.5 0-42.2 8.5-57.4 23.8L365.3 256z"/>
-  </svg>`;
+  </svg>`,
+);

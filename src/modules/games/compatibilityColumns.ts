@@ -1,10 +1,10 @@
 import CompatibilityModal from "@/modules/games/CompatibilityModal.svelte";
-import { linuxData, steamFrameData, steamMachineData, steamOsData, waitUntilGameDataLoaded } from "@/lib/gameData";
+import { linuxData, steamFrameData, steamMachineData, steamOsData } from "@/lib/gameData";
+import { registerGameDecorator, type GameView } from "@/lib/gameRows";
 import { removeAllNodesIfExist } from "@/lib/utilities";
-import { compatibilityRatingBadge } from "@/lib/linuxService";
+import { compatibilityRatingIconClass } from "@/lib/linuxService";
 import { mountTracked } from "@/globals";
-import { getGamesContainer } from "@/lib/waitUntilGamesContainerLoaded";
-import { addLinuxColumn, getGameName, getSteamId, insertInListBody } from "@/lib/gameTable";
+import { addLinuxColumn, getGameName } from "@/lib/gameTable";
 import { options } from "@/lib/store.svelte";
 
 type CompatibilityDevice = {
@@ -79,14 +79,14 @@ export const COMPATIBILITY_DEVICES: CompatibilityDevice[] = [
 export function createCompatibilityColumn(device: CompatibilityDevice) {
   const { classPrefix, columnLabel, title } = device;
 
-  function getHtml(steamId: number, view: "table" | "list" | "grid"): string {
+  function getHtml(steamId: number, view: GameView): string {
     const rating = device.getStatus(steamId)?.rating;
     const isUnknown = rating === "unknown";
     const showLabel = view !== "table" && rating !== undefined && (device.id !== "deck" || COMPATIBILITY_DEVICES.some((other) => other.id !== "deck" && other.enabled()));
     const classes = `bp-compatibility-element ${classPrefix}-element${isUnknown ? ` ${classPrefix}-unknown` : ""}${showLabel ? " bp-compatibility-labelled" : ""}`;
     const content =
       rating && rating !== "unknown"
-        ? `<button type="button" class="bp-compatibility-badge ${classPrefix}-badge ${classPrefix}-${rating}" data-steam-id="${steamId}" title="View ${title} rating details" aria-label="View ${title} rating details">${compatibilityRatingBadge(device.id, rating)}</button>`
+        ? `<button type="button" class="bp-compatibility-badge ${classPrefix}-badge ${classPrefix}-${rating} ${compatibilityRatingIconClass(device.id, rating)}" data-steam-id="${steamId}" title="View ${title} rating details" aria-label="View ${title} rating details"></button>`
         : isUnknown
           ? "???"
           : "";
@@ -98,55 +98,29 @@ export function createCompatibilityColumn(device: CompatibilityDevice) {
     return `<div class="${classes}">${showLabel ? `<span>${columnLabel}</span>` : ""}${content}</div>`;
   }
 
-  async function init() {
-    const gameContainer = getGamesContainer();
-
-    if (!gameContainer) {
-      return;
-    }
-
-    if (gameContainer.type === "list") {
-      gameContainer.container.classList.add("bp-game-list");
-    }
-
-    const modal = mountTracked(CompatibilityModal, { target: document.body, props: { deviceId: device.id, title } });
-
-    await waitUntilGameDataLoaded();
-
-    const gameElements = gameContainer.container.querySelectorAll<HTMLElement>(".game");
-    const anchorColumn = addLinuxColumn(gameContainer.container, `${classPrefix}-element`, columnLabel, device.columnWidth);
-
-    gameElements.forEach((game) => {
-      const steamId = getSteamId(game);
-
-      if (gameContainer.type === "table") {
-        game.querySelector(`td:nth-child(${anchorColumn})`)?.insertAdjacentHTML("afterend", getHtml(steamId, "table"));
-      } else if (gameContainer.type === "list") {
-        const linuxCell = game.querySelector(".bp-linux-media");
-
-        if (linuxCell) {
-          linuxCell.insertAdjacentHTML("beforeend", getHtml(steamId, "list"));
-        } else {
-          insertInListBody(game, `<div class="bp-linux-media">${getHtml(steamId, "list")}</div>`);
+  function init() {
+    registerGameDecorator({
+      setup: ({ type, container }) => {
+        if (type === "list") {
+          container.classList.add("bp-game-list");
         }
-      } else {
-        const linuxCell = game.querySelector(".bp-linux-grid");
 
-        if (linuxCell) {
-          linuxCell.insertAdjacentHTML("beforeend", getHtml(steamId, "grid"));
-        } else {
-          game.querySelector(".caption")?.insertAdjacentHTML("beforeend", `<div class="bp-linux-grid">${getHtml(steamId, "grid")}</div>`);
+        if (type === "table") {
+          addLinuxColumn(container, `${classPrefix}-element`, columnLabel, device.columnWidth);
         }
-      }
-    });
 
-    gameContainer.container.addEventListener("click", (event) => {
-      const badge = (event.target as Element).closest<HTMLElement>(`.${classPrefix}-badge`);
-      const status = badge ? device.getStatus(Number(badge.dataset.steamId)) : undefined;
+        const modal = mountTracked(CompatibilityModal, { target: document.body, props: { deviceId: device.id, title } });
 
-      if (badge && status) {
-        modal.open(status, getGameName(badge.closest(".game") as Element) ?? "");
-      }
+        container.addEventListener("click", (event) => {
+          const badge = (event.target as Element).closest<HTMLElement>(`.${classPrefix}-badge`);
+          const status = badge ? device.getStatus(Number(badge.dataset.steamId)) : undefined;
+
+          if (badge && status) {
+            modal.open(status, getGameName(badge.closest(".game") as Element) ?? "");
+          }
+        });
+      },
+      render: (_game, steamId, view) => ({ linux: getHtml(steamId, view) }),
     });
   }
 

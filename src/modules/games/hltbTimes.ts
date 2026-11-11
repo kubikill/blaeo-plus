@@ -1,10 +1,10 @@
-import { hltbLogo, infinityIcon } from "@/assets/icons";
+import { hltbLogoClass, infinityIcon } from "@/assets/icons";
 import { enqueueGames, formatHltbTime, getHltbGame, getHltbModes, getHltbStatus, isExcludedGame } from "@/lib/hltbService";
-import { hltbData, isUnknownToBackend, waitUntilGameDataLoaded } from "@/lib/gameData";
+import { hltbData, isUnknownToBackend } from "@/lib/gameData";
+import { registerGameDecorator } from "@/lib/gameRows";
 import { removeAllNodesIfExist } from "@/lib/utilities";
 import { options } from "@/lib/store.svelte";
-import { getGamesContainer } from "@/lib/waitUntilGamesContainerLoaded";
-import { getGameName, getSteamId, hasExtraPlaytimeColumn, hasLeadingIndexColumn, insertSortableHeader } from "@/lib/gameTable";
+import { getGameName, hasExtraPlaytimeColumn, hasLeadingIndexColumn, insertSortableHeader } from "@/lib/gameTable";
 import { mountTracked } from "@/globals";
 import HltbReportModal from "./HltbReportModal.svelte";
 
@@ -32,18 +32,14 @@ function getHltbTableHtml(steamId: number): string {
 
   if (!game) {
     const sortValue = isExcludedGame(steamId) ? -2 : -1;
-    return columns.map(() => `<td class="text-right bp-hltb-element" data-value="${sortValue}"><div>${getHltbStatus(steamId)}</div></td>`).join("");
+    return columns.map(() => `<td class="text-right bp-hltb-element" data-value="${sortValue}">${getHltbStatus(steamId)}</td>`).join("");
   }
 
   if (game.type.includes("sp")) {
     return columns
       .map((column) => {
         const isMain = column.field === "main";
-        return `
-          <td class="text-right bp-hltb-element${isMain ? " bp-hltb-cell" : ""}" data-value="${game[column.field] ?? -1}">
-            ${isMain && game.endless ? infinityIcon : ""}
-            <span title="${reportsTitle(game, column.field)}">${formatHltbTime(steamId, column.field)}</span>
-          </td>`;
+        return `<td class="text-right bp-hltb-element${isMain ? " bp-hltb-cell" : ""}" data-value="${game[column.field] ?? -1}" title="${reportsTitle(game, column.field)}">${isMain && game.endless ? infinityIcon : ""}${formatHltbTime(steamId, column.field)}</td>`;
       })
       .join("");
   }
@@ -64,22 +60,16 @@ function getHltbTableOneColumnHtml(steamId: number): string {
   let html = `<td class="text-right bp-hltb-element">`;
 
   if (!game) {
-    html += `<div>${getHltbStatus(steamId)}</div>`;
+    html += getHltbStatus(steamId);
   } else if (game.type.includes("sp")) {
     html += game.endless ? infinityIcon : "";
 
     for (let column of getEnabledColumns()) {
-      html += `
-        <div class="bp-hltb-element" title="${reportsTitle(game, column.field)}">
-          <div class="bp-hltb-one-column"><span class="bp-hltb-one-column-label">${column.label}:</span> ${formatHltbTime(steamId, column.field)}</div>
-        </div>`;
+      html += `<div class="bp-hltb-element bp-hltb-one-column" title="${reportsTitle(game, column.field)}"><span class="bp-hltb-one-column-label">${column.label}:</span> ${formatHltbTime(steamId, column.field)}</div>`;
     }
   } else {
     for (const { field, label } of getHltbModes(game)) {
-      html += `
-        <div class="bp-hltb-element bp-hltb-one-column" title="${reportsTitle(game, field)}">
-          <span class="bp-hltb-one-column-label">${label}:</span> ${formatHltbTime(steamId, field)}
-        </div>`;
+      html += `<div class="bp-hltb-element bp-hltb-one-column" title="${reportsTitle(game, field)}"><span class="bp-hltb-one-column-label">${label}:</span> ${formatHltbTime(steamId, field)}</div>`;
     }
   }
 
@@ -88,17 +78,14 @@ function getHltbTableOneColumnHtml(steamId: number): string {
 
 function getHltbListHtml(steamId: number): string {
   const game = getHltbGame(steamId);
-  let html = `<div class="bp-list-hltb-info">`;
+  let html = "";
 
   if (!game) {
-    html += `<div class="bp-hltb-element"><div>${getHltbStatus(steamId)}</div></div>`;
+    html += `<div class="bp-hltb-element">${getHltbStatus(steamId)}</div>`;
   } else if (game.type.includes("sp")) {
     for (let column of getEnabledColumns()) {
       const endlessIcon = column.field === "main" && game.endless ? infinityIcon : "";
-      html += `
-        <div class="bp-hltb-element" title="${reportsTitle(game, column.field)}">
-          <div>${endlessIcon} ${column.label}: ${formatHltbTime(steamId, column.field)}</div>
-        </div>`;
+      html += `<div class="bp-hltb-element" title="${reportsTitle(game, column.field)}">${endlessIcon} ${column.label}: ${formatHltbTime(steamId, column.field)}</div>`;
     }
   } else {
     for (const { field, label } of getHltbModes(game)) {
@@ -106,7 +93,7 @@ function getHltbListHtml(steamId: number): string {
     }
   }
 
-  return html + `</div>`;
+  return html;
 }
 
 function addTableHeaders(table: HTMLElement, headerRow: HTMLTableRowElement, oneColumnMode: boolean) {
@@ -147,86 +134,65 @@ function getReportButtonHtml(steamId: number, extraClass = ""): string {
 }
 
 function getHltbLinkHtml(steamId: number): string {
-  return `<a href="https://howlongtobeat.com/game/${hltbData[steamId].hltbId}" aria-label="HLTB game page" title="HLTB game page">${hltbLogo}</a>`;
+  return `<a href="https://howlongtobeat.com/game/${hltbData[steamId].hltbId}" aria-label="HLTB game page" title="HLTB game page" class="${hltbLogoClass}"></a>`;
 }
 
-export async function initHltbTimes() {
-  const gameContainer = getGamesContainer();
+export function initHltbTimes() {
+  const { oneColumnMode, addHltbLinks, reportButtons } = options.modules.games.hltbIntegration;
+  const queryList: QueryGame[] = [];
 
-  if (!gameContainer || gameContainer.type === "grid") {
-    return;
-  }
+  registerGameDecorator({
+    views: ["table", "list"],
+    setup: ({ type, container }) => {
+      const headerRow = container.querySelector("tr");
+      const colgroup = container.querySelector<HTMLElement>("colgroup");
 
-  await waitUntilGameDataLoaded();
+      if (type === "table" && headerRow) {
+        addTableHeaders(container, headerRow, oneColumnMode);
 
-  const games = gameContainer.container.querySelectorAll<HTMLElement>(".game");
-  const headerRow = gameContainer.container.querySelector("tr");
-  const colgroup = gameContainer.container.querySelector<HTMLElement>("colgroup");
-  const oneColumnMode = options.modules.games.hltbIntegration.oneColumnMode;
-  const addLinks = options.modules.games.hltbIntegration.addHltbLinks;
-  const addReportButtons = options.modules.games.hltbIntegration.reportButtons;
-
-  if (gameContainer.type === "table" && headerRow) {
-    addTableHeaders(gameContainer.container, headerRow, oneColumnMode);
-
-    if (colgroup) {
-      setColumnWidths(colgroup, headerRow, oneColumnMode);
-    }
-  }
-
-  const queryList = [] as QueryGame[];
-
-  games.forEach((game) => {
-    const steamId = getSteamId(game);
-    const hasHltbPage = !!getHltbGame(steamId);
-    const gameName = getGameName(game);
-
-    if (gameContainer.type === "table") {
-      game.insertAdjacentHTML("beforeend", oneColumnMode ? getHltbTableOneColumnHtml(steamId) : getHltbTableHtml(steamId));
-
-      const gameToolbar = game.querySelector(".toolbar");
-
-      if (addLinks && gameToolbar && hasHltbPage) {
-        gameToolbar.insertAdjacentHTML("beforeend", `<li class="bp-hltb-element" style="vertical-align: middle">${getHltbLinkHtml(steamId)}</li>`);
+        if (colgroup) {
+          setColumnWidths(colgroup, headerRow, oneColumnMode);
+        }
       }
 
-      if (addReportButtons && gameToolbar) {
-        gameToolbar.insertAdjacentHTML("beforeend", `<li class="bp-hltb-element" style="vertical-align: middle">${getReportButtonHtml(steamId)}</li>`);
+      if (reportButtons) {
+        const reportModal = mountTracked(HltbReportModal, { target: document.body, props: {} });
+
+        container.addEventListener("click", (event) => {
+          const button = (event.target as Element).closest<HTMLElement>(".bp-hltb-report");
+
+          if (button) {
+            const steamId = Number(button.dataset.steamId);
+            const hltbId = hltbData[steamId]?.hltbId;
+            reportModal.open({ steamId, name: getGameName(button.closest(".game") as Element) ?? "", hltbId: hltbId && hltbId > 0 ? hltbId : null });
+          }
+        });
       }
-    } else {
-      game.insertAdjacentHTML("beforeend", getHltbListHtml(steamId));
+    },
+    render: (game, steamId, view) => {
+      const link = addHltbLinks && getHltbGame(steamId) ? getHltbLinkHtml(steamId) : "";
+      const gameName = getGameName(game);
 
-      const gameHeading = game.querySelector("h4.media-heading");
-
-      if (addLinks && gameHeading && hasHltbPage) {
-        gameHeading.insertAdjacentHTML("beforeend", getHltbLinkHtml(steamId));
+      if (gameName && isUnknownToBackend("hltb", steamId) && !isExcludedGame(steamId)) {
+        queryList.push({ name: gameName, steamId });
       }
 
-      if (addReportButtons && gameHeading) {
-        gameHeading.insertAdjacentHTML("beforeend", getReportButtonHtml(steamId, " bp-hltb-element"));
+      if (view === "table") {
+        return {
+          times: oneColumnMode ? getHltbTableOneColumnHtml(steamId) : getHltbTableHtml(steamId),
+          links: link ? `<li class="bp-hltb-element" style="vertical-align: middle">${link}</li>` : "",
+          trailingLinks: reportButtons ? `<li class="bp-hltb-element" style="vertical-align: middle">${getReportButtonHtml(steamId)}</li>` : "",
+        };
       }
-    }
 
-    if (gameName && isUnknownToBackend("hltb", steamId) && !isExcludedGame(steamId)) {
-      queryList.push({ name: gameName, steamId });
-    }
+      return {
+        times: getHltbListHtml(steamId),
+        links: link,
+        trailingLinks: reportButtons ? getReportButtonHtml(steamId, " bp-hltb-element") : "",
+      };
+    },
+    finish: () => enqueueGames(queryList),
   });
-
-  enqueueGames(queryList);
-
-  if (addReportButtons) {
-    const reportModal = mountTracked(HltbReportModal, { target: document.body, props: {} });
-
-    gameContainer.container.addEventListener("click", (event) => {
-      const button = (event.target as Element).closest<HTMLElement>(".bp-hltb-report");
-
-      if (button) {
-        const steamId = Number(button.dataset.steamId);
-        const hltbId = hltbData[steamId]?.hltbId;
-        reportModal.open({ steamId, name: getGameName(button.closest(".game") as Element) ?? "", hltbId: hltbId && hltbId > 0 ? hltbId : null });
-      }
-    });
-  }
 }
 
 export function cleanupHltbTimes() {

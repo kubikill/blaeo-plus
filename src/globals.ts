@@ -2,7 +2,7 @@ import { gmRequest } from "@/lib/request";
 import { getAuthenticityToken } from "@/lib/utilities";
 import { mount, unmount, type Component, type MountOptions } from "svelte";
 
-export const BP_VERSION = "1.3.0-beta.3";
+export const BP_VERSION = "1.3.0-beta.4";
 export const SUPPORT_URL = "https://steamcommunity.com/groups/attackyourbacklog/discussions/1/7155698768546603592/";
 
 const mountedComponents: Record<string, any>[] = [];

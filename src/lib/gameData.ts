@@ -1,8 +1,6 @@
 import { BACKEND_TIMEOUT_MS, BACKEND_URL, gmRequest } from "./request";
 import { splitArrayIntoChunks } from "./utilities";
 import { options } from "./store.svelte";
-import { findSteamId } from "./gameTable";
-import { getGamesContainer, waitUntilGamesContainerLoaded } from "./waitUntilGamesContainerLoaded";
 import { allStoredIds, countRecords, readRecords, STORES, writeRecords, type StoredGameRecord } from "./gameDataDb";
 
 export type Dataset = (typeof STORES)[number];
@@ -171,28 +169,4 @@ export async function ensureGameData(steamIds: number[], datasets: Dataset[] = e
 
 export async function refreshCachedGameData(dataset: Dataset) {
   return ensureGameData(await allStoredIds(dataset), [dataset], { force: true });
-}
-
-export function getSteamIdsIn(container: ParentNode): number[] {
-  return Array.from(container.querySelectorAll(".game")).flatMap((game) => findSteamId(game) ?? []);
-}
-
-let pageDataPromise: Promise<void> | null = null;
-let pageDataContainer: HTMLElement | null = null;
-
-export function waitUntilGameDataLoaded(): Promise<void> {
-  const gamesContainer = getGamesContainer();
-
-  if (!gamesContainer) {
-    return Promise.reject(new Error("No games container on this page"));
-  }
-
-  if (!pageDataPromise || pageDataContainer !== gamesContainer.container) {
-    pageDataContainer = gamesContainer.container;
-    pageDataPromise = waitUntilGamesContainerLoaded()
-      .then(() => ensureGameData(getSteamIdsIn(gamesContainer.container)))
-      .catch((error) => console.error("BLAEO+: some game data is unavailable", error));
-  }
-
-  return pageDataPromise;
 }

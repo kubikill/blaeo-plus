@@ -133,6 +133,42 @@ body.bp-mobile-comment-layout {
   filter: none;
 }
 
+.bp-icon-hltb,
+.bp-icon-steamhunters {
+  display: inline-block;
+}
+
+.bp-icon-hltb {
+  width: 7px;
+  height: 13px;
+}
+
+.bp-icon-steamhunters {
+  width: 13px;
+  height: 13px;
+}
+
+.game-media .bp-icon-hltb,
+.game-media .bp-icon-steamhunters {
+  margin-left: 4px;
+  height: 16px;
+}
+
+.game-media .bp-icon-hltb {
+  width: 8.6px;
+}
+
+.toolbar .bp-icon-steamhunters {
+  opacity: 0.55;
+  filter: grayscale(1);
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+    filter: none;
+  }
+}
+
 .bp-protondb-rating {
   display: flex;
   justify-content: center;
@@ -183,8 +219,13 @@ body.bp-mobile-comment-layout {
     }
   }
 
-  svg {
+  &-provisional::before {
+    display: block;
+    flex-shrink: 0;
     margin-right: 4px;
+    width: 16px;
+    height: 16px;
+    content: "";
   }
 }
 
@@ -406,7 +447,9 @@ div.multiselect > ul.options {
   background-color: transparent;
   padding: 0;
   width: 100%;
+  min-width: 20px;
   height: 100%;
+  min-height: 20px;
 }
 
 .bp-hltb-report {
